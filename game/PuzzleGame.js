@@ -69,7 +69,7 @@ function PuzzleGame(){
     f2.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f2.add(this,"blockComboActive").listen();
     f2.add(this,"debugSelection").listen();
-    f2.add(this.cursorObj.scale,"x").listen();
+    f2.add(this,"dropDelay",100,1000).step(10).listen();
     f2.add(this,"debugDelete10");
     f2.add(this,"resetGame");
     f2.open();
@@ -84,7 +84,7 @@ PuzzleGame.prototype.debugDelete10 = function(){
     for(var i=0;i<10;i++){
         var x = Math.floor(Math.random()*this.boardWidth);
         var y = Math.floor(Math.random()*this.boardHeight);
-        this.deleteBlock(x,y);
+        this.destroyBlock(x,y);
     }
 };
 
@@ -99,6 +99,7 @@ PuzzleGame.prototype.resetGame = function(){
     this.blockDepth = 10;
     this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
     this.blockComboActive = false;
+    this.dropDelay = 300;
 
     this.piTimer = 0;
 
@@ -144,7 +145,6 @@ PuzzleGame.prototype.generateCursor = function(){
 };
 
 PuzzleGame.prototype.generateTube = function(){
-    console.log(this.boardRadius);
     var obj = new THREE.Object3D();
     var r = this.boardRadius+this.blockDepth/2+3;
     var material = new THREE.MeshLambertMaterial({color:0x00ff00,side:THREE.DoubleSide});
@@ -184,13 +184,13 @@ PuzzleGame.prototype.keypress = function(event){
     //console.log(event.keyCode);
     switch(event.keyCode){
         case 88: //X
-            this.deleteBlock(this.selectorX,this.selectorY);
+            this.destroyBlock(this.selectorX,this.selectorY);
             break;
         case 90: //Z
 
             break;
         case 32: //Space
-            this.swapBlocks(this.selectorX,this.selectorY,this.selectorX-1,this.selectorY);
+            this.swapBlocks(this.selectorX,this.selectorY,this.selectorX-1);
             break;
         case 38: //up
             this.adjustSelector('up');
@@ -207,44 +207,93 @@ PuzzleGame.prototype.keypress = function(event){
     }
 };
 
-PuzzleGame.prototype.swapBlocks = function(x,y,x2,y2){
+PuzzleGame.prototype.swapBlocks = function(x,y,x2){
+
     if(x2==-1){
         x2=this.boardWidth-1;
     }
 
     var block1 = this.gameGrid[x][y];
+    var block2 = this.gameGrid[x2][y];
+
+    if((block1 != null && block1.userData.locked )|| (block2 != null && block2.userData.locked)){
+        return;
+    }
+
     if(block1 !== null){
         new TWEEN.Tween(block1.position).to({
             x:this.calcXBlockPos(x2),
             z:this.calcZBlockPos(x2)
         },100).easing( TWEEN.Easing.Bounce.Out).start();
-        //block1.position.x = this.calcXBlockPos(x2);
-        //block1.position.z = this.calcZBlockPos(x2);
         block1.rotation.y = this.calcRBlockPos(x2);
     }
 
-
-    var block2 = this.gameGrid[x2][y];
     if(block2 !== null) {
         new TWEEN.Tween(block2.position).to({
             x:this.calcXBlockPos(x),
             z:this.calcZBlockPos(x)
         },100).easing( TWEEN.Easing.Bounce.Out).start();
-        //block2.position.x = this.calcXBlockPos(x);
-        //block2.position.z = this.calcZBlockPos(x);
         block2.rotation.y = this.calcRBlockPos(x);
     }
 
     this.gameGrid[x][y] = block2;
     this.gameGrid[x2][y] = block1;
 
-    this.checkDropBlocks();
+    if(block1 !=  null && block2 == null){
+        if(y-1>=0 && this.gameGrid[x2][y-1] == null){
+            this.lockBlocksStartingAtPoint(x2,y);
+            setTimeout(this.dropBlocksStartingAtPoint.bind(this,x2,y),this.dropDelay);
+        }
+        this.lockBlocksStartingAtPoint(x,y+1);
+        setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y+1),this.dropDelay);
+    }
+
+    if(block2 !=  null && block1 == null){
+        if(y-1>=0 && this.gameGrid[x][y-1] == null){
+            this.lockBlocksStartingAtPoint(x,y);
+            setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y),this.dropDelay);
+        }
+        this.lockBlocksStartingAtPoint(x2,y+1);
+        setTimeout(this.dropBlocksStartingAtPoint.bind(this,x2,y+1),this.dropDelay);
+    }
+
+    //this.checkDropBlocks();
+};
+
+PuzzleGame.prototype.destroyBlock = function(x,y){
+    if(this.gameGrid[x][y] == null || this.gameGrid[x][y].userData.locked){
+        return;
+    }
+
+    this.gameGrid[x][y].userData.locked = true;
+    this.gameGrid[x][y].userData.exploding = true;
+    this.gameGrid[x][y].material.map = this.explodeTexture;
+
+    setTimeout(this.deleteBlock.bind(this,x,y),1000);
+};
+
+PuzzleGame.prototype.lockBlocksStartingAtPoint = function(x,y){
+    for(var i = y;i<this.boardHeight;i++){
+        if(this.gameGrid[x][i] !== null && !this.gameGrid[x][i].userData.exploding){
+            this.gameGrid[x][i].userData.locked = true;
+            this.gameGrid[x][i].material.map = this.lockTexture;
+        }else{
+            return;
+        }
+    }
 };
 
 PuzzleGame.prototype.deleteBlock = function(x,y){
+
+    this.gameGrid[x][y].userData.exploding = false;
     this.gameBoard.remove(this.gameGrid[x][y]);
     this.gameGrid[x][y] = null;
 
+    this.lockBlocksStartingAtPoint(x,y+1);
+
+    setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y+1),this.dropDelay);
+
+    /*
     if(this.blockComboActive == false){
         this.blockComboTimeout = setTimeout(this.checkDropBlocks.bind(this),1000);
         this.blockComboActive = true;
@@ -252,8 +301,37 @@ PuzzleGame.prototype.deleteBlock = function(x,y){
         clearTimeout(this.blockComboTimeout);
         this.blockComboTimeout = setTimeout(this.checkDropBlocks.bind(this),1000);
     }
+    */
 };
 
+PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
+    var stillGottaFall = true;
+    for(var i = y;i<this.boardHeight;i++) {
+        if (this.gameGrid[x][i] !== null && !this.gameGrid[x][i].userData.exploding){
+            //You moved a block under this block about to fall.
+            if(this.gameGrid[x][i-1] !== null){
+                this.gameGrid[x][i].userData.locked = false;
+                this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
+                stillGottaFall = false;
+                continue;
+            }
+            new TWEEN.Tween(this.gameGrid[x][i].position).to({y:this.calcYBlockPos(i-1)},200).easing( TWEEN.Easing.Bounce.Out).start();
+            this.gameGrid[x][i-1] = this.gameGrid[x][i];
+            //this.gameGrid[x][i-1].userData.locked = false;
+            //this.gameGrid[x][i-1].material.map = this.blockTextures[this.gameGrid[x][i-1].userData.blockType];
+            this.gameGrid[x][i] = null;
+        }else{
+            ///stoooop!
+            break;
+        }
+    }
+    if(stillGottaFall){
+        if(y-1>=0){
+            this.dropBlocksStartingAtPoint(x,y-1);
+        }
+    }
+};
+/*
 PuzzleGame.prototype.checkDropBlocks = function(){
     this.blockComboActive = false;
     for(var x=0;x<this.boardWidth;x++){
@@ -273,6 +351,7 @@ PuzzleGame.prototype.checkDropBlocks = function(){
         }
     }
 };
+*/
 
 PuzzleGame.prototype.adjustSelector = function(direction){
     switch(direction){
@@ -341,9 +420,11 @@ PuzzleGame.prototype.cylinder = function(){
 
     var geometry = new THREE.BoxGeometry(this.blockWidth,this.blockHeight,this.blockDepth );
 
-    var blankTexture = new THREE.TextureLoader().load('game/block.png');
+    this.blankTexture = new THREE.TextureLoader().load('game/block.png');
+    this.explodeTexture = new THREE.TextureLoader().load('game/block_explode.png');
+    this.lockTexture = new THREE.TextureLoader().load('game/block_locked.png');
 
-    var blockTextures = {
+    this.blockTextures = {
         circle:new THREE.TextureLoader().load('game/block_circle.png'),
         diamond:new THREE.TextureLoader().load('game/block_diamond.png'),
         heart:new THREE.TextureLoader().load('game/block_heart.png'),
@@ -361,12 +442,12 @@ PuzzleGame.prototype.cylinder = function(){
         triangle2:0x3F51B5
     };
 
-    for(var i in blockTextures){
-        blockTextures[i].magFilter = THREE.NearestFilter;
-        blockTextures[i].minFilter = THREE.NearestFilter;
+    for(var i in this.blockTextures){
+        this.blockTextures[i].magFilter = THREE.NearestFilter;
+        this.blockTextures[i].minFilter = THREE.NearestFilter;
     }
 
-    var keys = Object.keys(blockTextures);
+    var keys = Object.keys(this.blockTextures);
 
     for(var x = 0; x < this.boardWidth; x++) {
         var column = [];
@@ -387,15 +468,17 @@ PuzzleGame.prototype.cylinder = function(){
                 safeType = true;
             }while(!safeType);
 
-
             var mesh = null;
-            var material = new THREE.MeshLambertMaterial( { color: blockColors[blockType],map:blockTextures[blockType]});
+            var material = new THREE.MeshLambertMaterial( { color: blockColors[blockType],map:this.blockTextures[blockType]});
             //material.color.setRGB((1/this.boardHeight)*y,0,1-(1/this.boardHeight)*y);
 
             mesh = new THREE.Mesh(geometry,material);
             mesh.userData.color = mesh.material.color.getHex();
 
             mesh.userData.blockType = blockType;
+            //mesh.userData.dropTimer = null;
+            mesh.userData.locked = false;
+            mesh.userData.exploding = false;
 
             mesh.userData.x = this.calcXBlockPos(x);
             mesh.userData.y = this.calcYBlockPos(y);
