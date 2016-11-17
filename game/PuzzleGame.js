@@ -10,8 +10,6 @@ function PuzzleGame(){
     this.selectorX = 0;
     this.selectorY = 0;
 
-    this.postprocessing = { ssaoEnabled : false, ssaoRenderMode: 0 };
-
     var container = document.createElement( 'div' );
     document.body.appendChild( container );
 
@@ -26,9 +24,7 @@ function PuzzleGame(){
 
     this.scene = new THREE.Scene();
 
-    //this.coreBall = this.generateCoreShape();
-    //this.scene.add(this.coreBall);
-
+	this.initTextures();
     this.resetGame();
 
     this.scene.add(this.generateTube());
@@ -54,23 +50,18 @@ function PuzzleGame(){
     this.stats = new Stats();
     container.appendChild( this.stats.dom );
 
-    // Init postprocessing
-    this.initPostprocessing();
-
     // Init gui
     var gui = new dat.GUI();
-    var f1 = gui.addFolder('SSAO');
-    f1.add( this.postprocessing, "ssaoEnabled" ).onChange();
-    f1.add( this.postprocessing, "ssaoRenderMode", { framebuffer: 0, onlyAO: 1 } ).onChange(this.renderModeChange.bind(this)).listen();
-    f1.open();
 
     var f2 = gui.addFolder('DEBUG');
     f2.add(this,"selectorX",0,this.boardWidth-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f2.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
-    f2.add(this,"blockComboActive").listen();
+    //f2.add(this,"blockComboActive").listen();
     f2.add(this,"debugSelection").listen();
     f2.add(this,"dropDelay",100,1000).step(10).listen();
     f2.add(this,"debugDelete10");
+	f2.add(this,"checkForMatches");
+	f2.add(this,"debugLoadMap");
     f2.add(this,"resetGame");
     f2.open();
 
@@ -80,12 +71,45 @@ function PuzzleGame(){
     this.animate();
 }
 
+PuzzleGame.prototype.debugLoadMap = function(){
+	this.loadMap('map1');
+};
+
 PuzzleGame.prototype.debugDelete10 = function(){
     for(var i=0;i<10;i++){
         var x = Math.floor(Math.random()*this.boardWidth);
         var y = Math.floor(Math.random()*this.boardHeight);
         this.destroyBlock(x,y);
     }
+};
+
+PuzzleGame.prototype.initTextures = function(){
+	this.blankTexture = new THREE.TextureLoader().load('game/block.png');
+	this.explodeTexture = new THREE.TextureLoader().load('game/block_explode.png');
+	this.lockTexture = new THREE.TextureLoader().load('game/block_locked.png');
+
+	this.blockTextures = {
+		circle:new THREE.TextureLoader().load('game/block_circle.png'),
+		diamond:new THREE.TextureLoader().load('game/block_diamond.png'),
+		heart:new THREE.TextureLoader().load('game/block_heart.png'),
+		star:new THREE.TextureLoader().load('game/block_star.png'),
+		triangle:new THREE.TextureLoader().load('game/block_triangle.png'),
+		triangle2:new THREE.TextureLoader().load('game/block_triangle2.png')
+	};
+
+	for(var i in this.blockTextures){
+		this.blockTextures[i].magFilter = THREE.NearestFilter;
+		this.blockTextures[i].minFilter = THREE.NearestFilter;
+	}
+
+	this.blockColors = {
+		circle:0x4CAF50,
+		diamond:0x9C27B0,
+		heart:0xF44336,
+		star:0xFFEB3B,
+		triangle:0x00BCD4,
+		triangle2:0x3F51B5
+	};
 };
 
 PuzzleGame.prototype.resetGame = function(){
@@ -160,26 +184,6 @@ PuzzleGame.prototype.generateTube = function(){
     return obj;
 };
 
-PuzzleGame.prototype.generateCoreShape = function(){
-    var obj = new THREE.Object3D();
-
-    var geometry = new THREE.IcosahedronGeometry(100);
-    var material = new THREE.MeshBasicMaterial({color:0xE79C10});
-    var core = new THREE.Mesh( geometry, material );
-    core.position.x = core.position.y = core.position.z = 0;
-
-    var outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.BackSide } );
-    var outlineMesh = new THREE.Mesh( geometry, outlineMaterial );
-    outlineMesh.position = core.position;
-    outlineMesh.scale.multiplyScalar(1.05);
-
-    obj.add(core);
-    obj.add(outlineMesh);
-
-    return obj;
-};
-
-
 PuzzleGame.prototype.keypress = function(event){
     //console.log(event.keyCode);
     switch(event.keyCode){
@@ -204,6 +208,69 @@ PuzzleGame.prototype.keypress = function(event){
         case 39: //right
             this.adjustSelector('right');
             break;
+    }
+};
+
+PuzzleGame.prototype.checkForMatches = function(){
+    for(var y = 0; y < this.boardHeight;y++){
+	    for(var x = 0; x < this.boardWidth;x++){
+			if(this.gameGrid[x][y] == null || this.gameGrid[x][y].userData.locked){
+				continue;
+			}
+
+		    var typeToMatch = this.gameGrid[x][y].userData.blockType;
+		    var matchChainX = [x];
+			var xToTest = x+1;
+		    if(xToTest == this.boardWidth){
+			    xToTest = 0;
+		    }
+
+		    while(xToTest != x && this.gameGrid[xToTest][y] != null && !this.gameGrid[xToTest][y].userData.locked){
+				var nextType = this.gameGrid[xToTest][y].userData.blockType;
+				if (nextType != typeToMatch) {
+					//no more matches!
+					break;
+				}
+				matchChainX.push(xToTest);
+				xToTest++;
+			    if(xToTest == this.boardWidth){
+				    xToTest = 0;
+			    }
+			}
+
+			if(matchChainX.length>=3){
+				for(var i=0;i<matchChainX.length;i++){
+					this.destroyBlock(matchChainX[i],y);
+				}
+			}
+		    matchChainX = [];
+
+		    var matchChainY = [y];
+		    var yToTest = y+1;
+		    if(yToTest == this.boardHeight){
+			    yToTest = 0;
+		    }
+
+		    while(yToTest != x && this.gameGrid[x][yToTest] != null && !this.gameGrid[x][yToTest].userData.locked){
+			    var nextType = this.gameGrid[x][yToTest].userData.blockType;
+			    if (nextType != typeToMatch) {
+				    //no more matches!
+				    break;
+			    }
+			    matchChainY.push(yToTest);
+			    yToTest++;
+			    if(yToTest == this.boardHeight){
+				    yToTest = 0;
+			    }
+		    }
+
+		    if(matchChainY.length>=3){
+			    for(var i=0;i<matchChainY.length;i++){
+				    this.destroyBlock(x,matchChainY[i]);
+			    }
+		    }
+		    matchChainY = [];
+	    }
     }
 };
 
@@ -248,7 +315,7 @@ PuzzleGame.prototype.swapBlocks = function(x,y,x2){
         setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y+1),this.dropDelay);
     }
 
-    if(block2 !=  null && block1 == null){
+    else if(block2 !=  null && block1 == null){
         if(y-1>=0 && this.gameGrid[x][y-1] == null){
             this.lockBlocksStartingAtPoint(x,y);
             setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y),this.dropDelay);
@@ -256,6 +323,8 @@ PuzzleGame.prototype.swapBlocks = function(x,y,x2){
         this.lockBlocksStartingAtPoint(x2,y+1);
         setTimeout(this.dropBlocksStartingAtPoint.bind(this,x2,y+1),this.dropDelay);
     }
+
+	this.checkForMatches();
 
     //this.checkDropBlocks();
 };
@@ -269,6 +338,11 @@ PuzzleGame.prototype.destroyBlock = function(x,y){
     this.gameGrid[x][y].userData.exploding = true;
     this.gameGrid[x][y].material.map = this.explodeTexture;
 
+	new TWEEN.Tween(this.gameGrid[x][y].scale).to({
+		x:0.7,
+		y:0.7
+	},800).easing( TWEEN.Easing.Elastic.Out).start();
+
     setTimeout(this.deleteBlock.bind(this,x,y),1000);
 };
 
@@ -276,7 +350,7 @@ PuzzleGame.prototype.lockBlocksStartingAtPoint = function(x,y){
     for(var i = y;i<this.boardHeight;i++){
         if(this.gameGrid[x][i] !== null && !this.gameGrid[x][i].userData.exploding){
             this.gameGrid[x][i].userData.locked = true;
-            this.gameGrid[x][i].material.map = this.lockTexture;
+            //this.gameGrid[x][i].material.map = this.lockTexture;
         }else{
             return;
         }
@@ -311,7 +385,7 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
             //You moved a block under this block about to fall.
             if(this.gameGrid[x][i-1] !== null){
                 this.gameGrid[x][i].userData.locked = false;
-                this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
+                //this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
                 stillGottaFall = false;
                 continue;
             }
@@ -329,6 +403,8 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
         if(y-1>=0){
             this.dropBlocksStartingAtPoint(x,y-1);
         }
+    }else{
+	    this.checkForMatches();
     }
 };
 /*
@@ -415,37 +491,27 @@ PuzzleGame.prototype.calcRBlockPos = function(x){
     return -this.circlePieceSize*x+HALF_PI;
 };
 
+PuzzleGame.prototype.loadMap = function(map){
+	var sThis = this;
+	THREE.XHRLoader().load('maps/'+map+'.txt',function(map){
+		var rows = map.split("\n");
+		var botRow = rows.length-1;
+		for(var i = botRow;i>=0;i--){
+
+		}
+	});
+};
+
+PuzzleGame.prototype.generateMap = function(){
+
+};
+
 PuzzleGame.prototype.cylinder = function(){
     var blocks = new THREE.Object3D();
 
     var geometry = new THREE.BoxGeometry(this.blockWidth,this.blockHeight,this.blockDepth );
 
-    this.blankTexture = new THREE.TextureLoader().load('game/block.png');
-    this.explodeTexture = new THREE.TextureLoader().load('game/block_explode.png');
-    this.lockTexture = new THREE.TextureLoader().load('game/block_locked.png');
 
-    this.blockTextures = {
-        circle:new THREE.TextureLoader().load('game/block_circle.png'),
-        diamond:new THREE.TextureLoader().load('game/block_diamond.png'),
-        heart:new THREE.TextureLoader().load('game/block_heart.png'),
-        star:new THREE.TextureLoader().load('game/block_star.png'),
-        triangle:new THREE.TextureLoader().load('game/block_triangle.png'),
-        triangle2:new THREE.TextureLoader().load('game/block_triangle2.png')
-    };
-
-    var blockColors = {
-        circle:0x4CAF50,
-        diamond:0x9C27B0,
-        heart:0xF44336,
-        star:0xFFEB3B,
-        triangle:0x00BCD4,
-        triangle2:0x3F51B5
-    };
-
-    for(var i in this.blockTextures){
-        this.blockTextures[i].magFilter = THREE.NearestFilter;
-        this.blockTextures[i].minFilter = THREE.NearestFilter;
-    }
 
     var keys = Object.keys(this.blockTextures);
 
@@ -459,17 +525,17 @@ PuzzleGame.prototype.cylinder = function(){
             var safeType = false;
             do{
                 //console.log(x+','+y);
-                if(x>0) {
+                //if(x>0) {
                     //console.log(this.gameGrid[x - 1][y]);
-                    if(y>0){
+                //    if(y>0){
                         //console.log(this.gameGrid[x][y-1]);
-                    }
-                }
+                //    }
+                //}
                 safeType = true;
             }while(!safeType);
 
             var mesh = null;
-            var material = new THREE.MeshLambertMaterial( { color: blockColors[blockType],map:this.blockTextures[blockType]});
+            var material = new THREE.MeshLambertMaterial( { color: this.blockColors[blockType],map:this.blockTextures[blockType]});
             //material.color.setRGB((1/this.boardHeight)*y,0,1-(1/this.boardHeight)*y);
 
             mesh = new THREE.Mesh(geometry,material);
@@ -497,18 +563,6 @@ PuzzleGame.prototype.cylinder = function(){
     return blocks;
 };
 
-PuzzleGame.prototype.renderModeChange = function(value){
-    if ( value == 0 ) {
-        // framebuffer
-        this.ssaoPass.uniforms[ 'onlyAO' ].value = false;
-    } else if ( value == 1 ) {
-        // onlyAO
-        this.ssaoPass.uniforms[ 'onlyAO' ].value = true;
-    } else {
-        console.error( "Not define renderModeChange type: " + value );
-    }
-};
-
 PuzzleGame.prototype.onWindowResize = function() {
     var width = window.innerWidth;
     var height = window.innerHeight;
@@ -522,32 +576,6 @@ PuzzleGame.prototype.onWindowResize = function() {
     var newHeight = Math.floor( height / pixelRatio ) || 1;
     this.depthRenderTarget.setSize( newWidth, newHeight );
     this.effectComposer.setSize( newWidth, newHeight );
-};
-
-PuzzleGame.prototype.initPostprocessing = function(){
-    // Setup render pass
-    var renderPass = new THREE.RenderPass( this.scene, this.camera );
-    // Setup depth pass
-    this.depthMaterial = new THREE.MeshDepthMaterial();
-    this.depthMaterial.depthPacking = THREE.RGBADepthPacking;
-    this.depthMaterial.blending = THREE.NoBlending;
-    var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
-    this.depthRenderTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, pars );
-    // Setup SSAO pass
-    this.ssaoPass = new THREE.ShaderPass( THREE.SSAOShader );
-    this.ssaoPass.renderToScreen = true;
-    //this.ssaoPass.uniforms[ "tDiffuse" ].value will be set by ShaderPass
-    this.ssaoPass.uniforms[ "tDepth" ].value = this.depthRenderTarget.texture;
-    this.ssaoPass.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
-    this.ssaoPass.uniforms[ 'cameraNear' ].value = this.camera.near;
-    this.ssaoPass.uniforms[ 'cameraFar' ].value = this.camera.far;
-    this.ssaoPass.uniforms[ 'onlyAO' ].value = ( this.postprocessing.ssaoRenderMode == 1 );
-    this.ssaoPass.uniforms[ 'aoClamp' ].value = 0.3;
-    this.ssaoPass.uniforms[ 'lumInfluence' ].value = 0.5;
-    // Add pass to effect composer
-    this.effectComposer = new THREE.EffectComposer( this.renderer );
-    this.effectComposer.addPass( renderPass );
-    this.effectComposer.addPass( this.ssaoPass );
 };
 
 PuzzleGame.prototype.updateCursorPos = function(){
@@ -601,7 +629,6 @@ PuzzleGame.prototype.moveBlocksToCylinder = function(){
 };
 
 PuzzleGame.prototype.render = function() {
-
     TWEEN.update();
 
     var timer = performance.now();
@@ -615,24 +642,25 @@ PuzzleGame.prototype.render = function() {
     //this.debugLight.position.x = this.light.position.x;
     //this.debugLight.position.z = this.light.position.z;
 
-    var sThis = this;
+	var sThis = this;
+
+	this.gameBoard.traverse(function(block){
+		if(block.userData.exploding){
+			block.rotation.y = timer * 0.01;
+			block.rotation.x = timer * 0.01;
+		}
+	});
+
     this.cursorObj.traverse(function(cursor){
         cursor.scale.x = sThis.cursorObj.scale.y = (0.05*Math.sin(sThis.piTimer)+1);
     });
 
-    if ( this.postprocessing.ssaoEnabled ) {
-        // Render depth into this.depthRenderTarget
-        this.scene.overrideMaterial = this.depthMaterial;
-        this.renderer.render(this.scene, this.camera, this.depthRenderTarget, true );
-        // Render renderPass and SSAO shaderPass
-        this.scene.overrideMaterial = null;
-        this.effectComposer.render();
-    } else {
-        this.renderer.render( this.scene, this.camera );
-    }
+	this.renderer.render(this.scene,this.camera);
 
     this.piTimer+=0.05;
     if(this.piTimer > TWO_PI){
         this.piTimer = 0;
     }
 };
+
+var game = new PuzzleGame();
