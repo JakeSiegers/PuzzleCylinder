@@ -24,7 +24,7 @@ function PuzzleGame(){
 
     this.scene = new THREE.Scene();
 
-	this.initTextures();
+	this.initLoaders();
     this.resetGame();
 
     this.scene.add(this.generateTube());
@@ -50,6 +50,8 @@ function PuzzleGame(){
     this.stats = new Stats();
     container.appendChild( this.stats.dom );
 
+    this.debugMapNumber = 1;
+
     // Init gui
     var gui = new dat.GUI();
 
@@ -61,6 +63,7 @@ function PuzzleGame(){
     f2.add(this,"dropDelay",100,1000).step(10).listen();
     f2.add(this,"debugDelete10");
 	f2.add(this,"checkForMatches");
+    f2.add(this,"debugMapNumber",1,2).step(1);
 	f2.add(this,"debugLoadMap");
     f2.add(this,"resetGame");
     f2.open();
@@ -72,7 +75,7 @@ function PuzzleGame(){
 }
 
 PuzzleGame.prototype.debugLoadMap = function(){
-	this.loadMap('map1');
+	this.loadMap('map'+this.debugMapNumber);
 };
 
 PuzzleGame.prototype.debugDelete10 = function(){
@@ -83,7 +86,10 @@ PuzzleGame.prototype.debugDelete10 = function(){
     }
 };
 
-PuzzleGame.prototype.initTextures = function(){
+PuzzleGame.prototype.initLoaders = function(){
+
+    this.fileLoader = new THREE.FileLoader();
+
 	this.blankTexture = new THREE.TextureLoader().load('game/block.png');
 	this.explodeTexture = new THREE.TextureLoader().load('game/block_explode.png');
 	this.lockTexture = new THREE.TextureLoader().load('game/block_locked.png');
@@ -112,7 +118,7 @@ PuzzleGame.prototype.initTextures = function(){
 	};
 };
 
-PuzzleGame.prototype.resetGame = function(){
+PuzzleGame.prototype.resetGame = function(map){
     this.gameGrid = [];
     this.boardHeight = 13;
     this.boardWidth = 30;
@@ -124,6 +130,7 @@ PuzzleGame.prototype.resetGame = function(){
     this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
     this.blockComboActive = false;
     this.dropDelay = 300;
+    this.canMoveCursor = false;
 
     this.piTimer = 0;
 
@@ -132,7 +139,8 @@ PuzzleGame.prototype.resetGame = function(){
     if(this.hasOwnProperty('gameBoard')){
         this.scene.remove(this.gameBoard);
     }
-    this.gameBoard = this.cylinder();
+    this.gameBoard = this.cylinder(map);
+    this.gameBoard.rotation.y = TWO_PI;
     this.scene.add(this.gameBoard);
 
     if(this.hasOwnProperty('cursorObj')){
@@ -142,10 +150,21 @@ PuzzleGame.prototype.resetGame = function(){
     this.scene.add(this.cursorObj);
 
     this.selectorY = Math.floor(this.boardHeight/2);
-    this.selectorX = Math.floor(this.boardWidth/2);
-    this.focusCameraOnSelection();
+    this.selectorX = 0;//Math.floor(this.boardWidth/2);
 
-    setTimeout(this.moveBlocksToCylinder.bind(this),1000);
+    var startingBoardAngle = this.circlePieceSize * this.selectorX-HALF_PI-(this.circlePieceSize/2);
+    this.gameBoard.rotation.y = startingBoardAngle-TWO_PI;
+
+
+    setTimeout(this.moveBlocksToCylinder.bind(this),400);
+
+    var sThis = this;
+    new TWEEN.Tween(this.gameBoard.rotation).to({
+        y:startingBoardAngle
+    },1200).easing(TWEEN.Easing.Exponential.Out).delay(400).start().onComplete(function(){
+        sThis.canMoveCursor = true;
+    });
+
 };
 
 PuzzleGame.prototype.generateCursor = function(){
@@ -171,8 +190,8 @@ PuzzleGame.prototype.generateCursor = function(){
 PuzzleGame.prototype.generateTube = function(){
     var obj = new THREE.Object3D();
     var r = this.boardRadius+this.blockDepth/2+3;
-    var material = new THREE.MeshLambertMaterial({color:0x00ff00,side:THREE.DoubleSide});
-    var geometry = new THREE.CylinderGeometry(r,r,400,this.boardWidth,1,true);
+    var material = new THREE.MeshLambertMaterial({color:0x333333,side:THREE.DoubleSide});
+    var geometry = new THREE.CylinderGeometry(r,r,400,this.boardWidth,1,false);
     var tube = new THREE.Mesh( geometry, material );
     tube.position.y = -(this.blockHeight*this.boardHeight)/2-198;
 
@@ -185,6 +204,11 @@ PuzzleGame.prototype.generateTube = function(){
 };
 
 PuzzleGame.prototype.keypress = function(event){
+
+    if(!this.canMoveCursor){
+        return;
+    }
+
     //console.log(event.keyCode);
     switch(event.keyCode){
         case 88: //X
@@ -212,6 +236,7 @@ PuzzleGame.prototype.keypress = function(event){
 };
 
 PuzzleGame.prototype.checkForMatches = function(){
+    var blocksToBeDestroyed = [];
     for(var y = 0; y < this.boardHeight;y++){
 	    for(var x = 0; x < this.boardWidth;x++){
 			if(this.gameGrid[x][y] == null || this.gameGrid[x][y].userData.locked){
@@ -238,12 +263,12 @@ PuzzleGame.prototype.checkForMatches = function(){
 			    }
 			}
 
-			if(matchChainX.length>=3){
-				for(var i=0;i<matchChainX.length;i++){
-					this.destroyBlock(matchChainX[i],y);
-				}
-			}
-		    matchChainX = [];
+            if(matchChainX.length>=3){
+                for(var i=0;i<matchChainX.length;i++){
+                    blocksToBeDestroyed.push({x:matchChainX[i],y:y});
+                }
+            }
+            matchChainX = [];
 
 		    var matchChainY = [y];
 		    var yToTest = y+1;
@@ -251,7 +276,7 @@ PuzzleGame.prototype.checkForMatches = function(){
 			    yToTest = 0;
 		    }
 
-		    while(yToTest != x && this.gameGrid[x][yToTest] != null && !this.gameGrid[x][yToTest].userData.locked){
+		    while(yToTest != y && this.gameGrid[x][yToTest] != null && !this.gameGrid[x][yToTest].userData.locked){
 			    var nextType = this.gameGrid[x][yToTest].userData.blockType;
 			    if (nextType != typeToMatch) {
 				    //no more matches!
@@ -266,11 +291,18 @@ PuzzleGame.prototype.checkForMatches = function(){
 
 		    if(matchChainY.length>=3){
 			    for(var i=0;i<matchChainY.length;i++){
-				    this.destroyBlock(x,matchChainY[i]);
+                    blocksToBeDestroyed.push({x:x,y:matchChainY[i]});
 			    }
 		    }
 		    matchChainY = [];
 	    }
+    }
+
+    //console.log(blocksToBeDestroyed);
+
+    for(var i = 0;i<blocksToBeDestroyed.length;i++){
+        //this.gameGrid[blocksToBeDestroyed[i].x][blocksToBeDestroyed[i].y].material.map = this.explodeTexture;
+        this.destroyBlock(blocksToBeDestroyed[i].x,blocksToBeDestroyed[i].y);
     }
 };
 
@@ -358,24 +390,12 @@ PuzzleGame.prototype.lockBlocksStartingAtPoint = function(x,y){
 };
 
 PuzzleGame.prototype.deleteBlock = function(x,y){
-
     this.gameGrid[x][y].userData.exploding = false;
     this.gameBoard.remove(this.gameGrid[x][y]);
     this.gameGrid[x][y] = null;
 
     this.lockBlocksStartingAtPoint(x,y+1);
-
     setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y+1),this.dropDelay);
-
-    /*
-    if(this.blockComboActive == false){
-        this.blockComboTimeout = setTimeout(this.checkDropBlocks.bind(this),1000);
-        this.blockComboActive = true;
-    }else{
-        clearTimeout(this.blockComboTimeout);
-        this.blockComboTimeout = setTimeout(this.checkDropBlocks.bind(this),1000);
-    }
-    */
 };
 
 PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
@@ -491,27 +511,28 @@ PuzzleGame.prototype.calcRBlockPos = function(x){
     return -this.circlePieceSize*x+HALF_PI;
 };
 
-PuzzleGame.prototype.loadMap = function(map){
+PuzzleGame.prototype.loadMap = function(mapFile){
 	var sThis = this;
-	THREE.XHRLoader().load('maps/'+map+'.txt',function(map){
-		var rows = map.split("\n");
+	this.fileLoader.load('maps/'+mapFile+'.txt',function(map){
+		var rows = map.split("\r\n");
 		var botRow = rows.length-1;
-		for(var i = botRow;i>=0;i--){
-
+        var mapArray = [];
+		for(var y = botRow;y>=0;y--){
+            var row = [];
+            var items = rows[y].split("");
+            for(var x = items.length-1;x>=0;x--){
+                row.push(items[x]);
+            }
+            mapArray.push(row);
 		}
+		sThis.resetGame(mapArray);
 	});
 };
 
-PuzzleGame.prototype.generateMap = function(){
-
-};
-
-PuzzleGame.prototype.cylinder = function(){
+PuzzleGame.prototype.cylinder = function(mapArray){
     var blocks = new THREE.Object3D();
 
     var geometry = new THREE.BoxGeometry(this.blockWidth,this.blockHeight,this.blockDepth );
-
-
 
     var keys = Object.keys(this.blockTextures);
 
@@ -522,6 +543,17 @@ PuzzleGame.prototype.cylinder = function(){
 
             var blockType = keys[ keys.length * Math.random() << 0];
 
+            if(mapArray){
+                if(!mapArray[y] || !mapArray[y][x] || mapArray[y][x] == '-'){
+                    column.push(null);
+                    continue;
+                }
+                if(mapArray[y][x] != '?') {
+                    blockType = keys[mapArray[y][x]];
+                }
+            }
+
+            /*
             var safeType = false;
             do{
                 //console.log(x+','+y);
@@ -533,6 +565,7 @@ PuzzleGame.prototype.cylinder = function(){
                 //}
                 safeType = true;
             }while(!safeType);
+            */
 
             var mesh = null;
             var material = new THREE.MeshLambertMaterial( { color: this.blockColors[blockType],map:this.blockTextures[blockType]});
@@ -569,13 +602,6 @@ PuzzleGame.prototype.onWindowResize = function() {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize( width, height );
-    // Resize renderTargets
-    this.ssaoPass.uniforms[ 'size' ].value.set( width, height );
-    var pixelRatio = this.renderer.getPixelRatio();
-    var newWidth  = Math.floor( width / pixelRatio ) || 1;
-    var newHeight = Math.floor( height / pixelRatio ) || 1;
-    this.depthRenderTarget.setSize( newWidth, newHeight );
-    this.effectComposer.setSize( newWidth, newHeight );
 };
 
 PuzzleGame.prototype.updateCursorPos = function(){
@@ -605,18 +631,16 @@ PuzzleGame.prototype.updateCursorPos = function(){
     }
 };
 
-PuzzleGame.prototype.animate = function(){
-    requestAnimationFrame(this.animate.bind(this));
-    this.stats.begin();
-    this.render();
-    this.stats.end();
-};
+
 
 PuzzleGame.prototype.moveBlocksToCylinder = function(){
     var count = 0;
 
     for(var x=0;x<this.boardWidth;x++) {
         for(var y=this.boardHeight-1;y>=0;y--){
+            if(this.gameGrid[x][y] == null){
+                continue;
+            }
             new TWEEN.Tween(this.gameGrid[x][y].position).to({
                 x: this.gameGrid[x][y].userData.x,
                 y: this.gameGrid[x][y].userData.y,
@@ -628,14 +652,17 @@ PuzzleGame.prototype.moveBlocksToCylinder = function(){
     }
 };
 
+PuzzleGame.prototype.animate = function(){
+    requestAnimationFrame(this.animate.bind(this));
+    this.stats.begin();
+    this.render();
+    this.stats.end();
+};
+
 PuzzleGame.prototype.render = function() {
     TWEEN.update();
 
     var timer = performance.now();
-    //this.coreBall.rotation.x = timer * 0.001;
-    //this.coreBall.rotation.y = timer * 0.003;
-    //this.coreBall.rotation.z = timer * 0.004;
-
 
     //this.light.position.x = Math.sin(this.piTimer)*(this.boardRadius+this.blockDepth+100);
     //this.light.position.z = Math.cos(this.piTimer)*(this.boardRadius+this.blockDepth+100);
