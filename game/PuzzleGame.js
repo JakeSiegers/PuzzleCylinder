@@ -6,10 +6,6 @@ const TWO_PI = PI*2;
 const HALF_PI = PI/2;
 
 function PuzzleGame(){
-
-    this.selectorX = 0;
-    this.selectorY = 0;
-
     var container = document.createElement( 'div' );
     document.body.appendChild( container );
 
@@ -24,6 +20,8 @@ function PuzzleGame(){
 
     this.scene = new THREE.Scene();
 
+    this.stopQueue = 0;
+    this.pushTimeoutObj = null;
 	this.initLoaders();
     this.resetGame();
 
@@ -66,6 +64,7 @@ function PuzzleGame(){
     f2.add(this,"dropDelay",100,1000).step(10).listen();
     f2.add(this,"debugDelete10");
     f2.add(this,"checkForMatches");
+    f2.add(this,"stopQueue").listen();
     f2.add(this,'pushTowerUp');
     f2.open();
 
@@ -125,6 +124,10 @@ PuzzleGame.prototype.initLoaders = function(){
 };
 
 PuzzleGame.prototype.resetGame = function(map){
+    if(this.stopQueue != 0){
+        console.warn('Cannot reset while things are happening! (stopQueue is not 0!)');
+        return;
+    }
     this.gameGrid = [];
     this.boardHeight = 13;
     this.boardWidth = 30;
@@ -133,9 +136,9 @@ PuzzleGame.prototype.resetGame = function(map){
     this.blockWidth = 35;
     this.blockHeight = 35;
     this.blockDepth = 10;
-    this.halfBoardHeight = (((this.boardHeight-1)*this.blockHeight)/2);
+    this.boardPixelHeight = (this.boardHeight-1)*this.blockHeight;
+    this.halfBoardPixelHeight = this.boardPixelHeight/2;
     this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
-    this.blockComboActive = false;
     this.dropDelay = 300;
     this.canMoveCursor = false;
     this.upOffset = 0;
@@ -153,6 +156,10 @@ PuzzleGame.prototype.resetGame = function(map){
 
     this.generateNextRow();
 
+    if(this.pushTimeoutObj !== null){
+        clearTimeout(this.pushTimeoutObj);
+    }
+    this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),2000);
 
 
     if(this.hasOwnProperty('cursorObj')){
@@ -168,11 +175,11 @@ PuzzleGame.prototype.resetGame = function(map){
     this.gameBoard.rotation.y = startingTowerAngle-PI;
     this.nextRow.rotation.y = startingTowerAngle;
 
-    var startingTowerHeight = this.updateTowerPos();
-    this.gameBoard.position.y = startingTowerHeight - 500;
+    var startingTowerPosition = this.updateTowerPos();
+    this.gameBoard.position.y = startingTowerPosition - this.boardPixelHeight;
 
     new TWEEN.Tween(this.gameBoard.position).to({
-        y:startingTowerHeight
+        y:startingTowerPosition
     },1200).easing(TWEEN.Easing.Quintic.Out).delay(400).start();
 
     var sThis = this;
@@ -185,13 +192,32 @@ PuzzleGame.prototype.resetGame = function(map){
 
 };
 
-PuzzleGame.prototype.pushTowerUp = function(){
-    for(var tx = 0;tx<this.boardWidth;tx++){
+PuzzleGame.prototype.loseAnimation = function(){
+    new TWEEN.Tween(this.gameBoard.position).to({
+        y:-this.boardPixelHeight*2
+    },2000).easing(TWEEN.Easing.Quintic.Out).delay(400).start();
+};
 
+PuzzleGame.prototype.checkToPushBlocks = function(){
+    if(this.stopQueue != 0){
+        this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),200);
+        return;
+    }
+    for(var tx = 0;tx<this.boardWidth;tx++){
+        if(this.gameGrid[tx][this.boardHeight-1] !== null){
+            //YOU LOSE
+            this.canMoveCursor = false;
+            this.loseAnimation();
+            return;
+        }
     }
 
+    this.pushTowerUp();
+    this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),200);
+};
 
-    this.upOffset += this.blockHeight/10;
+PuzzleGame.prototype.pushTowerUp = function(){
+    this.upOffset += this.blockHeight/20;
     if(this.upOffset>this.blockHeight){
         for(var x=0;x<this.boardWidth;x++){
             for(var y=this.boardHeight-1;y>=0;y--){
@@ -208,11 +234,9 @@ PuzzleGame.prototype.pushTowerUp = function(){
             this.gameGrid[nx][0] = block;
         }
         this.checkForMatches();
-        //this.scene.remove(this.nextRow);
         this.generateNextRow();
-        //this.nextRowChangeBlocks();
-        //this.scene.add(this.nextRow);
         this.upOffset = 0;
+        this.selectorY++;
     }
     this.updateTowerPos();
     this.updateCursorPos();
@@ -417,6 +441,7 @@ PuzzleGame.prototype.destroyBlock = function(x,y){
     if(this.gameGrid[x][y] == null || this.gameGrid[x][y].userData.locked){
         return;
     }
+    this.stopQueue++;
 
     this.gameGrid[x][y].userData.locked = true;
     this.gameGrid[x][y].userData.exploding = true;
@@ -442,6 +467,7 @@ PuzzleGame.prototype.lockBlocksStartingAtPoint = function(x,y){
 };
 
 PuzzleGame.prototype.deleteBlock = function(x,y){
+    this.stopQueue--;
     this.gameGrid[x][y].userData.exploding = false;
     this.gameBoard.remove(this.gameGrid[x][y]);
     this.gameGrid[x][y] = null;
@@ -461,7 +487,11 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
                 stillGottaFall = false;
                 continue;
             }
-            new TWEEN.Tween(this.gameGrid[x][i].position).to({y:this.calcYBlockPos(i-1)},200).easing( TWEEN.Easing.Bounce.Out).start();
+            sThis = this;
+            this.stopQueue++;
+            new TWEEN.Tween(this.gameGrid[x][i].position).to({y:this.calcYBlockPos(i-1)},200).easing( TWEEN.Easing.Bounce.Out).start().onComplete(function(){
+                sThis.stopQueue--;
+            });
             this.gameGrid[x][i-1] = this.gameGrid[x][i];
             //this.gameGrid[x][i-1].userData.locked = false;
             //this.gameGrid[x][i-1].material.map = this.blockTextures[this.gameGrid[x][i-1].userData.blockType];
@@ -574,7 +604,8 @@ PuzzleGame.prototype.calcRBlockPos = function(x){
 PuzzleGame.prototype.loadMap = function(mapFile){
 	var sThis = this;
 	this.fileLoader.load('maps/'+mapFile+'.txt',function(map){
-		var rows = map.split("\r\n");
+        map = map.replace(/\r\n/g, "\r");
+		var rows = map.split("\r");
 		var botRow = rows.length-1;
         var mapArray = [];
 		for(var y = botRow;y>=0;y--){
@@ -703,15 +734,15 @@ PuzzleGame.prototype.onWindowResize = function() {
 };
 
 PuzzleGame.prototype.updateTowerPos = function(){
-    this.gameBoard.position.y = -this.halfBoardHeight+this.upOffset;
+    this.gameBoard.position.y = -this.halfBoardPixelHeight+this.upOffset;
     return this.gameBoard.position.y;
 };
 PuzzleGame.prototype.updateCursorPos = function(){
-    this.cursorObj.position.y = this.calcYBlockPos(this.selectorY)-this.halfBoardHeight+this.upOffset;
+    this.cursorObj.position.y = this.calcYBlockPos(this.selectorY)-this.halfBoardPixelHeight+this.upOffset;
     this.debugSelectionUpdate();
 };
 PuzzleGame.prototype.updateNextRowPos = function(){
-    this.nextRow.position.y = this.calcYBlockPos(-1)-this.halfBoardHeight+this.upOffset;
+    this.nextRow.position.y = this.calcYBlockPos(-1)-this.halfBoardPixelHeight+this.upOffset;
 };
 
 PuzzleGame.prototype.debugSelectionUpdate = function(){
