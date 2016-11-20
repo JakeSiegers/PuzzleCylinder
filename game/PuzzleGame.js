@@ -55,18 +55,25 @@ function PuzzleGame(){
     // Init gui
     var gui = new dat.GUI();
 
-    var f2 = gui.addFolder('DEBUG');
-    f2.add(this,"selectorX",0,this.boardWidth-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
-    f2.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
-    //f2.add(this,"blockComboActive").listen();
-    f2.add(this,"debugSelection").listen();
+    var f1 = gui.addFolder('SELECTION');
+    f1.add(this,"selectorX",0,this.boardWidth-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
+    f1.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
+    f1.add(this,"debugSelection").listen();
+
+    f1.open();
+
+    var f2 = gui.addFolder('BLOCKS');
     f2.add(this,"dropDelay",100,1000).step(10).listen();
     f2.add(this,"debugDelete10");
-	f2.add(this,"checkForMatches");
-    f2.add(this,"debugMapNumber",1,2).step(1);
-	f2.add(this,"debugLoadMap");
-    f2.add(this,"resetGame");
+    f2.add(this,"checkForMatches");
+    f2.add(this,'pushTowerUp');
     f2.open();
+
+    var f3 = gui.addFolder('GAME');
+    f3.add(this,"debugMapNumber",1,2).step(1);
+    f3.add(this,"debugLoadMap");
+    f3.add(this,"resetGame");
+    f3.open();
 
     window.addEventListener('resize', this.onWindowResize.bind(this), false );
     document.addEventListener('keydown', this.keypress.bind(this));
@@ -131,6 +138,7 @@ PuzzleGame.prototype.resetGame = function(map){
     this.blockComboActive = false;
     this.dropDelay = 300;
     this.canMoveCursor = false;
+    this.upOffset = 0;
 
     this.piTimer = 0;
 
@@ -164,6 +172,22 @@ PuzzleGame.prototype.resetGame = function(map){
     },1200).easing(TWEEN.Easing.Exponential.Out).delay(400).start().onComplete(function(){
         sThis.canMoveCursor = true;
     });
+
+    this.updateTowerPos();
+};
+
+PuzzleGame.prototype.pushTowerUp = function(){
+    var upAmount = this.blockHeight/10;
+
+    this.upOffset += upAmount;
+
+    if(this.upOffset>this.blockHeight){
+        this.upOffset = 0;
+    }
+
+    this.updateTowerPos();
+    this.updateCursorPos();
+
 
 };
 
@@ -375,7 +399,7 @@ PuzzleGame.prototype.destroyBlock = function(x,y){
 		y:0.7
 	},800).easing( TWEEN.Easing.Elastic.Out).start();
 
-    setTimeout(this.deleteBlock.bind(this,x,y),1000);
+    setTimeout(this.deleteBlock.bind(this,x,y),500);
 };
 
 PuzzleGame.prototype.lockBlocksStartingAtPoint = function(x,y){
@@ -496,7 +520,7 @@ PuzzleGame.prototype.focusCameraOnSelection = function(){
 };
 
 PuzzleGame.prototype.calcYBlockPos = function(y){
-    return (y*this.blockHeight)-((this.boardHeight-1)*this.blockHeight)/2
+    return (y*this.blockHeight);
 };
 
 PuzzleGame.prototype.calcXBlockPos = function(x){
@@ -542,6 +566,11 @@ PuzzleGame.prototype.cylinder = function(mapArray){
         for (var y = 0; y < this.boardHeight; y++) {
 
             var blockType = keys[ keys.length * Math.random() << 0];
+
+            if(y>Math.floor(this.boardHeight*0.70)){
+                column.push(null);
+                continue;
+            }
 
             if(mapArray){
                 if(!mapArray[y] || !mapArray[y][x] || mapArray[y][x] == '-'){
@@ -604,9 +633,15 @@ PuzzleGame.prototype.onWindowResize = function() {
     this.renderer.setSize( width, height );
 };
 
+PuzzleGame.prototype.updateTowerPos = function(){
+    this.gameBoard.position.y = -(((this.boardHeight-1)*this.blockHeight)/2)+this.upOffset;
+};
 PuzzleGame.prototype.updateCursorPos = function(){
-    this.cursorObj.position.y = this.calcYBlockPos(this.selectorY);
+    this.cursorObj.position.y = this.calcYBlockPos(this.selectorY)-(((this.boardHeight-1)*this.blockHeight)/2)+this.upOffset;
+    this.debugSelectionUpdate();
+};
 
+PuzzleGame.prototype.debugSelectionUpdate = function(){
     if(this.debugSelection) {
         for(var x=0;x<this.boardWidth;x++) {
             for(var y=0;y<this.boardHeight;y++) {
@@ -630,8 +665,6 @@ PuzzleGame.prototype.updateCursorPos = function(){
         }
     }
 };
-
-
 
 PuzzleGame.prototype.moveBlocksToCylinder = function(){
     var count = 0;
