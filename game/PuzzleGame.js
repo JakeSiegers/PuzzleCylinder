@@ -22,6 +22,8 @@ function PuzzleGame(){
 
     this.stopQueue = 0;
     this.pushTimeoutObj = null;
+    this.pushDelay = 500;
+    this.dropDelay = 300;
 	this.initLoaders();
     this.resetGame();
 
@@ -57,7 +59,6 @@ function PuzzleGame(){
     f1.add(this,"selectorX",0,this.boardWidth-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f1.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f1.add(this,"debugSelection").listen();
-
     f1.open();
 
     var f2 = gui.addFolder('BLOCKS');
@@ -65,6 +66,7 @@ function PuzzleGame(){
     f2.add(this,"debugDelete10");
     f2.add(this,"checkForMatches");
     f2.add(this,"stopQueue").listen();
+    f2.add(this,"pushDelay",100,1000).step(1).listen();
     f2.add(this,'pushTowerUp');
     f2.open();
 
@@ -73,6 +75,8 @@ function PuzzleGame(){
     f3.add(this,"debugLoadMap");
     f3.add(this,"resetGame");
     f3.open();
+
+    gui.close();
 
     window.addEventListener('resize', this.onWindowResize.bind(this),false);
     document.addEventListener('keydown', this.keyPress.bind(this));
@@ -139,7 +143,6 @@ PuzzleGame.prototype.resetGame = function(map){
     this.boardPixelHeight = (this.boardHeight-1)*this.blockHeight;
     this.halfBoardPixelHeight = this.boardPixelHeight/2;
     this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
-    this.dropDelay = 300;
     this.canMoveCursor = false;
     this.upOffset = 0;
 
@@ -200,7 +203,7 @@ PuzzleGame.prototype.loseAnimation = function(){
 
 PuzzleGame.prototype.checkToPushBlocks = function(){
     if(this.stopQueue != 0){
-        this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),200);
+        this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),this.pushDelay);
         return;
     }
     for(var tx = 0;tx<this.boardWidth;tx++){
@@ -213,7 +216,7 @@ PuzzleGame.prototype.checkToPushBlocks = function(){
     }
 
     this.pushTowerUp();
-    this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),200);
+    this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),this.pushDelay);
 };
 
 PuzzleGame.prototype.pushTowerUp = function(){
