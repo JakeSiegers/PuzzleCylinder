@@ -578,10 +578,10 @@ PuzzleGame.prototype.adjustSelector = function(direction){
             break;
     }
     if(this.selectorY>=this.boardHeight){
-        this.selectorY = 0;
+        this.selectorY = this.boardHeight-1;
     }
     if(this.selectorY<0){
-        this.selectorY = this.boardHeight-1;
+        this.selectorY = 0
     }
     if(this.selectorX>=this.boardWidth){
         this.selectorX = 0;
