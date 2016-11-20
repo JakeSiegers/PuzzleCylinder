@@ -24,6 +24,7 @@ function PuzzleGame(){
     this.pushTimeoutObj = null;
     this.pushDelay = 500;
     this.dropDelay = 300;
+    this.handicap = 1;
 	this.initLoaders();
     this.resetGame();
 
@@ -59,24 +60,28 @@ function PuzzleGame(){
     f1.add(this,"selectorX",0,this.boardWidth-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f1.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f1.add(this,"debugSelection").listen();
-    f1.open();
+    //f1.open();
 
     var f2 = gui.addFolder('BLOCKS');
     f2.add(this,"dropDelay",100,1000).step(10).listen();
     f2.add(this,"debugDelete10");
     f2.add(this,"checkForMatches");
     f2.add(this,"stopQueue").listen();
-    f2.add(this,"pushDelay",100,1000).step(1).listen();
     f2.add(this,'pushTowerUp');
-    f2.open();
+    //f2.open();
 
-    var f3 = gui.addFolder('GAME');
+    var f3 = gui.addFolder('CUSTOM MAPS');
     f3.add(this,"debugMapNumber",1,2).step(1);
     f3.add(this,"debugLoadMap");
-    f3.add(this,"resetGame");
-    f3.open();
+    //f3.open();
 
-    gui.close();
+    var f4 = gui.addFolder('GAMEPLAY');
+    f4.add(this,"handicap",0,3).step(1).listen();
+    f4.add(this,"pushDelay",100,1000).step(1).listen();
+    f4.add(this,"resetGame");
+    f4.open();
+
+    //gui.close();
 
     window.addEventListener('resize', this.onWindowResize.bind(this),false);
     document.addEventListener('keydown', this.keyPress.bind(this));
@@ -107,7 +112,7 @@ PuzzleGame.prototype.initLoaders = function(){
 		circle:new THREE.TextureLoader().load('game/block_circle.png'),
 		diamond:new THREE.TextureLoader().load('game/block_diamond.png'),
 		heart:new THREE.TextureLoader().load('game/block_heart.png'),
-		star:new THREE.TextureLoader().load('game/block_star.png'),
+        star:new THREE.TextureLoader().load('game/block_star.png'),
 		triangle:new THREE.TextureLoader().load('game/block_triangle.png'),
 		triangle2:new THREE.TextureLoader().load('game/block_triangle2.png')
 	};
@@ -143,7 +148,7 @@ PuzzleGame.prototype.resetGame = function(map){
     this.boardPixelHeight = (this.boardHeight-1)*this.blockHeight;
     this.halfBoardPixelHeight = this.boardPixelHeight/2;
     this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
-    this.canMoveCursor = false;
+    this.gameActive = false;
     this.upOffset = 0;
 
     this.piTimer = 0;
@@ -189,16 +194,28 @@ PuzzleGame.prototype.resetGame = function(map){
     new TWEEN.Tween(this.gameBoard.rotation).to({
         y:startingTowerAngle
     },1200).easing(TWEEN.Easing.Quintic.Out).delay(400).start().onComplete(function(){
-        sThis.canMoveCursor = true;
+        sThis.gameActive = true;
+        sThis.checkForMatches();
     });
 
 
 };
 
 PuzzleGame.prototype.loseAnimation = function(){
-    new TWEEN.Tween(this.gameBoard.position).to({
-        y:-this.boardPixelHeight*2
-    },2000).easing(TWEEN.Easing.Quintic.Out).delay(400).start();
+    for(var x = 0;x<this.boardWidth;x++){
+        for(var y=0;y<this.boardHeight;y++){
+            if(this.gameGrid[x][y] != null){
+                this.gameGrid[x][y].material.map = this.blankTexture;
+                var delay = 500;
+                if(this.gameGrid[x][this.boardHeight-1] != null){
+                    delay = 2000;
+                }
+                new TWEEN.Tween(this.gameGrid[x][y].position).to({
+                    y:-this.boardPixelHeight*2
+                },4000).easing(TWEEN.Easing.Exponential.Out).delay(delay).start();
+            }
+        }
+    }
 };
 
 PuzzleGame.prototype.checkToPushBlocks = function(){
@@ -209,7 +226,7 @@ PuzzleGame.prototype.checkToPushBlocks = function(){
     for(var tx = 0;tx<this.boardWidth;tx++){
         if(this.gameGrid[tx][this.boardHeight-1] !== null){
             //YOU LOSE
-            this.canMoveCursor = false;
+            this.gameActive = false;
             this.loseAnimation();
             return;
         }
@@ -284,7 +301,7 @@ PuzzleGame.prototype.generateTube = function(){
 
 PuzzleGame.prototype.keyPress = function(event){
 
-    if(!this.canMoveCursor){
+    if(!this.gameActive){
         return;
     }
 
@@ -315,6 +332,11 @@ PuzzleGame.prototype.keyPress = function(event){
 };
 
 PuzzleGame.prototype.checkForMatches = function(){
+
+    if(!this.gameActive){
+        return;
+    }
+
     var blocksToBeDestroyed = [];
     for(var y = 0; y < this.boardHeight;y++){
 	    for(var x = 0; x < this.boardWidth;x++){
@@ -642,7 +664,7 @@ PuzzleGame.prototype.generateNextRowMeshArray = function(){
     var geometry = new THREE.BoxGeometry(this.blockWidth,this.blockHeight,this.blockDepth );
     var keys = Object.keys(this.blockTextures);
     for(var x = 0; x < this.boardWidth; x++) {
-        var blockType = keys[ keys.length * Math.random() << 0];
+        var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
         var material = new THREE.MeshLambertMaterial( { color: this.blockColors[blockType],map:this.blockTextures[blockType],transparent:true,opacity:0.5});
         var mesh = new THREE.Mesh(geometry,material);
         mesh.userData.color = mesh.material.color.getHex();
@@ -684,7 +706,7 @@ PuzzleGame.prototype.cylinder = function(mapArray){
         this.stackHeights[x] = this.boardHeight;
         for (var y = 0; y < this.boardHeight; y++) {
 
-            var blockType = keys[ keys.length * Math.random() << 0];
+            var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
 
             if(y>Math.floor(this.boardHeight*0.70)){
                 column.push(null);
