@@ -221,7 +221,7 @@ PuzzleGame.prototype.loseAnimation = function(){
 };
 
 PuzzleGame.prototype.checkToPushBlocks = function(){
-    if(this.stopQueue != 0){
+    if(TWEEN.getAll().length != 0){
         this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),this.pushDelay);
         return;
     }
@@ -427,7 +427,7 @@ PuzzleGame.prototype.swapBlocks = function(x,y,x2){
         new TWEEN.Tween(block1.position).to({
             x:this.calcXBlockPos(x2),
             z:this.calcZBlockPos(x2)
-        },100).easing( TWEEN.Easing.Bounce.Out).start();
+        },50).easing( TWEEN.Easing.Bounce.Out).start();
         block1.rotation.y = this.calcRBlockPos(x2);
     }
 
@@ -435,7 +435,7 @@ PuzzleGame.prototype.swapBlocks = function(x,y,x2){
         new TWEEN.Tween(block2.position).to({
             x:this.calcXBlockPos(x),
             z:this.calcZBlockPos(x)
-        },100).easing( TWEEN.Easing.Bounce.Out).start();
+        },50).easing( TWEEN.Easing.Bounce.Out).start();
         block2.rotation.y = this.calcRBlockPos(x);
     }
 
