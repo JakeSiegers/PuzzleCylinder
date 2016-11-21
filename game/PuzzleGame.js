@@ -389,7 +389,7 @@ PuzzleGame.prototype.checkForMatches = function(){
 			    matchChainY.push(yToTest);
 			    yToTest++;
 			    if(yToTest == this.boardHeight){
-				    yToTest = 0;
+                    break; // No Y rollover!
 			    }
 		    }
 
