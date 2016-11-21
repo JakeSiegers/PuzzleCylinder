@@ -11,8 +11,10 @@ function PuzzleGame(){
 
     this.renderer = new THREE.WebGLRenderer( { antialias: false } );
     this.renderer.setClearColor( 0x222222 );
-    this.renderer.setPixelRatio( window.devicePixelRatio );
-    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setSize(this.windowWidth,this.windowHeight);
     document.body.appendChild( this.renderer.domElement );
 
     this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 100, 850);
@@ -23,7 +25,7 @@ function PuzzleGame(){
     this.stopQueue = 0;
     this.pushTimeoutObj = null;
     this.pushDelay = 500;
-    this.dropDelay = 300;
+    this.dropDelay = 150;
     this.handicap = 1;
 	this.initLoaders();
     this.resetGame();
@@ -300,6 +302,7 @@ PuzzleGame.prototype.generateTube = function(){
 };
 
 PuzzleGame.prototype.keyPress = function(event){
+    event.preventDefault();
 
     if(!this.gameActive){
         return;
@@ -374,7 +377,7 @@ PuzzleGame.prototype.checkForMatches = function(){
 		    var matchChainY = [y];
 		    var yToTest = y+1;
 		    if(yToTest == this.boardHeight){
-			    yToTest = 0;
+                continue; // No Y rollover!
 		    }
 
 		    while(yToTest != y && this.gameGrid[x][yToTest] != null && !this.gameGrid[x][yToTest].userData.locked){
@@ -708,10 +711,6 @@ PuzzleGame.prototype.cylinder = function(mapArray){
 
             var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
 
-            if(y>Math.floor(this.boardHeight*0.70)){
-                column.push(null);
-                continue;
-            }
 
             if(mapArray){
                 if(!mapArray[y] || !mapArray[y][x] || mapArray[y][x] == '-'){
@@ -721,27 +720,11 @@ PuzzleGame.prototype.cylinder = function(mapArray){
                 if(mapArray[y][x] != '?') {
                     blockType = keys[mapArray[y][x]];
                 }
+            }else if(y>Math.floor(this.boardHeight*0.70)){
+                column.push(null);
+                continue;
             }
-
-            /*
-            var safeType = false;
-            do{
-                //console.log(x+','+y);
-                //if(x>0) {
-                    //console.log(this.gameGrid[x - 1][y]);
-                //    if(y>0){
-                        //console.log(this.gameGrid[x][y-1]);
-                //    }
-                //}
-                safeType = true;
-            }while(!safeType);
-            */
-
             var mesh = this.generateBlockMesh(blockType,x,y);
-            //mesh.position.y = mesh.position.y - 500;
-
-            //material.color.setRGB((1/this.boardHeight)*y,0,1-(1/this.boardHeight)*y);
-
             column.push(mesh);
             blocks.add(mesh);
         }
