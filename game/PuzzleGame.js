@@ -487,7 +487,7 @@ PuzzleGame.prototype.lockBlocksStartingAtPoint = function(x,y){
     for(var i = y;i<this.boardHeight;i++){
         if(this.gameGrid[x][i] !== null && !this.gameGrid[x][i].userData.exploding){
             this.gameGrid[x][i].userData.locked = true;
-            //this.gameGrid[x][i].material.map = this.lockTexture;
+            this.gameGrid[x][i].material.map = this.lockTexture;
         }else{
             return;
         }
@@ -511,7 +511,7 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
             //You moved a block under this block about to fall.
             if(this.gameGrid[x][i-1] !== null){
                 this.gameGrid[x][i].userData.locked = false;
-                //this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
+                this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
                 stillGottaFall = false;
                 continue;
             }
@@ -521,8 +521,6 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
                 sThis.stopQueue--;
             });
             this.gameGrid[x][i-1] = this.gameGrid[x][i];
-            //this.gameGrid[x][i-1].userData.locked = false;
-            //this.gameGrid[x][i-1].material.map = this.blockTextures[this.gameGrid[x][i-1].userData.blockType];
             this.gameGrid[x][i] = null;
         }else{
             ///stoooop!
