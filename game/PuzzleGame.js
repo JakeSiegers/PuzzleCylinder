@@ -70,7 +70,7 @@ function PuzzleGame(){
     f2.add(this,"checkForMatches");
     f2.add(this,"stopQueue").listen();
     f2.add(this,'pushTowerUp');
-    //f2.open();
+    f2.open();
 
     var f3 = gui.addFolder('CUSTOM MAPS');
     f3.add(this,"debugMapNumber",1,2).step(1);
@@ -221,7 +221,8 @@ PuzzleGame.prototype.loseAnimation = function(){
 };
 
 PuzzleGame.prototype.checkToPushBlocks = function(){
-    if(TWEEN.getAll().length != 0){
+    if(this.stopQueue !== 0){
+    //if(TWEEN.getAll().length != 0){
         this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),this.pushDelay);
         return;
     }
@@ -280,7 +281,6 @@ PuzzleGame.prototype.generateCursor = function(){
     mesh2.position.x = this.blockWidth/2;
     obj.add(mesh2);
 
-
     obj.position.z = this.boardRadius+this.blockDepth;
     return obj;
 };
@@ -311,7 +311,7 @@ PuzzleGame.prototype.keyPress = function(event){
     //console.log(event.keyCode);
     switch(event.keyCode){
         case 88: //X
-            this.destroyBlock(this.selectorX,this.selectorY);
+            //this.destroyBlock(this.selectorX,this.selectorY);
             break;
         case 90: //Z
 
@@ -423,19 +423,26 @@ PuzzleGame.prototype.swapBlocks = function(x,y,x2){
         return;
     }
 
+	var sThis = this;
     if(block1 !== null){
+	    this.stopQueue++;
         new TWEEN.Tween(block1.position).to({
             x:this.calcXBlockPos(x2),
             z:this.calcZBlockPos(x2)
-        },50).easing( TWEEN.Easing.Bounce.Out).start();
+        },50).easing( TWEEN.Easing.Bounce.Out).start().onComplete(function(){
+            sThis.stopQueue--;
+        });
         block1.rotation.y = this.calcRBlockPos(x2);
     }
 
     if(block2 !== null) {
+	    this.stopQueue++;
         new TWEEN.Tween(block2.position).to({
             x:this.calcXBlockPos(x),
             z:this.calcZBlockPos(x)
-        },50).easing( TWEEN.Easing.Bounce.Out).start();
+        },50).easing( TWEEN.Easing.Bounce.Out).start().onComplete(function(){
+	        sThis.stopQueue--;
+        });
         block2.rotation.y = this.calcRBlockPos(x);
     }
 
