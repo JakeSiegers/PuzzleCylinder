@@ -86,7 +86,7 @@ function PuzzleGame(){
     f4.add(this,"resetGame");
     f4.open();
 
-	var f5 = gui.addFolder('VB2');
+	var f5 = gui.addFolder('VB3');
 
     //gui.close();
 
@@ -247,7 +247,7 @@ PuzzleGame.prototype.checkToPushBlocks = function(){
 PuzzleGame.prototype.pushTowerUp = function(){
     this.upOffset += this.blockHeight/20;
     if(this.upOffset>this.blockHeight){
-        /*
+
     	for(var x=0;x<this.boardWidth;x++){
             for(var y=this.boardHeight-1;y>=0;y--){
                 if(this.gameGrid[x][y] != null) {
@@ -266,9 +266,9 @@ PuzzleGame.prototype.pushTowerUp = function(){
         this.generateNextRow();
         this.upOffset = 0;
         this.selectorY++;
-        */
 
-	    this.upOffset = 0;
+
+	    //this.upOffset = 0;
     }
     this.updateTowerPos();
     this.updateCursorPos();
