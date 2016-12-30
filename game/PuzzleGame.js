@@ -26,29 +26,32 @@ function PuzzleGame(){
     this.pushTimeoutObj = null;
     this.pushDelay = 500;
     this.dropDelay = 150;
-    this.handicap = 1;
+    this.handicap = 0;
 	this.initLoaders();
     this.resetGame();
 
     this.scene.add(this.generateTube());
 
-    this.light = new THREE.PointLight(0xffffff,1,600);
-    this.light.position.z = (this.boardRadius+this.blockDepth+100);
-    this.scene.add(this.light);
+    //this.light = new THREE.PointLight(0xffffff,1,600);
+    //this.light.position.z = (this.boardRadius+this.blockDepth+100);
+    //this.scene.add(this.light);
 
-    this.light = new THREE.PointLight(0xffffff,1,600);
-    this.light.position.z = (this.boardRadius+this.blockDepth+100);
-    this.light.position.x = 300;
-    this.scene.add(this.light);
+    //this.light = new THREE.PointLight(0xffffff,1,600);
+    //this.light.position.z = (this.boardRadius+this.blockDepth+100);
+    //this.light.position.x = 300;
+    //this.scene.add(this.light);
 
-    this.light = new THREE.PointLight(0xffffff,1,600);
-    this.light.position.z = (this.boardRadius+this.blockDepth+100);
-    this.light.position.x = -300;
-    this.scene.add(this.light);
+    //this.light = new THREE.PointLight(0xffffff,1,600);
+    //this.light.position.z = (this.boardRadius+this.blockDepth+100);
+    //this.light.position.x = -300;
+    //this.scene.add(this.light);
 
-    //this.debugLight = new THREE.Mesh(new THREE.SphereGeometry(10),new THREE.MeshBasicMaterial({color:0xff0000}));
-    //this.debugLight.position.z = this.light.position.z;
-    //this.scene.add(this.debugLight);
+	//this.gameLighting = new THREE.RectAreaLight( 0xffffff, 5.0, 50, 50 );
+	//this.gameLighting.position.z = (this.boardRadius+this.blockDepth+100);
+	//this.scene.add(this.gameLighting);
+
+	this.gameLighting = new THREE.AmbientLight( 0xffffff );
+	this.scene.add(this.gameLighting);
 
     this.stats = new Stats();
     container.appendChild( this.stats.dom );
@@ -83,7 +86,7 @@ function PuzzleGame(){
     f4.add(this,"resetGame");
     f4.open();
 
-	var f5 = gui.addFolder('VB1');
+	var f5 = gui.addFolder('VB2');
 
     //gui.close();
 
@@ -244,7 +247,8 @@ PuzzleGame.prototype.checkToPushBlocks = function(){
 PuzzleGame.prototype.pushTowerUp = function(){
     this.upOffset += this.blockHeight/20;
     if(this.upOffset>this.blockHeight){
-        for(var x=0;x<this.boardWidth;x++){
+        /*
+    	for(var x=0;x<this.boardWidth;x++){
             for(var y=this.boardHeight-1;y>=0;y--){
                 if(this.gameGrid[x][y] != null) {
                     this.gameGrid[x][y].position.y = this.calcYBlockPos(y + 1);
@@ -262,6 +266,9 @@ PuzzleGame.prototype.pushTowerUp = function(){
         this.generateNextRow();
         this.upOffset = 0;
         this.selectorY++;
+        */
+
+	    this.upOffset = 0;
     }
     this.updateTowerPos();
     this.updateCursorPos();
