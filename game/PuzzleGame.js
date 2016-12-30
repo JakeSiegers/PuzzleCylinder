@@ -83,6 +83,8 @@ function PuzzleGame(){
     f4.add(this,"resetGame");
     f4.open();
 
+	var f5 = gui.addFolder('VB1');
+
     //gui.close();
 
     window.addEventListener('resize', this.onWindowResize.bind(this),false);
