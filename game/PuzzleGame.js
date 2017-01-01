@@ -61,6 +61,7 @@ function PuzzleGame(){
     // Init gui
     var gui = new dat.GUI();
 
+    /*
     var f1 = gui.addFolder('SELECTION');
     f1.add(this,"selectorX",0,this.boardWidth-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f1.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
@@ -73,12 +74,13 @@ function PuzzleGame(){
     f2.add(this,"checkForMatches");
     f2.add(this,"stopQueue").listen();
     f2.add(this,'pushTowerUp');
-    f2.open();
+    //f2.open();
 
     var f3 = gui.addFolder('CUSTOM MAPS');
     f3.add(this,"debugMapNumber",1,2).step(1);
     f3.add(this,"debugLoadMap");
     //f3.open();
+    */
 
     var f4 = gui.addFolder('GAMEPLAY');
     f4.add(this,"handicap",0,4).step(1).listen();
