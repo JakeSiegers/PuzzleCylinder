@@ -415,11 +415,8 @@ PuzzleGame.prototype.checkForMatches = function(){
 	    }
     }
 
-    //console.log(blocksToBeDestroyed);
-
-    for(var i = 0;i<blocksToBeDestroyed.length;i++){
-        //this.gameGrid[blocksToBeDestroyed[i].x][blocksToBeDestroyed[i].y].material.map = this.explodeTexture;
-        this.destroyBlock(blocksToBeDestroyed[i].x,blocksToBeDestroyed[i].y);
+    for(var d = 0;d<blocksToBeDestroyed.length;d++){
+        this.destroyBlock(blocksToBeDestroyed[d].x,blocksToBeDestroyed[d].y);
     }
 };
 
@@ -497,7 +494,7 @@ PuzzleGame.prototype.destroyBlock = function(x,y){
 
     this.gameGrid[x][y].userData.locked = true;
     this.gameGrid[x][y].userData.exploding = true;
-    this.gameGrid[x][y].material.map = this.explodeTexture;
+    //this.gameGrid[x][y].material.map = this.explodeTexture;
 
 	new TWEEN.Tween(this.gameGrid[x][y].scale).to({
 		x:0.7,
@@ -824,13 +821,14 @@ PuzzleGame.prototype.render = function() {
 
 	this.gameBoard.traverse(function(block){
 		if(block.userData.exploding){
-			block.rotation.y = timer * 0.01;
-			block.rotation.x = timer * 0.01;
+			//block.rotation.y = timer * 0.01;
+			block.scale.x = block.scale.y =  (0.1*Math.sin(sThis.piTimer*16)+0.6);
+			//block.rotation.x = timer * 0.01;
 		}
 	});
 
     this.cursorObj.traverse(function(cursor){
-        cursor.scale.x = sThis.cursorObj.scale.y = (0.05*Math.sin(sThis.piTimer)+1);
+        cursor.scale.x = cursor.scale.y = (0.05*Math.sin(sThis.piTimer)+1);
     });
 
 	this.renderer.render(this.scene,this.camera);
