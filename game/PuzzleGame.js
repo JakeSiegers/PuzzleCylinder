@@ -88,15 +88,72 @@ function PuzzleGame(){
     f4.add(this,"resetGame");
     f4.open();
 
-	var f5 = gui.addFolder('VB5');
+	var f5 = gui.addFolder('VB6');
 
     //gui.close();
 
     window.addEventListener('resize', this.onWindowResize.bind(this),false);
     document.addEventListener('keydown', this.keyPress.bind(this));
 
+    //Basic touch support... It probably will be crummy for now.
+    this.touchTimer = null;
+    this.xTouchChain = 0;
+	this.yTouchChain = 0;
+	document.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
+	document.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
+
     this.animate();
 }
+
+PuzzleGame.prototype.onDocumentTouchStart = function( event ){
+	var sThis = this;
+	if ( event.touches.length === 1 ) {
+		if (this.touchTimer == null) {
+			this.touchTimer = setTimeout(function () {
+				sThis.touchTimer = null;
+			}, 200)
+		} else {
+			clearTimeout(this.touchTimer);
+			this.touchTimer = null;
+			if(Math.abs(this.xTouchChain) < 10 &&  Math.abs(this.yTouchChain) < 10) {
+				this.swapSelectedBlocks();
+			}
+		}
+		event.preventDefault();
+		this.lastXTouch = event.touches[ 0 ].pageX;
+		this.lastYTouch = event.touches[ 0 ].pageY;
+		this.xTouchChain = 0;
+		this.yTouchChain = 0;
+	}
+};
+
+PuzzleGame.prototype.onDocumentTouchMove = function( event ){
+	if ( event.touches.length === 1 ) {
+		event.preventDefault();
+		var mouseX = event.touches[ 0 ].pageX;
+		var mouseY = event.touches[ 0 ].pageY;
+		var xDelta = ( mouseX - this.lastXTouch );
+		var yDelta = ( mouseY - this.lastYTouch );
+		this.lastXTouch = mouseX;
+		this.lastYTouch = mouseY;
+		this.xTouchChain += xDelta;
+		this.yTouchChain += yDelta;
+		if(this.xTouchChain < -30){
+			this.adjustSelector('right');
+			this.xTouchChain = 0;
+		}else if(this.xTouchChain > 30){
+			this.adjustSelector('left');
+			this.xTouchChain = 0;
+		}
+		if(this.yTouchChain < -30){
+			this.adjustSelector('up');
+			this.yTouchChain = 0;
+		}else if(this.yTouchChain > 30){
+			this.adjustSelector('down');
+			this.yTouchChain = 0;
+		}
+	}
+};
 
 PuzzleGame.prototype.debugLoadMap = function(){
 	this.loadMap('map'+this.debugMapNumber);
@@ -131,10 +188,12 @@ PuzzleGame.prototype.initLoaders = function(){
 		penta:new THREE.TextureLoader().load('img/block_penta.png')
 	};
 
+	var maxAnisotropy = this.renderer.getMaxAnisotropy();
 	//Sharpen out textures - prevent scale blurring
 	for(var i in this.blockTextures){
 		//this.blockTextures[i].magFilter = THREE.NearestFilter;
 		//this.blockTextures[i].minFilter = THREE.NearestFilter;
+		//this.blockTextures[i].anisotropy = maxAnisotropy;
 	}
 
 	this.blockColors = {
@@ -335,7 +394,7 @@ PuzzleGame.prototype.keyPress = function(event){
 
             break;
         case 32: //Space
-            this.swapBlocks(this.selectorX,this.selectorY,this.selectorX-1);
+            this.swapSelectedBlocks();
             break;
         case 38: //up
             this.adjustSelector('up');
@@ -350,6 +409,10 @@ PuzzleGame.prototype.keyPress = function(event){
             this.adjustSelector('right');
             break;
     }
+};
+
+PuzzleGame.prototype.swapSelectedBlocks = function(){
+	this.swapBlocks(this.selectorX,this.selectorY,this.selectorX-1);
 };
 
 PuzzleGame.prototype.checkForMatches = function(){
@@ -697,7 +760,9 @@ PuzzleGame.prototype.generateNextRowMeshArray = function(){
     var keys = Object.keys(this.blockTextures);
     for(var x = 0; x < this.boardWidth; x++) {
         var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
-        var material = new THREE.MeshBasicMaterial( { color: this.blockColors[blockType],map:this.blockTextures[blockType],transparent:true,opacity:0.5});
+        var darkerColor = new THREE.Color(this.blockColors[blockType]);
+        darkerColor.add( new THREE.Color(0x505050));
+        var material = new THREE.MeshBasicMaterial( { color: darkerColor,map:this.blockTextures[blockType],transparent:true,opacity:1});
         var mesh = new THREE.Mesh(geometry,material);
         mesh.userData.color = mesh.material.color.getHex();
         mesh.userData.blockType = blockType;
@@ -826,7 +891,24 @@ PuzzleGame.prototype.render = function() {
 
 	var sThis = this;
 
+	var almostDead = false;
+	for(var tx = 0;tx<this.boardWidth;tx++){
+		if(this.gameGrid[tx][this.boardHeight-10] !== null){
+			almostDead = true;
+			break;
+		}
+	}
+
 	this.gameBoard.traverse(function(block){
+		if(almostDead){
+			//console.log(block);
+			//block.quaternion.x = block.position.x;
+			//block.quaternion.y = block.position.y;
+			//block.quaternion.z = block.position.z;
+			//console.log(block.quaternion.y);
+			//block.quaternion.z.setFromAxisAngle(block.position,0.0001*Math.sin(sThis.piTimer));
+
+		}
 		if(block.userData.exploding){
 			//block.rotation.y = timer * 0.01;
 			block.scale.x = block.scale.y =  (0.1*Math.sin(sThis.piTimer*16)+0.8);
