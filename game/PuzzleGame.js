@@ -24,9 +24,9 @@ function PuzzleGame(){
 
     this.stopQueue = 0;
     this.pushTimeoutObj = null;
-    this.pushDelay = 500;
+    this.pushDelay = 100;
     this.dropDelay = 150;
-    this.handicap = 2;
+    this.handicap = 3;
 	this.initLoaders();
     this.resetGame();
 
@@ -81,12 +81,12 @@ function PuzzleGame(){
     //f3.open();
 
     var f4 = gui.addFolder('GAMEPLAY');
-    f4.add(this,"handicap",0,3).step(1).listen();
-    f4.add(this,"pushDelay",100,1000).step(1).listen();
+    f4.add(this,"handicap",0,4).step(1).listen();
+    f4.add(this,"pushDelay",0,200).step(1).listen();
     f4.add(this,"resetGame");
     f4.open();
 
-	var f5 = gui.addFolder('VB4');
+	var f5 = gui.addFolder('VB5');
 
     //gui.close();
 
@@ -125,12 +125,14 @@ PuzzleGame.prototype.initLoaders = function(){
 		heart:new THREE.TextureLoader().load('img/block_heart.png'),
         star:new THREE.TextureLoader().load('img/block_star.png'),
 		triangle:new THREE.TextureLoader().load('img/block_triangle.png'),
-		triangle2:new THREE.TextureLoader().load('img/block_triangle2.png')
+		triangle2:new THREE.TextureLoader().load('img/block_triangle2.png'),
+		penta:new THREE.TextureLoader().load('img/block_penta.png')
 	};
 
+	//Sharpen out textures - prevent scale blurring
 	for(var i in this.blockTextures){
-		this.blockTextures[i].magFilter = THREE.NearestFilter;
-		this.blockTextures[i].minFilter = THREE.NearestFilter;
+		//this.blockTextures[i].magFilter = THREE.NearestFilter;
+		//this.blockTextures[i].minFilter = THREE.NearestFilter;
 	}
 
 	this.blockColors = {
@@ -139,7 +141,8 @@ PuzzleGame.prototype.initLoaders = function(){
 		heart:0xF44336,
 		star:0xFFEB3B,
 		triangle:0x00BCD4,
-		triangle2:0x3F51B5
+		triangle2:0x3F51B5,
+		penta:0x607D8B
 	};
 };
 
@@ -249,7 +252,7 @@ PuzzleGame.prototype.checkToPushBlocks = function(){
 };
 
 PuzzleGame.prototype.pushTowerUp = function(){
-    this.upOffset += this.blockHeight/20;
+    this.upOffset += this.blockHeight/100;
     if(this.upOffset>this.blockHeight){
 
     	for(var x=0;x<this.boardWidth;x++){
@@ -508,7 +511,8 @@ PuzzleGame.prototype.lockBlocksStartingAtPoint = function(x,y){
     for(var i = y;i<this.boardHeight;i++){
         if(this.gameGrid[x][i] !== null && !this.gameGrid[x][i].userData.exploding){
             this.gameGrid[x][i].userData.locked = true;
-            this.gameGrid[x][i].material.map = this.lockTexture;
+	        //Set texture to a debug "lock/dropping" texture.
+            //this.gameGrid[x][i].material.map = this.lockTexture;
         }else{
             return;
         }
@@ -534,7 +538,8 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
             //You moved a block under this block about to fall.
             if(this.gameGrid[x][i-1] !== null){
                 this.gameGrid[x][i].userData.locked = false;
-                this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
+                //Set texture back to normal, non debug texture.
+                //this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
                 stillGottaFall = false;
                 continue;
             }
@@ -822,7 +827,7 @@ PuzzleGame.prototype.render = function() {
 	this.gameBoard.traverse(function(block){
 		if(block.userData.exploding){
 			//block.rotation.y = timer * 0.01;
-			block.scale.x = block.scale.y =  (0.1*Math.sin(sThis.piTimer*16)+0.6);
+			block.scale.x = block.scale.y =  (0.1*Math.sin(sThis.piTimer*16)+0.8);
 			//block.rotation.x = timer * 0.01;
 		}
 	});
