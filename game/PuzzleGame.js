@@ -137,10 +137,10 @@ PuzzleGame.prototype.onDocumentTouchMove = function( event ){
 		this.xTouchChain += xDelta;
 		this.yTouchChain += yDelta;
 		if(this.xTouchChain < -30){
-			this.adjustSelector('right');
+			this.adjustSelector('left');
 			this.xTouchChain = 0;
 		}else if(this.xTouchChain > 30){
-			this.adjustSelector('left');
+			this.adjustSelector('right');
 			this.xTouchChain = 0;
 		}
 		if(this.yTouchChain < -30){
