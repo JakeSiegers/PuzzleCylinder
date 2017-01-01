@@ -6,8 +6,6 @@ const TWO_PI = PI*2;
 const HALF_PI = PI/2;
 
 function PuzzleGame(){
-    var container = document.createElement( 'div' );
-    document.body.appendChild( container );
 
     this.renderer = new THREE.WebGLRenderer( { antialias: false ,alpha: true} );
     this.renderer.setClearColor(0x000000,0.5);
@@ -54,7 +52,7 @@ function PuzzleGame(){
 	//this.scene.add(this.gameLighting);
 
     this.stats = new Stats();
-    container.appendChild( this.stats.dom );
+	document.body.appendChild( this.stats.dom );
 
     this.debugMapNumber = 1;
 
@@ -99,8 +97,8 @@ function PuzzleGame(){
     this.touchTimer = null;
     this.xTouchChain = 0;
 	this.yTouchChain = 0;
-	document.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
-	document.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
+	this.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
+	this.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
 
     this.animate();
 }
