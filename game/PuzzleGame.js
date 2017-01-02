@@ -86,7 +86,7 @@ function PuzzleGame(){
     f4.add(this,"resetGame");
     f4.open();
 
-	var f5 = gui.addFolder('VB6');
+	var f5 = gui.addFolder('VB7');
 
     //gui.close();
 
