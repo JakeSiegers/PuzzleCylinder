@@ -239,6 +239,7 @@ PuzzleGame.prototype.resetGame = function(map){
     this.gameActive = false;
     this.upOffset = 0;
 	this.pushDelay = 100;
+	this.handicap = 3;
 
     this.piTimer = 0;
 
