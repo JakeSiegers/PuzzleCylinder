@@ -22,7 +22,7 @@ function PuzzleGame(){
 
     this.stopQueue = 0;
     this.pushTimeoutObj = null;
-    this.pushDelay = 100;
+	this.pushDelay = 100;
     this.dropDelay = 150;
     this.handicap = 3;
 	this.initLoaders();
@@ -99,7 +99,7 @@ function PuzzleGame(){
 	this.yTouchChain = 0;
 	this.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
 	this.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
-
+	setInterval(this.makeHarder.bind(this),3000);
     this.animate();
 }
 
@@ -150,6 +150,21 @@ PuzzleGame.prototype.onDocumentTouchMove = function( event ){
 			this.adjustSelector('down');
 			this.yTouchChain = 0;
 		}
+	}
+};
+
+PuzzleGame.prototype.makeHarder = function(){
+	if(this.pushDelay > 0){
+		if(this.pushDelay == 90){
+			this.handicap = 2;
+		}
+		if(this.pushDelay == 80){
+			this.handicap = 1;
+		}
+		if(this.pushDelay == 70){
+			this.handicap = 0;
+		}
+		this.pushDelay--;
 	}
 };
 
@@ -223,6 +238,7 @@ PuzzleGame.prototype.resetGame = function(map){
     this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
     this.gameActive = false;
     this.upOffset = 0;
+	this.pushDelay = 100;
 
     this.piTimer = 0;
 
