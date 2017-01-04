@@ -838,7 +838,7 @@ PuzzleGame.prototype.cylinder = function(mapArray){
         this.stackHeights[x] = this.boardHeight;
         for (var y = 0; y < this.boardHeight; y++) {
 
-        	var invalidBlockTypes = array();
+        	//var invalidBlockTypes = array();
 
 
             var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
