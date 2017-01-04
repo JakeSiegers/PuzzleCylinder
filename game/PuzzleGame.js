@@ -29,6 +29,9 @@ function PuzzleGame(){
     this.resetGame();
 
     this.scene.add(this.generateTube());
+	this.scene.add(this.generateCylinderDepthFilter());
+
+
 
     //this.light = new THREE.PointLight(0xffffff,1,600);
     //this.light.position.z = (this.boardRadius+this.blockDepth+100);
@@ -233,7 +236,8 @@ PuzzleGame.prototype.resetGame = function(map){
     this.blockWidth = 35;
     this.blockHeight = 35;
     this.blockDepth = 10;
-    this.boardPixelHeight = (this.boardHeight-1)*this.blockHeight;
+    this.boardPixelHeight = (this.boardHeight)*this.blockHeight;
+	console.log(this.boardPixelHeight);
     this.halfBoardPixelHeight = this.boardPixelHeight/2;
     this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
     this.gameActive = false;
@@ -383,14 +387,30 @@ PuzzleGame.prototype.generateTube = function(){
     var material = new THREE.MeshBasicMaterial({color:0x222222,side:THREE.DoubleSide,map:this.tubeTexture});
     var geometry = new THREE.CylinderGeometry(r,r,400,this.boardWidth,1,false);
     var tube = new THREE.Mesh( geometry, material );
-    tube.position.y = -(this.blockHeight*this.boardHeight)/2-198;
+    tube.position.y = -(this.boardPixelHeight)/2-198;
 
     var tube2 = new THREE.Mesh( geometry, material );
-    tube2.position.y = (this.blockHeight*this.boardHeight)/2+198;
+    tube2.position.y = (this.boardPixelHeight)/2+198;
 
     obj.add(tube);
     obj.add(tube2);
     return obj;
+};
+
+PuzzleGame.prototype.generateCylinderDepthFilter = function(){
+	var obj = new THREE.Object3D();
+	var material =  new THREE.MeshBasicMaterial({color:0x000000,side:THREE.DoubleSide,transparent:true,opacity:0.6});
+	var geometry = new THREE.PlaneGeometry((this.boardRadius+this.blockDepth)*2, this.boardPixelHeight );
+	var plane = new THREE.Mesh(geometry,material);
+
+	var r = this.boardRadius+this.blockDepth;
+	material = new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,transparent:true,opacity:0.1,depthWrite: false, depthTest: false});
+	geometry = new THREE.CylinderGeometry(r,r,this.boardPixelHeight,this.boardWidth,1,true,-HALF_PI,PI);
+	var tube = new THREE.Mesh( geometry, material );
+
+	obj.add(plane);
+	obj.add(tube);
+	return obj;
 };
 
 PuzzleGame.prototype.keyPress = function(event){
@@ -721,7 +741,7 @@ PuzzleGame.prototype.focusCameraOnSelection = function(){
 };
 
 PuzzleGame.prototype.calcYBlockPos = function(y){
-    return (y*this.blockHeight);
+	return (y*this.blockHeight)+(this.blockHeight/2)
 };
 
 PuzzleGame.prototype.calcXBlockPos = function(x){
@@ -775,9 +795,9 @@ PuzzleGame.prototype.generateNextRowMeshArray = function(){
     var keys = Object.keys(this.blockTextures);
     for(var x = 0; x < this.boardWidth; x++) {
         var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
-        var darkerColor = new THREE.Color(this.blockColors[blockType]);
-        darkerColor.add( new THREE.Color(0x505050));
-        var material = new THREE.MeshBasicMaterial( { color: darkerColor,map:this.blockTextures[blockType],transparent:true,opacity:1});
+        var adjustedColor = new THREE.Color(this.blockColors[blockType]);
+        adjustedColor.add( new THREE.Color(0x505050));
+        var material = new THREE.MeshBasicMaterial( { color: adjustedColor,map:this.blockTextures[blockType],transparent:true,opacity:1});
         var mesh = new THREE.Mesh(geometry,material);
         mesh.userData.color = mesh.material.color.getHex();
         mesh.userData.blockType = blockType;
@@ -817,6 +837,9 @@ PuzzleGame.prototype.cylinder = function(mapArray){
         var column = [];
         this.stackHeights[x] = this.boardHeight;
         for (var y = 0; y < this.boardHeight; y++) {
+
+        	var invalidBlockTypes = array();
+
 
             var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
 
@@ -859,7 +882,7 @@ PuzzleGame.prototype.updateCursorPos = function(){
     this.debugSelectionUpdate();
 };
 PuzzleGame.prototype.updateNextRowPos = function(){
-    this.nextRow.position.y = this.calcYBlockPos(-1)-this.halfBoardPixelHeight+this.upOffset;
+    this.nextRow.position.y = this.calcYBlockPos(-1)-this.halfBoardPixelHeight-(this.blockHeight/2)+this.upOffset;
 };
 
 PuzzleGame.prototype.debugSelectionUpdate = function(){
@@ -897,7 +920,8 @@ PuzzleGame.prototype.animate = function(){
 PuzzleGame.prototype.render = function() {
     TWEEN.update();
 
-    var timer = performance.now();
+	var timer = performance.now();
+
 
     //this.light.position.x = Math.sin(this.piTimer)*(this.boardRadius+this.blockDepth+100);
     //this.light.position.z = Math.cos(this.piTimer)*(this.boardRadius+this.blockDepth+100);
@@ -922,7 +946,6 @@ PuzzleGame.prototype.render = function() {
 			//block.quaternion.z = block.position.z;
 			//console.log(block.quaternion.y);
 			//block.quaternion.z.setFromAxisAngle(block.position,0.0001*Math.sin(sThis.piTimer));
-
 		}
 		if(block.userData.exploding){
 			//block.rotation.y = timer * 0.01;
