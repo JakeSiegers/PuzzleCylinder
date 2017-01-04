@@ -912,9 +912,9 @@ PuzzleGame.prototype.debugSelectionUpdate = function(){
 
 PuzzleGame.prototype.animate = function(){
     requestAnimationFrame(this.animate.bind(this));
-    this.stats.begin();
+    //this.stats.begin();
     this.render();
-    this.stats.end();
+    //this.stats.end();
 };
 
 PuzzleGame.prototype.render = function() {
