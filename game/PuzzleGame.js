@@ -1,5 +1,5 @@
 
-if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+//if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 const PI = Math.PI;
 const TWO_PI = PI*2;
