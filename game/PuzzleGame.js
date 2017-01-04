@@ -54,8 +54,8 @@ function PuzzleGame(){
 	//this.gameLighting = new THREE.AmbientLight( 0xffffff );
 	//this.scene.add(this.gameLighting);
 
-    this.stats = new Stats();
-	document.body.appendChild( this.stats.dom );
+    //this.stats = new Stats();
+	//document.body.appendChild( this.stats.dom );
 
     this.debugMapNumber = 1;
 
@@ -920,7 +920,7 @@ PuzzleGame.prototype.animate = function(){
 PuzzleGame.prototype.render = function() {
     TWEEN.update();
 
-	var timer = performance.now();
+	//var timer = performance.now();
 
 
     //this.light.position.x = Math.sin(this.piTimer)*(this.boardRadius+this.blockDepth+100);
