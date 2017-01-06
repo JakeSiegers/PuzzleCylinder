@@ -24,35 +24,13 @@ function PuzzleGame(){
     this.pushTimeoutObj = null;
 	this.pushDelay = 100;
     this.dropDelay = 150;
-    this.handicap = 3;
+	this.matches = 0;
+    this.score = 0;
 	this.initLoaders();
     this.resetGame();
 
     this.scene.add(this.generateTube());
 	this.scene.add(this.generateCylinderDepthFilter());
-
-
-
-    //this.light = new THREE.PointLight(0xffffff,1,600);
-    //this.light.position.z = (this.boardRadius+this.blockDepth+100);
-    //this.scene.add(this.light);
-
-    //this.light = new THREE.PointLight(0xffffff,1,600);
-    //this.light.position.z = (this.boardRadius+this.blockDepth+100);
-    //this.light.position.x = 300;
-    //this.scene.add(this.light);
-
-    //this.light = new THREE.PointLight(0xffffff,1,600);
-    //this.light.position.z = (this.boardRadius+this.blockDepth+100);
-    //this.light.position.x = -300;
-    //this.scene.add(this.light);
-
-	//this.gameLighting = new THREE.RectAreaLight( 0xffffff, 5.0, 50, 50 );
-	//this.gameLighting.position.z = (this.boardRadius+this.blockDepth+100);
-	//this.scene.add(this.gameLighting);
-
-	//this.gameLighting = new THREE.AmbientLight( 0xffffff );
-	//this.scene.add(this.gameLighting);
 
     this.stats = new Stats();
 	document.body.appendChild( this.stats.dom );
@@ -62,12 +40,12 @@ function PuzzleGame(){
     // Init gui
     var gui = new dat.GUI();
 
-    /*
+	/*
     var f1 = gui.addFolder('SELECTION');
     f1.add(this,"selectorX",0,this.boardWidth-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f1.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
     f1.add(this,"debugSelection").listen();
-    //f1.open();
+    f1.open();
 
     var f2 = gui.addFolder('BLOCKS');
     f2.add(this,"dropDelay",100,1000).step(10).listen();
@@ -83,13 +61,16 @@ function PuzzleGame(){
     //f3.open();
     */
 
+
     var f4 = gui.addFolder('GAMEPLAY');
     f4.add(this,"handicap",0,4).step(1).listen();
     f4.add(this,"pushDelay",0,200).step(1).listen();
+	f4.add(this,"matches").listen();
+    f4.add(this,"score").listen();
     f4.add(this,"resetGame");
     f4.open();
 
-	var f5 = gui.addFolder('VB7');
+	var f5 = gui.addFolder('VB8');
 
     //gui.close();
 
@@ -102,7 +83,7 @@ function PuzzleGame(){
 	this.yTouchChain = 0;
 	this.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
 	this.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
-	setInterval(this.makeHarder.bind(this),3000);
+	setInterval(this.makeHarder.bind(this),1000);
     this.animate();
 }
 
@@ -158,16 +139,22 @@ PuzzleGame.prototype.onDocumentTouchMove = function( event ){
 
 PuzzleGame.prototype.makeHarder = function(){
 	if(this.pushDelay > 0){
-		if(this.pushDelay == 90){
+		this.pushDelay = 100 - this.matches/5;
+		if(this.pushDelay < 0){
+			this.pushDelay = 0;
+		}
+		if(this.pushDelay <= 90){
+			this.handicap = 3;
+		}
+		if(this.pushDelay <= 70){
 			this.handicap = 2;
 		}
-		if(this.pushDelay == 80){
+		if(this.pushDelay <= 50){
 			this.handicap = 1;
 		}
-		if(this.pushDelay == 70){
+		if(this.pushDelay <= 30){
 			this.handicap = 0;
 		}
-		this.pushDelay--;
 	}
 };
 
@@ -237,13 +224,14 @@ PuzzleGame.prototype.resetGame = function(map){
     this.blockHeight = 35;
     this.blockDepth = 10;
     this.boardPixelHeight = (this.boardHeight)*this.blockHeight;
-	console.log(this.boardPixelHeight);
     this.halfBoardPixelHeight = this.boardPixelHeight/2;
     this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
     this.gameActive = false;
     this.upOffset = 0;
 	this.pushDelay = 100;
-	this.handicap = 3;
+	this.handicap = 4;
+	this.score = 0;
+	this.matches = 0;
 
     this.piTimer = 0;
 
@@ -290,6 +278,7 @@ PuzzleGame.prototype.resetGame = function(map){
     },1200).easing(TWEEN.Easing.Quintic.Out).delay(400).start().onComplete(function(){
         sThis.gameActive = true;
         sThis.checkForMatches();
+        //sThis.stopQueue = 1;
     });
 
 
@@ -484,6 +473,7 @@ PuzzleGame.prototype.checkForMatches = function(){
 			}
 
             if(matchChainX.length>=3){
+	            this.matches++
                 for(var i=0;i<matchChainX.length;i++){
                     blocksToBeDestroyed.push({x:matchChainX[i],y:y});
                 }
@@ -510,6 +500,7 @@ PuzzleGame.prototype.checkForMatches = function(){
 		    }
 
 		    if(matchChainY.length>=3){
+			    this.matches++
 			    for(var i=0;i<matchChainY.length;i++){
                     blocksToBeDestroyed.push({x:x,y:matchChainY[i]});
 			    }
@@ -519,6 +510,7 @@ PuzzleGame.prototype.checkForMatches = function(){
     }
 
     for(var d = 0;d<blocksToBeDestroyed.length;d++){
+    	this.score++;
         this.destroyBlock(blocksToBeDestroyed[d].x,blocksToBeDestroyed[d].y);
     }
 };
@@ -664,27 +656,6 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
 	    this.checkForMatches();
     }
 };
-/*
-PuzzleGame.prototype.checkDropBlocks = function(){
-    this.blockComboActive = false;
-    for(var x=0;x<this.boardWidth;x++){
-        var emptyQueue = [];
-        for(var y=0;y<this.boardHeight;y++){
-            if(this.gameGrid[x][y] == null) {
-                emptyQueue.push(y);
-                continue;
-            }
-            if(emptyQueue.length > 0){
-                var nextEmpty = emptyQueue.shift();
-                this.gameGrid[x][nextEmpty] = this.gameGrid[x][y];
-                new TWEEN.Tween(this.gameGrid[x][nextEmpty].position).to({y:this.calcYBlockPos(nextEmpty)},200).easing( TWEEN.Easing.Bounce.Out).start();
-                this.gameGrid[x][y] = null;
-                emptyQueue.push(y);
-            }
-        }
-    }
-};
-*/
 
 PuzzleGame.prototype.adjustSelector = function(direction){
     switch(direction){
@@ -829,10 +800,81 @@ PuzzleGame.prototype.generateBlockMesh = function(blockType,x,y){
     return mesh;
 };
 
+PuzzleGame.prototype.getBlockAt = function(x,y){
+	x = (x+this.boardWidth)%this.boardWidth;
+	y = (y+this.boardHeight)%this.boardHeight;
+	if(x in this.gameGrid === false  || y in this.gameGrid[x] === false || this.gameGrid[x][y] === null){
+		return false;
+	}
+	return this.gameGrid[x][y];
+};
+
+PuzzleGame.prototype.generateMap = function(colorPoolIn,heightPercent){
+	var grid = [];
+	for(var gx =0;gx<this.boardWidth;gx++){
+		var column = [];
+		for(var gy =0;gy<this.boardHeight;gy++) {
+			column.push(null);
+		}
+		grid.push(column);
+	}
+
+	for(var x =0;x<this.boardWidth;x++){
+		for(var y =0;y<this.boardHeight;y++) {
+
+			if(y > this.boardHeight*heightPercent){
+				grid[x][y] = null;
+				continue;
+			}
+
+			var colorPool = colorPoolIn.slice(0);
+			var lastXType = '';
+			var lastYType = '';
+			var debug = "";
+			debug+='('+x+','+y+') - CHECKING - ';
+
+			for(var i=-2;i<=2;i++){
+				if(i == 0){
+					continue;
+				}
+
+				var nextXBlock = grid[(x-i+this.boardWidth)%this.boardWidth][y];
+
+				if(nextXBlock !== null){
+					var xType = nextXBlock;
+					var xPos = colorPool.indexOf(xType);
+					if(xType == lastXType && xPos !== -1 && colorPool.length > 1){
+						colorPool.splice(xPos, 1);
+					}
+					lastXType = xType;
+				}
+				var nextYBlock = grid[x][(y-i+this.boardHeight)%this.boardHeight];
+
+				if(nextYBlock !== null){
+					var yType = nextYBlock;
+					var yPos = colorPool.indexOf(yType);
+					if(yType == lastYType && yPos !== -1 && colorPool.length > 1){
+						colorPool.splice(yPos,1);
+					}
+					lastYType = yType;
+				}
+			}
+			grid[x][y] = colorPool[Math.floor(Math.random()*colorPool.length)];
+		}
+	}
+	return grid;
+};
+
 PuzzleGame.prototype.cylinder = function(mapArray){
     var blocks = new THREE.Object3D();
+	var colorPool = [];
+    var allColors = Object.keys(this.blockColors);
+    for(var i=0;i<allColors.length - this.handicap;i++){
+    	colorPool.push(allColors[i]);
+    }
 
-    var keys = Object.keys(this.blockTextures);
+	var goodMap = this.generateMap(colorPool,0.3);
+
     for(var x = 0; x < this.boardWidth; x++) {
         var column = [];
         this.stackHeights[x] = this.boardHeight;
@@ -840,25 +882,31 @@ PuzzleGame.prototype.cylinder = function(mapArray){
 
         	//var invalidBlockTypes = array();
 
+            var blockType = goodMap[x][y];//colorPool[Math.floor(Math.random()*colorPool.length)];
+			//console.log('chose '+blockType);
+	        //console.log('==========================');
 
-            var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
-
-
+	        /*
             if(mapArray){
                 if(!mapArray[y] || !mapArray[y][x] || mapArray[y][x] == '-'){
                     column.push(null);
                     continue;
                 }
                 if(mapArray[y][x] != '?') {
-                    blockType = keys[mapArray[y][x]];
+                    blockType = allColors[mapArray[y][x]];
                 }
             }else if(y>Math.floor(this.boardHeight*0.40)){
                 column.push(null);
                 continue;
             }
-            var mesh = this.generateBlockMesh(blockType,x,y);
-            column.push(mesh);
-            blocks.add(mesh);
+            */
+	        if(blockType == null){
+	        	column.push(null);
+	        }else{
+		        var mesh = this.generateBlockMesh(blockType,x,y);
+		        column.push(mesh);
+		        blocks.add(mesh);
+	        }
         }
         this.gameGrid.push(column);
     }
@@ -921,12 +969,6 @@ PuzzleGame.prototype.render = function() {
     TWEEN.update();
 
 	var timer = performance.now();
-
-
-    //this.light.position.x = Math.sin(this.piTimer)*(this.boardRadius+this.blockDepth+100);
-    //this.light.position.z = Math.cos(this.piTimer)*(this.boardRadius+this.blockDepth+100);
-    //this.debugLight.position.x = this.light.position.x;
-    //this.debugLight.position.z = this.light.position.z;
 
 	var sThis = this;
 
