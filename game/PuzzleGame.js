@@ -70,7 +70,7 @@ function PuzzleGame(){
     f4.add(this,"resetGame");
     f4.open();
 
-	var f5 = gui.addFolder('VB8');
+	var f5 = gui.addFolder('VB9');
 
     //gui.close();
 
