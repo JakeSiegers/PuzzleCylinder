@@ -67,6 +67,7 @@ function PuzzleGame(){
     f4.add(this,"pushDelay",0,200).step(1).listen();
 	f4.add(this,"matches").listen();
     f4.add(this,"score").listen();
+	f4.add(this,"rowsCreated").listen();
     f4.add(this,"resetGame");
     f4.open();
 
@@ -232,6 +233,7 @@ PuzzleGame.prototype.resetGame = function(map){
 	this.handicap = 4;
 	this.score = 0;
 	this.matches = 0;
+	this.rowsCreated = 0;
 
     this.piTimer = 0;
 
@@ -758,6 +760,7 @@ PuzzleGame.prototype.generateNextRow = function(){
     this.scene.add(this.nextRow);
     this.updateNextRowPos();
     this.nextRow.rotation.y = this.circlePieceSize * this.selectorX-HALF_PI-(this.circlePieceSize/2);
+	this.rowsCreated++;
 };
 
 PuzzleGame.prototype.generateNextRowMeshArray = function(){
