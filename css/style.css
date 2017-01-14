@@ -27,13 +27,13 @@ body{
 }
 
 #loaderText{
-	font-size: 25px;
+	font-size: 20px;
 	width:40px;
-	height:30px;
-	margin-top:-15px;
+	height:20px;
+	margin-top:-10px;
 	margin-left:-20px;
 	font-family: Arial, sans-serif;
-	color:black;
+	color:white;
 	position: fixed;
 	text-align:center;
 	top:50%;
@@ -48,7 +48,7 @@ body{
 	height: 50px;
 	margin-top:-25px;
 	margin-left:-25px;
-	background: white;
+	background: #9C27B0;
 	animation: spin 2.5s cubic-bezier(.79, 0, .47, .97) infinite;
 	transition: display 10s linear;
 }
