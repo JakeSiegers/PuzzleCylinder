@@ -20,32 +20,36 @@ function PuzzleGame(){
 
     this.scene = new THREE.Scene();
 
-    this.stopQueue = 0;
-    this.pushTimeoutObj = null;
-	this.pushDelay = 100;
-    this.dropDelay = 150;
-	this.matches = 0;
-    this.score = 0;
 	this.initLoaders();
-    this.resetGame();
+}
 
-    this.scene.add(this.generateTube());
+PuzzleGame.prototype.preloadComplete = function(){
+	this.stopQueue = 0;
+	this.pushTimeoutObj = null;
+	this.pushDelay = 100;
+	this.dropDelay = 150;
+	this.matches = 0;
+	this.score = 0;
+
+	this.resetGame();
+
+	this.scene.add(this.generateTube());
 	this.scene.add(this.generateCylinderDepthFilter());
 
-    this.stats = new Stats();
+	this.stats = new Stats();
 	document.body.appendChild( this.stats.dom );
 
-    this.debugMapNumber = 1;
+	this.debugMapNumber = 1;
 
-    window.addEventListener('resize', this.onWindowResize.bind(this),false);
-    document.addEventListener('keydown', this.keyPress.bind(this));
+	window.addEventListener('resize', this.onWindowResize.bind(this),false);
+	document.addEventListener('keydown', this.keyPress.bind(this));
 
 	this.initTouch();
 	this.initDatGui();
 
 	setInterval(this.makeHarder.bind(this),1000);
-    this.animate();
-}
+	this.animate();
+};
 
 PuzzleGame.prototype.makeHarder = function(){
 	if(this.pushDelay > 0){
@@ -70,12 +74,26 @@ PuzzleGame.prototype.makeHarder = function(){
 
 PuzzleGame.prototype.initLoaders = function(){
 
+	var loaderDom = document.getElementById("loader");
+	var loaderTextDom = document.getElementById("loaderText");
+
 	var manager = new THREE.LoadingManager();
 	console.log('New LoadingManager');
 	manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
-
 		console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
-
+	};
+	var sThis = this;
+	manager.onLoad = function ( ) {
+		console.log( 'Loading complete!');
+		sThis.preloadComplete();
+		loaderDom.className += " hideLoader";
+	};
+	manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+		console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+		loaderTextDom.innerHTML = Math.floor((itemsLoaded/itemsTotal)*100)+"%";
+	};
+	manager.onError = function ( url ) {
+		console.log( 'There was an error loading ' + url );
 	};
 
     this.fileLoader = new THREE.FileLoader(manager);
@@ -120,6 +138,7 @@ PuzzleGame.prototype.initLoaders = function(){
 		triangle2:0x3F51B5,
 		penta:0x607D8B
 	};
+
 };
 
 PuzzleGame.prototype.resetGame = function(map){
