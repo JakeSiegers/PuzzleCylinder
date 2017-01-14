@@ -1,50 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <title>Jake's Puzzle Cylinder</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <style>
-        body{
-            margin:0px;
-            overflow: hidden;
-            background: url(https://source.unsplash.com/XZtpcHdhBT0/1280x720) no-repeat center center fixed;
-            -webkit-background-size: cover;
-            -moz-background-size: cover;
-            -o-background-size: cover;
-            background-size: cover;
-        }
-    </style>
-</head>
-<body>
-    <script src="3js/three.83.min.js"></script>
+	<head>
+	    <title>Jake's Puzzle Cylinder</title>
+	    <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" href="css/style.css">
+	</head>
+	<body>
+	    <script src="3js/three.83.min.js"></script>
 
-    <!--
-    <script src="3js/shaders/SSAOShader.js"></script>
-    <script src="3js/shaders/CopyShader.js"></script>
+	    <!--
+	    <script src="3js/shaders/SSAOShader.js"></script>
+	    <script src="3js/shaders/CopyShader.js"></script>
 
-    <script src="3js/postprocessing/EffectComposer.js"></script>
-    <script src="3js/postprocessing/RenderPass.js"></script>
-    <script src="3js/postprocessing/ShaderPass.js"></script>
-    <script src="3js/postprocessing/MaskPass.js"></script>
-    -->
+	    <script src="3js/postprocessing/EffectComposer.js"></script>
+	    <script src="3js/postprocessing/RenderPass.js"></script>
+	    <script src="3js/postprocessing/ShaderPass.js"></script>
+	    <script src="3js/postprocessing/MaskPass.js"></script>
 
-    <!--<script src="3js/Detector.js"></script>-->
-    <script src="3js/libs/stats.min.js"></script>
-    <script src='3js/libs/dat.gui.min.js'></script>
-    <script src='3js/libs/tween.min.js'></script>
+	    <script src="3js/Detector.js"></script>
+	    -->
+	    <script src="3js/libs/stats.min.js"></script>
 
-    <script src='game/PuzzleGame.js'></script>
+	    <script src='3js/libs/tween.min.js'></script>
+	    <script src='game/PuzzleGame.js'></script>
 
-    <script>
-	    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-			    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-		    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	    <script src='3js/libs/dat.gui.min.js'></script>
+	    <script src='game/PuzzleGameDebug.js'></script>
 
-	    ga('create', 'UA-89982309-1', 'auto');
-	    ga('send', 'pageview');
-
-    </script>
-</body>
+	    <script src='game/GoogleAnalytics.js'></script>
+	</body>
 </html>

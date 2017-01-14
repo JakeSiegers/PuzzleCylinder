@@ -37,44 +37,6 @@ function PuzzleGame(){
 
     this.debugMapNumber = 1;
 
-    // Init gui
-    var gui = new dat.GUI();
-
-	/*
-    var f1 = gui.addFolder('SELECTION');
-    f1.add(this,"selectorX",0,this.boardWidth-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
-    f1.add(this,"selectorY",0,this.boardHeight-1).step(1).onChange(this.focusCameraOnSelection.bind(this)).listen();
-    f1.add(this,"debugSelection").listen();
-    f1.open();
-
-    var f2 = gui.addFolder('BLOCKS');
-    f2.add(this,"dropDelay",100,1000).step(10).listen();
-    f2.add(this,"debugDelete10");
-    f2.add(this,"checkForMatches");
-    f2.add(this,"stopQueue").listen();
-    f2.add(this,'pushTowerUp');
-    //f2.open();
-
-    var f3 = gui.addFolder('CUSTOM MAPS');
-    f3.add(this,"debugMapNumber",1,2).step(1);
-    f3.add(this,"debugLoadMap");
-    //f3.open();
-    */
-
-
-    var f4 = gui.addFolder('GAMEPLAY');
-    f4.add(this,"handicap",0,4).step(1).listen();
-    f4.add(this,"pushDelay",0,200).step(1).listen();
-	f4.add(this,"matches").listen();
-    f4.add(this,"score").listen();
-	f4.add(this,"rowsCreated").listen();
-    f4.add(this,"resetGame");
-    f4.open();
-
-	var f5 = gui.addFolder('VB9');
-
-    //gui.close();
-
     window.addEventListener('resize', this.onWindowResize.bind(this),false);
     document.addEventListener('keydown', this.keyPress.bind(this));
 
@@ -172,24 +134,38 @@ PuzzleGame.prototype.debugDelete10 = function(){
 };
 
 PuzzleGame.prototype.initLoaders = function(){
-    this.fileLoader = new THREE.FileLoader();
 
-	this.blankTexture = new THREE.TextureLoader().load('img/block.png');
-	this.explodeTexture = new THREE.TextureLoader().load('img/block_explode.png');
-	this.lockTexture = new THREE.TextureLoader().load('img/block_locked.png');
-	this.tubeTexture = new THREE.TextureLoader().load('img/block.png');
+	var manager = new THREE.LoadingManager();
+	console.log('New LoadingManager');
+	manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
+
+		console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+
+	};
+
+    this.fileLoader = new THREE.FileLoader(manager);
+	var textureLoader =  new THREE.TextureLoader(manager);
+
+	this.blankTexture = textureLoader.load('img/block.png');
+	this.explodeTexture = textureLoader.load('img/block_explode.png');
+	this.lockTexture = textureLoader.load('img/block_locked.png');
+	this.tubeTexture = textureLoader.load('img/block.png');
 	this.tubeTexture.wrapS = THREE.RepeatWrapping;
 	this.tubeTexture.wrapT = THREE.RepeatWrapping;
 	this.tubeTexture.repeat.set( 30, 13 );
 
+	this.cursorTexture = textureLoader.load('img/cursor.png');
+	this.cursorTexture.magFilter = THREE.NearestFilter;
+	this.cursorTexture.minFilter = THREE.NearestFilter;
+
 	this.blockTextures = {
-		circle:new THREE.TextureLoader().load('img/block_circle.png'),
-		diamond:new THREE.TextureLoader().load('img/block_diamond.png'),
-		heart:new THREE.TextureLoader().load('img/block_heart.png'),
-        star:new THREE.TextureLoader().load('img/block_star.png'),
-		triangle:new THREE.TextureLoader().load('img/block_triangle.png'),
-		triangle2:new THREE.TextureLoader().load('img/block_triangle2.png'),
-		penta:new THREE.TextureLoader().load('img/block_penta.png')
+		circle:textureLoader.load('img/block_circle.png'),
+		diamond:textureLoader.load('img/block_diamond.png'),
+		heart:textureLoader.load('img/block_heart.png'),
+        star:textureLoader.load('img/block_star.png'),
+		triangle:textureLoader.load('img/block_triangle.png'),
+		triangle2:textureLoader.load('img/block_triangle2.png'),
+		penta:textureLoader.load('img/block_penta.png')
 	};
 
 	var maxAnisotropy = this.renderer.getMaxAnisotropy();
@@ -356,11 +332,8 @@ PuzzleGame.prototype.pushTowerUp = function(){
 PuzzleGame.prototype.generateCursor = function(){
     var obj = new THREE.Object3D();
     var geometry = new THREE.PlaneGeometry(this.blockWidth,this.blockHeight);
-    var texture = new THREE.TextureLoader().load('img/cursor.png');
-    texture.magFilter = THREE.NearestFilter;
-    texture.minFilter = THREE.NearestFilter;
 
-    var material = new THREE.MeshBasicMaterial({color:0xffffff,side: THREE.DoubleSide,map:texture,transparent: true});
+    var material = new THREE.MeshBasicMaterial({color:0xffffff,side: THREE.DoubleSide,map:this.cursorTexture,transparent: true});
     var mesh = new THREE.Mesh(geometry,material);
     mesh.position.x = -this.blockWidth/2;
     obj.add(mesh);
