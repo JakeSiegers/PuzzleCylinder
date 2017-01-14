@@ -40,65 +40,12 @@ function PuzzleGame(){
     window.addEventListener('resize', this.onWindowResize.bind(this),false);
     document.addEventListener('keydown', this.keyPress.bind(this));
 
-    //Basic touch support... It probably will be crummy for now.
-    this.touchTimer = null;
-    this.xTouchChain = 0;
-	this.yTouchChain = 0;
-	this.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
-	this.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
+	this.initTouch();
+	this.initDatGui();
+
 	setInterval(this.makeHarder.bind(this),1000);
     this.animate();
 }
-
-PuzzleGame.prototype.onDocumentTouchStart = function( event ){
-	var sThis = this;
-	if ( event.touches.length === 1 ) {
-		if (this.touchTimer == null) {
-			this.touchTimer = setTimeout(function () {
-				sThis.touchTimer = null;
-			}, 200)
-		} else {
-			clearTimeout(this.touchTimer);
-			this.touchTimer = null;
-			if(Math.abs(this.xTouchChain) < 10 &&  Math.abs(this.yTouchChain) < 10) {
-				this.swapSelectedBlocks();
-			}
-		}
-		event.preventDefault();
-		this.lastXTouch = event.touches[ 0 ].pageX;
-		this.lastYTouch = event.touches[ 0 ].pageY;
-		this.xTouchChain = 0;
-		this.yTouchChain = 0;
-	}
-};
-
-PuzzleGame.prototype.onDocumentTouchMove = function( event ){
-	if ( event.touches.length === 1 ) {
-		event.preventDefault();
-		var mouseX = event.touches[ 0 ].pageX;
-		var mouseY = event.touches[ 0 ].pageY;
-		var xDelta = ( mouseX - this.lastXTouch );
-		var yDelta = ( mouseY - this.lastYTouch );
-		this.lastXTouch = mouseX;
-		this.lastYTouch = mouseY;
-		this.xTouchChain += xDelta;
-		this.yTouchChain += yDelta;
-		if(this.xTouchChain < -30){
-			this.adjustSelector('left');
-			this.xTouchChain = 0;
-		}else if(this.xTouchChain > 30){
-			this.adjustSelector('right');
-			this.xTouchChain = 0;
-		}
-		if(this.yTouchChain < -30){
-			this.adjustSelector('up');
-			this.yTouchChain = 0;
-		}else if(this.yTouchChain > 30){
-			this.adjustSelector('down');
-			this.yTouchChain = 0;
-		}
-	}
-};
 
 PuzzleGame.prototype.makeHarder = function(){
 	if(this.pushDelay > 0){
@@ -119,18 +66,6 @@ PuzzleGame.prototype.makeHarder = function(){
 			this.handicap = 0;
 		}
 	}
-};
-
-PuzzleGame.prototype.debugLoadMap = function(){
-	this.loadMap('map'+this.debugMapNumber);
-};
-
-PuzzleGame.prototype.debugDelete10 = function(){
-    for(var i=0;i<10;i++){
-        var x = Math.floor(Math.random()*this.boardWidth);
-        var y = Math.floor(Math.random()*this.boardHeight);
-        this.destroyBlock(x,y);
-    }
 };
 
 PuzzleGame.prototype.initLoaders = function(){
@@ -806,8 +741,6 @@ PuzzleGame.prototype.generateMap = function(colorPoolIn,heightPercent){
 			var colorPool = colorPoolIn.slice(0);
 			var lastXType = '';
 			var lastYType = '';
-			var debug = "";
-			debug+='('+x+','+y+') - CHECKING - ';
 
 			for(var i=-2;i<=2;i++){
 				if(i == 0){
@@ -909,31 +842,6 @@ PuzzleGame.prototype.updateNextRowPos = function(){
     this.nextRow.position.y = this.calcYBlockPos(-1)-this.halfBoardPixelHeight-(this.blockHeight/2)+this.upOffset;
 };
 
-PuzzleGame.prototype.debugSelectionUpdate = function(){
-    if(this.debugSelection) {
-        for(var x=0;x<this.boardWidth;x++) {
-            for(var y=0;y<this.boardHeight;y++) {
-                if (this.gameGrid[x][y] !== null){
-                    this.gameGrid[x][y].material.color.setHex(this.gameGrid[x][y].userData.color);
-                }
-            }
-        }
-
-        if (this.gameGrid[this.selectorX][this.selectorY] !== null) {
-            this.gameGrid[this.selectorX][this.selectorY].material.color.setHex(0x00ff00);
-        }
-
-        var otherX = this.selectorX-1;
-        if(otherX<0){
-            otherX = this.boardWidth-1;
-        }
-
-        if (this.gameGrid[otherX][this.selectorY] !== null) {
-            this.gameGrid[otherX][this.selectorY].material.color.setHex(0x00ff00);
-        }
-    }
-};
-
 PuzzleGame.prototype.animate = function(){
     requestAnimationFrame(this.animate.bind(this));
     this.stats.begin();
@@ -983,5 +891,3 @@ PuzzleGame.prototype.render = function() {
         this.piTimer = 0;
     }
 };
-
-var game = new PuzzleGame();
