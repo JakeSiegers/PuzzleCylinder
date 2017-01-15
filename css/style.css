@@ -1,7 +1,7 @@
 body{
 	margin:0;
 	overflow: hidden;
-	background: url(https://source.unsplash.com/XZtpcHdhBT0/1280x720) no-repeat center center fixed;
+	background: url(https://source.unsplash.com/_4Ib-a8g9aA/1920x1080) no-repeat center center fixed;
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
@@ -9,11 +9,12 @@ body{
 }
 
 #loader {
-	background:rgba(0,0,0,0.8);
+	background:black;
 	color:black;
 	width:100%;
 	height:100%;
 	position: absolute;
+	transition: all 1s ease;
 }
 
 #loaderWrap{
@@ -33,7 +34,8 @@ body{
 	margin-top:-10px;
 	margin-left:-20px;
 	font-family: Arial, sans-serif;
-	color:white;
+	font-weight:bold;
+	color:black;
 	position: fixed;
 	text-align:center;
 	top:50%;
@@ -50,11 +52,10 @@ body{
 	margin-left:-25px;
 	background: #9C27B0;
 	animation: spin 2.5s cubic-bezier(.79, 0, .47, .97) infinite;
-	transition: display 10s linear;
 }
 
 .hideLoader{
-	display:none;
+	opacity:0;
 }
 
 @keyframes spin {

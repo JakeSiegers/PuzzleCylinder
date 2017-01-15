@@ -7,34 +7,60 @@ const HALF_PI = PI/2;
 
 function PuzzleGame(){
 
-    this.renderer = new THREE.WebGLRenderer( { antialias: false ,alpha: true} );
-    this.renderer.setClearColor(0x000000,0.5);
-    this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(this.windowWidth,this.windowHeight);
-    document.body.appendChild( this.renderer.domElement );
+	this.renderer = new THREE.WebGLRenderer( { antialias: false ,alpha: true} );
+	this.renderer.setClearColor(0x000000,0.5);
+	this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	this.renderer.setPixelRatio(window.devicePixelRatio);
+	this.renderer.setSize(this.windowWidth,this.windowHeight);
+	document.body.appendChild( this.renderer.domElement );
 
-    this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 100, 850);
-    this.camera.position.z = 500;
+	this.scene = new THREE.Scene();
 
-    this.scene = new THREE.Scene();
+	this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 100, 850);
+	this.camera.position.z = 500;
+
+	this.resetGameVariables();
+
+
+	//Timer Objects
+	this.pushTimeoutObj = null;
+	this.difficultyTimeoutObj = null;
 
 	this.initLoaders();
+
+	this.tube = this.generateTube();
+	this.scene.add(this.tube);
+	this.scene.add(this.generateCylinderDepthFilter());
 }
 
 PuzzleGame.prototype.preloadComplete = function(){
-	this.stopQueue = 0;
-	this.pushTimeoutObj = null;
-	this.pushDelay = 100;
-	this.dropDelay = 150;
-	this.matches = 0;
-	this.score = 0;
 
-	this.resetGame();
+	setTimeout(this.closeTube.bind(this),100);
+	setTimeout(this.resetGame.bind(this),2000);
 
-	this.scene.add(this.generateTube());
-	this.scene.add(this.generateCylinderDepthFilter());
+	/*
+
+	var textGeometry = new THREE.TextGeometry( "Puzzle Cylinder",
+		{
+
+			font: this.font
+
+		});
+
+
+	var textMaterial = new THREE.MeshBasicMaterial( { color: 0x62254a } );
+	var text3D = new THREE.Mesh( textGeometry, textMaterial );
+	this.scene.add(text3D);
+	*/
+
+
+
+
+	this.makeText();
+
+
+
 
 	this.stats = new Stats();
 	document.body.appendChild( this.stats.dom );
@@ -47,9 +73,45 @@ PuzzleGame.prototype.preloadComplete = function(){
 	this.initTouch();
 	this.initDatGui();
 
-	setInterval(this.makeHarder.bind(this),1000);
 	this.animate();
 };
+
+PuzzleGame.prototype.makeText = function(){
+
+	console.log(this.font);
+
+	var textGeometry1 = new THREE.TextGeometry("Puzzle",{
+		font: this.font,
+		size:50,
+		height :5
+	});
+	var textGeometry2 = new THREE.TextGeometry("Cylinder",{
+		font: this.font,
+		size:50,
+		height :5
+	});
+
+	var material = new THREE.MeshBasicMaterial({color: this.blockColors.diamond});
+
+	this.title1 = new THREE.Mesh(textGeometry1, material);
+	this.title2 = new THREE.Mesh(textGeometry2, material);
+
+	textGeometry1.computeBoundingBox();
+	var textWidth1 = textGeometry1.boundingBox.max.x - textGeometry1.boundingBox.min.x;
+	this.title1.position.x =  -textWidth1/2;
+
+	textGeometry2.computeBoundingBox();
+	var textWidth2 = textGeometry2.boundingBox.max.x - textGeometry2.boundingBox.min.x;
+	this.title2.position.x =  -textWidth2/2;
+
+	this.title1.position.y = this.boardPixelHeight;
+	this.title2.position.y = -this.boardPixelHeight;
+
+	this.title1.position.z = this.title2.position.z = this.boardRadius+5;
+	this.scene.add(this.title1);
+	this.scene.add(this.title2);
+};
+
 
 PuzzleGame.prototype.makeHarder = function(){
 	if(this.pushDelay > 0){
@@ -79,9 +141,6 @@ PuzzleGame.prototype.initLoaders = function(){
 
 	var manager = new THREE.LoadingManager();
 	console.log('New LoadingManager');
-	manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
-		console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
-	};
 	var sThis = this;
 	manager.onLoad = function ( ) {
 		console.log( 'Loading complete!');
@@ -90,7 +149,7 @@ PuzzleGame.prototype.initLoaders = function(){
 	};
 	manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
 		console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
-		loaderTextDom.innerHTML = Math.floor((itemsLoaded/itemsTotal)*100)+"%";
+		loaderTextDom.innerHTML = Math.floor((itemsLoaded/itemsTotal)*100);
 	};
 	manager.onError = function ( url ) {
 		console.log( 'There was an error loading ' + url );
@@ -98,6 +157,7 @@ PuzzleGame.prototype.initLoaders = function(){
 
     this.fileLoader = new THREE.FileLoader(manager);
 	var textureLoader =  new THREE.TextureLoader(manager);
+	var fontLoader = new THREE.FontLoader(manager);
 
 	this.blankTexture = textureLoader.load('img/block.png');
 	this.explodeTexture = textureLoader.load('img/block_explode.png');
@@ -105,7 +165,12 @@ PuzzleGame.prototype.initLoaders = function(){
 	this.tubeTexture = textureLoader.load('img/block.png');
 	this.tubeTexture.wrapS = THREE.RepeatWrapping;
 	this.tubeTexture.wrapT = THREE.RepeatWrapping;
-	this.tubeTexture.repeat.set( 30, 13 );
+	this.tubeTexture.repeat.set( this.boardWidth, this.boardHeight );
+
+	//Font loader is weird.... It doesn't return the loaded value.
+	fontLoader.load('fonts/Righteous_Regular.json',function(response){
+		sThis.font = response;
+	});
 
 	this.cursorTexture = textureLoader.load('img/cursor.png');
 	this.cursorTexture.magFilter = THREE.NearestFilter;
@@ -121,13 +186,13 @@ PuzzleGame.prototype.initLoaders = function(){
 		penta:textureLoader.load('img/block_penta.png')
 	};
 
-	var maxAnisotropy = this.renderer.getMaxAnisotropy();
 	//Sharpen out textures - prevent scale blurring
-	for(var i in this.blockTextures){
+	//var maxAnisotropy = this.renderer.getMaxAnisotropy();
+	//for(var i in this.blockTextures){
 		//this.blockTextures[i].magFilter = THREE.NearestFilter;
 		//this.blockTextures[i].minFilter = THREE.NearestFilter;
 		//this.blockTextures[i].anisotropy = maxAnisotropy;
-	}
+	//}
 
 	this.blockColors = {
 		circle:0x4CAF50,
@@ -141,40 +206,46 @@ PuzzleGame.prototype.initLoaders = function(){
 
 };
 
+PuzzleGame.prototype.resetGameVariables = function(){
+	//TODO:Sort these!
+	this.stopQueue = 0;
+	this.score = 0;
+	this.gameGrid = [];
+	this.boardHeight = 13;
+	this.boardWidth = 30;
+	this.circlePieceSize = (TWO_PI/this.boardWidth);
+	this.stackHeights = [];
+	this.blockWidth = 35;
+	this.blockHeight = 35;
+	this.blockDepth = 10;
+	this.boardPixelHeight = (this.boardHeight)*this.blockHeight;
+	this.halfBoardPixelHeight = this.boardPixelHeight/2;
+	this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
+	this.hasControl = false;
+	this.gameActive = false;
+	this.upOffset = 0;
+	this.pushDelay = 100;
+	this.dropDelay = 150;
+	this.handicap = 4;
+	this.matches = 0;
+	this.rowsCreated = 0;
+	this.piTimer = 0;
+	this.debugSelection = false;
+};
+
 PuzzleGame.prototype.resetGame = function(map){
     if(this.stopQueue != 0){
         console.warn('Cannot reset while things are happening! (stopQueue is not 0!)');
         return;
     }
-    this.gameGrid = [];
-    this.boardHeight = 13;
-    this.boardWidth = 30;
-    this.circlePieceSize = (TWO_PI/this.boardWidth);
-    this.stackHeights = [];
-    this.blockWidth = 35;
-    this.blockHeight = 35;
-    this.blockDepth = 10;
-    this.boardPixelHeight = (this.boardHeight)*this.blockHeight;
-    this.halfBoardPixelHeight = this.boardPixelHeight/2;
-    this.boardRadius = ((this.blockWidth-1)*this.boardWidth)/(2*PI);
-    this.gameActive = false;
-    this.upOffset = 0;
-	this.pushDelay = 100;
-	this.handicap = 4;
-	this.score = 0;
-	this.matches = 0;
-	this.rowsCreated = 0;
 
-    this.piTimer = 0;
-
-    this.debugSelection = false;
+    this.resetGameVariables();
 
     if(this.hasOwnProperty('gameBoard')){
         this.scene.remove(this.gameBoard);
     }
     this.gameBoard = this.cylinder(map);
     this.scene.add(this.gameBoard);
-
 
     this.generateNextRow();
 
@@ -183,6 +254,10 @@ PuzzleGame.prototype.resetGame = function(map){
     }
     this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),2000);
 
+	if(this.difficultyTimeoutObj !== null){
+		clearInterval(this.difficultyTimeoutObj);
+	}
+	this.difficultyTimeoutObj = setInterval(this.makeHarder.bind(this),1000);
 
     if(this.hasOwnProperty('cursorObj')){
         this.scene.remove(this.cursorObj);
@@ -200,6 +275,8 @@ PuzzleGame.prototype.resetGame = function(map){
     var startingTowerPosition = this.updateTowerPos();
     this.gameBoard.position.y = startingTowerPosition - this.boardPixelHeight;
 
+	this.openTube();
+
     new TWEEN.Tween(this.gameBoard.position).to({
         y:startingTowerPosition
     },1200).easing(TWEEN.Easing.Quintic.Out).delay(400).start();
@@ -208,12 +285,11 @@ PuzzleGame.prototype.resetGame = function(map){
     new TWEEN.Tween(this.gameBoard.rotation).to({
         y:startingTowerAngle
     },1200).easing(TWEEN.Easing.Quintic.Out).delay(400).start().onComplete(function(){
+        sThis.hasControl = true;
         sThis.gameActive = true;
         sThis.checkForMatches();
         //sThis.stopQueue = 1;
     });
-
-
 };
 
 PuzzleGame.prototype.loseAnimation = function(){
@@ -231,6 +307,7 @@ PuzzleGame.prototype.loseAnimation = function(){
             }
         }
     }
+	setTimeout(this.closeTube.bind(this),2500);
 };
 
 PuzzleGame.prototype.checkToPushBlocks = function(){
@@ -242,7 +319,8 @@ PuzzleGame.prototype.checkToPushBlocks = function(){
     for(var tx = 0;tx<this.boardWidth;tx++){
         if(this.gameGrid[tx][this.boardHeight-1] !== null){
             //YOU LOSE
-            this.gameActive = false;
+            this.hasControl = false;
+	        this.gameActive = false;
             this.loseAnimation();
             return;
         }
@@ -299,16 +377,44 @@ PuzzleGame.prototype.generateCursor = function(){
     return obj;
 };
 
+PuzzleGame.prototype.closeTube = function(){
+	var closeDelay = 1000;
+	var closeEase = TWEEN.Easing.Cubic.Out;
+
+	new TWEEN.Tween(this.title1.position).to({y:30},closeDelay).easing(closeEase).start();
+	new TWEEN.Tween(this.title2.position).to({y:-30},closeDelay).easing(closeEase).start();
+
+	new TWEEN.Tween(this.tube.children[0].position).to({y:-this.boardPixelHeight/2},closeDelay).easing(closeEase).start();
+	new TWEEN.Tween(this.tube.children[0].rotation).to({y:-HALF_PI},closeDelay).easing(closeEase).start();
+
+	new TWEEN.Tween(this.tube.children[1].position).to({y:this.boardPixelHeight/2},closeDelay).easing(closeEase).start();
+	new TWEEN.Tween(this.tube.children[1].rotation).to({y:HALF_PI},closeDelay).easing(closeEase).start();
+};
+
+PuzzleGame.prototype.openTube = function(){
+	var openDelay = 1000;
+	var openEase = TWEEN.Easing.Cubic.Out;
+
+	new TWEEN.Tween(this.title1.position).to({y:this.boardPixelHeight},openDelay).easing(openEase).start();
+	new TWEEN.Tween(this.title2.position).to({y:-this.boardPixelHeight},openDelay).easing(openEase).start();
+
+	new TWEEN.Tween(this.tube.children[0].position).to({y:-this.boardPixelHeight+1},openDelay).easing(openEase).start();
+	new TWEEN.Tween(this.tube.children[0].rotation).to({y:0},openDelay).easing(openEase).start();
+
+	new TWEEN.Tween(this.tube.children[1].position).to({y:this.boardPixelHeight-1},openDelay).easing(openEase).start();
+	new TWEEN.Tween(this.tube.children[1].rotation).to({y:0},openDelay).easing(openEase).start();
+};
+
 PuzzleGame.prototype.generateTube = function(){
     var obj = new THREE.Object3D();
-    var r = this.boardRadius+this.blockDepth/2+3;
+    var r = this.boardRadius+this.blockDepth/2+5;
     var material = new THREE.MeshBasicMaterial({color:0x222222,side:THREE.DoubleSide,map:this.tubeTexture});
-    var geometry = new THREE.CylinderGeometry(r,r,400,this.boardWidth,1,false);
+    var geometry = new THREE.CylinderGeometry(r,r,this.boardPixelHeight,this.boardWidth,1,false);
     var tube = new THREE.Mesh( geometry, material );
-    tube.position.y = -(this.boardPixelHeight)/2-198;
+    tube.position.y = -(this.boardPixelHeight)
 
     var tube2 = new THREE.Mesh( geometry, material );
-    tube2.position.y = (this.boardPixelHeight)/2+198;
+    tube2.position.y = (this.boardPixelHeight)
 
     obj.add(tube);
     obj.add(tube2);
@@ -327,14 +433,14 @@ PuzzleGame.prototype.generateCylinderDepthFilter = function(){
 	var tube = new THREE.Mesh( geometry, material );
 
 	obj.add(plane);
-	obj.add(tube);
+	//obj.add(tube);
 	return obj;
 };
 
 PuzzleGame.prototype.keyPress = function(event){
     event.preventDefault();
 
-    if(!this.gameActive){
+    if(!this.hasControl){
         return;
     }
 
@@ -370,7 +476,7 @@ PuzzleGame.prototype.swapSelectedBlocks = function(){
 
 PuzzleGame.prototype.checkForMatches = function(){
 
-    if(!this.gameActive){
+    if(!this.hasControl){
         return;
     }
 
@@ -868,12 +974,11 @@ PuzzleGame.prototype.animate = function(){
     this.stats.end();
 };
 
-PuzzleGame.prototype.render = function() {
-    TWEEN.update();
+PuzzleGame.prototype.gameAnimations = function(){
 
-	var timer = performance.now();
-
-	var sThis = this;
+	if(!this.gameActive){
+		return;
+	}
 
 	var almostDead = false;
 	for(var tx = 0;tx<this.boardWidth;tx++){
@@ -882,6 +987,8 @@ PuzzleGame.prototype.render = function() {
 			break;
 		}
 	}
+
+	var sThis = this;
 
 	this.gameBoard.traverse(function(block){
 		if(almostDead){
@@ -899,12 +1006,16 @@ PuzzleGame.prototype.render = function() {
 		}
 	});
 
-    this.cursorObj.traverse(function(cursor){
-        cursor.scale.x = cursor.scale.y = (0.05*Math.sin(sThis.piTimer)+1);
-    });
+	this.cursorObj.traverse(function(cursor){
+		cursor.scale.x = cursor.scale.y = (0.05*Math.sin(sThis.piTimer)+1);
+	});
+};
 
+PuzzleGame.prototype.render = function() {
+    TWEEN.update();
+	var timer = performance.now();
+	this.gameAnimations();
 	this.renderer.render(this.scene,this.camera);
-
     this.piTimer+=0.05;
     if(this.piTimer > TWO_PI){
         this.piTimer = 0;
