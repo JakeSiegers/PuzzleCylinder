@@ -77,9 +77,6 @@ PuzzleGame.prototype.preloadComplete = function(){
 };
 
 PuzzleGame.prototype.makeText = function(){
-
-	console.log(this.font);
-
 	var textGeometry1 = new THREE.TextGeometry("Puzzle",{
 		font: this.font,
 		size:50,
@@ -145,7 +142,10 @@ PuzzleGame.prototype.initLoaders = function(){
 	manager.onLoad = function ( ) {
 		console.log( 'Loading complete!');
 		sThis.preloadComplete();
-		loaderDom.className += " hideLoader";
+		loaderDom.className = "hideLoader";
+		setTimeout(function(){
+			loaderDom.className = "hideLoaderDisplayNone";
+		},1000);
 	};
 	manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
 		console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );

@@ -58,6 +58,10 @@ body{
 	opacity:0;
 }
 
+.hideLoaderDisplayNone{
+	display:none;
+}
+
 @keyframes spin {
 	0% {
 		transform: rotate(-45deg) scale(1);
