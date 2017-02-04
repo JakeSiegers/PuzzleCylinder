@@ -480,6 +480,9 @@ PuzzleGame.prototype.checkForMatches = function(){
         return;
     }
 
+    //combo being number of matches that happened in the same check
+    var comboCount = 0;
+
     var blocksToBeDestroyed = [];
     for(var y = 0; y < this.boardHeight;y++){
 	    for(var x = 0; x < this.boardWidth;x++){
@@ -494,7 +497,7 @@ PuzzleGame.prototype.checkForMatches = function(){
 			    xToTest = 0;
 		    }
 
-		    while(xToTest != x && this.gameGrid[xToTest][y] != null && !this.gameGrid[xToTest][y].userData.locked){
+		    while(xToTest != x && this.gameGrid[xToTest][y] != null && !this.gameGrid[xToTest][y].userData.locked && !this.gameGrid[xToTest][y].userData.alreadyMatchedX){
 				var nextType = this.gameGrid[xToTest][y].userData.blockType;
 				if (nextType != typeToMatch) {
 					//no more matches!
@@ -508,8 +511,10 @@ PuzzleGame.prototype.checkForMatches = function(){
 			}
 
             if(matchChainX.length>=3){
-	            this.matches++
+	            this.matches++;
+	            comboCount++;
                 for(var i=0;i<matchChainX.length;i++){
+	                this.gameGrid[matchChainX[i]][y].userData.alreadyMatchedX = true;
                     blocksToBeDestroyed.push({x:matchChainX[i],y:y});
                 }
             }
@@ -521,7 +526,7 @@ PuzzleGame.prototype.checkForMatches = function(){
                 continue; // No Y rollover!
 		    }
 
-		    while(yToTest != y && this.gameGrid[x][yToTest] != null && !this.gameGrid[x][yToTest].userData.locked){
+		    while(yToTest != y && this.gameGrid[x][yToTest] != null && !this.gameGrid[x][yToTest].userData.locked && !this.gameGrid[x][yToTest].userData.alreadyMatchedY){
 			    var nextType = this.gameGrid[x][yToTest].userData.blockType;
 			    if (nextType != typeToMatch) {
 				    //no more matches!
@@ -535,8 +540,10 @@ PuzzleGame.prototype.checkForMatches = function(){
 		    }
 
 		    if(matchChainY.length>=3){
-			    this.matches++
+			    this.matches++;
+			    comboCount++;
 			    for(var i=0;i<matchChainY.length;i++){
+				    this.gameGrid[x][matchChainY[i]].userData.alreadyMatchedY = true;
                     blocksToBeDestroyed.push({x:x,y:matchChainY[i]});
 			    }
 		    }
@@ -544,8 +551,12 @@ PuzzleGame.prototype.checkForMatches = function(){
 	    }
     }
 
+    if(comboCount > 1){
+    	console.log("x"+comboCount+"!");
+    }
+
     for(var d = 0;d<blocksToBeDestroyed.length;d++){
-    	this.score++;
+    	this.score+=comboCount;
         this.destroyBlock(blocksToBeDestroyed[d].x,blocksToBeDestroyed[d].y);
     }
 };
@@ -785,8 +796,15 @@ PuzzleGame.prototype.generateNextRow = function(){
     if(this.hasOwnProperty('nextRow')){
         this.scene.remove(this.nextRow);
     }
+
+    var colorPool = [];
+	var allColors = Object.keys(this.blockColors);
+	for(var c=0;c<allColors.length - this.handicap;c++){
+		colorPool.push(allColors[c]);
+	}
+
     this.nextRow = new THREE.Object3D();
-    var meshes = this.generateNextRowMeshArray();
+    var meshes = this.generateNextRowMeshArray(colorPool);
     for(var i in meshes){
         this.nextRow.add(meshes[i]);
     }
@@ -796,17 +814,22 @@ PuzzleGame.prototype.generateNextRow = function(){
 	this.rowsCreated++;
 };
 
-PuzzleGame.prototype.generateNextRowMeshArray = function(){
+PuzzleGame.prototype.generateNextRowMeshArray = function(colorPool){
     var meshes = [];
     var geometry = new THREE.BoxGeometry(this.blockWidth,this.blockHeight,this.blockDepth );
     var keys = Object.keys(this.blockTextures);
     for(var x = 0; x < this.boardWidth; x++) {
-        var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
+
+
+    	//TODO: Don't spawn the next row in a way the blocks match - like the cylinder generator function. I've already started with a color pool array.
+    	var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
+
+
         var adjustedColor = new THREE.Color(this.blockColors[blockType]);
         adjustedColor.add( new THREE.Color(0x505050));
         var material = new THREE.MeshBasicMaterial( { color: adjustedColor,map:this.blockTextures[blockType],transparent:true,opacity:1});
         var mesh = new THREE.Mesh(geometry,material);
-        mesh.userData.color = mesh.material.color.getHex();
+        //mesh.userData.color = mesh.material.color.getHex();
         mesh.userData.blockType = blockType;
         mesh.position.x = this.calcXBlockPos(x);
         mesh.position.y = this.calcYBlockPos(0);
@@ -821,11 +844,14 @@ PuzzleGame.prototype.generateBlockMesh = function(blockType,x,y){
     var geometry = new THREE.BoxGeometry(this.blockWidth,this.blockHeight,this.blockDepth);
     var material = new THREE.MeshBasicMaterial({color: this.blockColors[blockType],map:this.blockTextures[blockType]});
     var mesh = new THREE.Mesh(geometry,material);
-    mesh.userData.color = mesh.material.color.getHex();
+    //mesh.userData.color = mesh.material.color.getHex();
 
     mesh.userData.blockType = blockType;
     mesh.userData.locked = false;
     mesh.userData.exploding = false;
+    //Used to prevent double counting when finding matches.
+    mesh.userData.alreadyMatchedX = false;
+	mesh.userData.alreadyMatchedY = false;
 
     mesh.position.x = this.calcXBlockPos(x);
     mesh.position.y = this.calcYBlockPos(y);
@@ -903,9 +929,9 @@ PuzzleGame.prototype.cylinder = function(mapArray){
     var blocks = new THREE.Object3D();
 	var colorPool = [];
     var allColors = Object.keys(this.blockColors);
-    for(var i=0;i<allColors.length - this.handicap;i++){
-    	colorPool.push(allColors[i]);
-    }
+	for(var i=0;i<allColors.length - this.handicap;i++){
+		colorPool.push(allColors[i]);
+	}
 
 	var goodMap = this.generateMap(colorPool,0.3);
 
@@ -980,35 +1006,42 @@ PuzzleGame.prototype.gameAnimations = function(){
 		return;
 	}
 
-	var almostDead = false;
+	var almostDead = {};
 	for(var tx = 0;tx<this.boardWidth;tx++){
-		if(this.gameGrid[tx][this.boardHeight-10] !== null){
-			almostDead = true;
-			break;
+		almostDead[tx] = false;
+		if(this.gameGrid[tx][this.boardHeight-3] !== null){
+			almostDead[tx] = true;
 		}
 	}
 
-	var sThis = this;
+	for(var x=0;x<this.boardWidth;x++){
+		for(var y=0;y<this.boardHeight;y++) {
+			var block = this.gameGrid[x][y];
+			if(block !== null && block.userData.exploding){
+				block.scale.x = block.scale.y =  (0.1*Math.sin(this.piTimer*16)+0.8);
+			}
 
-	this.gameBoard.traverse(function(block){
-		if(almostDead){
-			//console.log(block);
-			//block.quaternion.x = block.position.x;
-			//block.quaternion.y = block.position.y;
-			//block.quaternion.z = block.position.z;
-			//console.log(block.quaternion.y);
-			//block.quaternion.z.setFromAxisAngle(block.position,0.0001*Math.sin(sThis.piTimer));
+			if(block !== null) {
+				if(almostDead[x]){
+					block.rotation.z = Math.cos(this.piTimer*3)*PI/32
+				}else{
+					block.rotation.z = 0;
+				}
+			}
 		}
-		if(block.userData.exploding){
-			//block.rotation.y = timer * 0.01;
-			block.scale.x = block.scale.y =  (0.1*Math.sin(sThis.piTimer*16)+0.8);
-			//block.rotation.x = timer * 0.01;
-		}
-	});
+	}
 
-	this.cursorObj.traverse(function(cursor){
-		cursor.scale.x = cursor.scale.y = (0.05*Math.sin(sThis.piTimer)+1);
-	});
+	for(var i =0; i< this.nextRow.children.length;i++){
+		if(almostDead[i]){
+			this.nextRow.children[i].rotation.z = Math.cos(this.piTimer*3)*PI/32
+		}else{
+			this.nextRow.children[i].rotation.z = 0;
+		}
+	}
+
+	for(var c =0; c< this.cursorObj.children.length;c++) {
+		this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = (0.05*Math.sin(this.piTimer)+1);
+	}
 };
 
 PuzzleGame.prototype.render = function() {

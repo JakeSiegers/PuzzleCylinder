@@ -68,7 +68,7 @@ PuzzleGame.prototype.initDatGui = function(){
 	f4.add(this,"resetGame");
 	f4.open();
 
-	var f5 = gui.addFolder('VB10');
+	var f5 = gui.addFolder('VB11');
 
 	//gui.close();
 };
