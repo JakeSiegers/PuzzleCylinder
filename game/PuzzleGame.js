@@ -814,16 +814,56 @@ PuzzleGame.prototype.generateNextRow = function(){
 	this.rowsCreated++;
 };
 
-PuzzleGame.prototype.generateNextRowMeshArray = function(colorPool){
+PuzzleGame.prototype.generateNextRowMeshArray = function(colorPoolIn){
     var meshes = [];
     var geometry = new THREE.BoxGeometry(this.blockWidth,this.blockHeight,this.blockDepth );
-    var keys = Object.keys(this.blockTextures);
+    //var keys = Object.keys(this.blockTextures);
+
+    //Preload the array with nulls
+	for(var x1 = 0; x1 < this.boardWidth; x1++) {
+		meshes[x1] = null;
+	}
+
     for(var x = 0; x < this.boardWidth; x++) {
 
+	    var colorPool = colorPoolIn.slice(0);
+	    var lastXType = '';
+	    var lastYType = '';
 
-    	//TODO: Don't spawn the next row in a way the blocks match - like the cylinder generator function. I've already started with a color pool array.
-    	var blockType = keys[ (keys.length-this.handicap) * Math.random() << 0];
+	    for(var i=-2;i<=2;i++) {
 
+		    if(i == 0){
+			    continue;
+		    }
+
+		    var nextXBlock = meshes[(x-i+this.boardWidth)%this.boardWidth];
+
+		    if(nextXBlock !== null){
+			    var xType = nextXBlock.userData.blockType;
+			    var xPos = colorPool.indexOf(xType);
+			    if(xType == lastXType && xPos !== -1 && colorPool.length > 1){
+				    colorPool.splice(xPos, 1);
+			    }
+			    lastXType = xType;
+		    }
+
+		    if(i < 0){
+		    	continue;
+		    }
+
+		    var nextYBlock = this.gameGrid[x][i-1];
+		    if(nextYBlock !== null){
+			    var yType = nextYBlock.userData.blockType;
+			    var yPos = colorPool.indexOf(yType);
+			    if(yType == lastYType && yPos !== -1 && colorPool.length > 1){
+				    colorPool.splice(yPos,1);
+			    }
+			    lastYType = yType;
+		    }
+
+	    }
+
+	    var blockType = colorPool[Math.floor(Math.random()*colorPool.length)];
 
         var adjustedColor = new THREE.Color(this.blockColors[blockType]);
         adjustedColor.add( new THREE.Color(0x505050));
@@ -835,7 +875,7 @@ PuzzleGame.prototype.generateNextRowMeshArray = function(colorPool){
         mesh.position.y = this.calcYBlockPos(0);
         mesh.position.z = this.calcZBlockPos(x);
         mesh.rotation.y = this.calcRBlockPos(x);
-        meshes.push(mesh);
+        meshes[x] = mesh;
     }
     return meshes;
 };
