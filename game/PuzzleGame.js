@@ -4,6 +4,9 @@
 const PI = Math.PI;
 const TWO_PI = PI*2;
 const HALF_PI = PI/2;
+const MODE_MENU = 0;
+const MODE_ENDLESS = 1;
+const MODE_SCORECARD = 2
 
 function PuzzleGame(){
 
@@ -36,31 +39,14 @@ function PuzzleGame(){
 
 PuzzleGame.prototype.preloadComplete = function(){
 
-	setTimeout(this.closeTube.bind(this),100);
-	setTimeout(this.resetGame.bind(this),2000);
+	this.gameBoard = new THREE.Object3D();
+	this.nextRow = new THREE.Object3D();
+	this.cursorObj = new THREE.Object3D();
+	this.makeMenuText();
 
-	/*
+	this.closeAndSetGameMode(MODE_MENU);
 
-	var textGeometry = new THREE.TextGeometry( "Puzzle Cylinder",
-		{
-
-			font: this.font
-
-		});
-
-
-	var textMaterial = new THREE.MeshBasicMaterial( { color: 0x62254a } );
-	var text3D = new THREE.Mesh( textGeometry, textMaterial );
-	this.scene.add(text3D);
-	*/
-
-
-
-
-	this.makeText();
-
-
-
+	//setTimeout(this.resetGame.bind(this),2000);
 
 	this.stats = new Stats();
 	document.body.appendChild( this.stats.dom );
@@ -76,16 +62,84 @@ PuzzleGame.prototype.preloadComplete = function(){
 	this.animate();
 };
 
-PuzzleGame.prototype.makeText = function(){
+PuzzleGame.prototype.closeAndSetGameMode = function(newMode){
+	this.closeTube(this.setGameMode.bind(this,newMode));
+};
+
+PuzzleGame.prototype.setGameMode = function(newMode){
+	this.menuObj.visible = false;
+	this.menuLogo.visible = false;
+	this.menuScore.visible = false;
+	this.gameBoard.visible = false;
+	this.cursorObj.visible = false;
+	this.nextRow.visible = false;
+
+	this.gameMode = newMode;
+	switch(newMode){
+		case MODE_MENU:
+			this.menuSelection = 0;
+			this.menuOptions = ["Play Endless","Options","Credits"];
+			this.menuObj.visible = true;
+			this.menuLogo.visible = true;
+			this.openTube();
+
+			//TEMP BEFORE MENU IS FINISHED
+			setTimeout(this.closeAndSetGameMode.bind(this,MODE_ENDLESS),2000);
+
+			break;
+		case MODE_ENDLESS:
+			this.gameBoard.visible = true;
+			this.cursorObj.visible = true;
+			this.nextRow.visible = true;
+			this.resetGame();
+			this.openTube();
+			break;
+		case MODE_SCORECARD:
+			this.menuObj.visible = true;
+			this.menuLogo.visible = true;
+			this.menuScore.visible = true;
+			this.setScoreCardText();
+			this.openTube();
+			break;
+	}
+};
+
+PuzzleGame.prototype.setScoreCardText = function(){
+	var textGeometry1 = new THREE.TextGeometry("Score: "+this.score,{
+		font: this.font,
+		size:20,
+		height :2
+	});
+
+	var material = new THREE.MeshBasicMaterial({color: this.blockColors.heart});
+	var score = new THREE.Mesh(textGeometry1, material);
+	textGeometry1.computeBoundingBox();
+	score.position.x =  -(textGeometry1.boundingBox.max.x - textGeometry1.boundingBox.min.x)/2;
+
+	sThis = this;
+	this.menuScore.traverseVisible(function(obj){
+		sThis.menuScore.remove(obj);
+	});
+
+	this.menuScore.add(score);
+};
+
+PuzzleGame.prototype.makeMenuText = function(){
+	this.menuObj = new THREE.Group();
+	this.menuOptionsObj = new THREE.Group();
+	this.menuLogo = new THREE.Group();
+	this.menuScore = new THREE.Group();
+
 	var textGeometry1 = new THREE.TextGeometry("Puzzle",{
 		font: this.font,
-		size:50,
-		height :5
+		size:40,
+		height :2
 	});
+
 	var textGeometry2 = new THREE.TextGeometry("Cylinder",{
 		font: this.font,
-		size:50,
-		height :5
+		size:40,
+		height :2
 	});
 
 	var material = new THREE.MeshBasicMaterial({color: this.blockColors.diamond});
@@ -101,12 +155,19 @@ PuzzleGame.prototype.makeText = function(){
 	var textWidth2 = textGeometry2.boundingBox.max.x - textGeometry2.boundingBox.min.x;
 	this.title2.position.x =  -textWidth2/2;
 
-	this.title1.position.y = this.boardPixelHeight;
-	this.title2.position.y = -this.boardPixelHeight;
+	this.title1.position.y = 30;
+	this.title2.position.y = -30;
 
-	this.title1.position.z = this.title2.position.z = this.boardRadius+5;
-	this.scene.add(this.title1);
-	this.scene.add(this.title2);
+	this.menuLogo.add(this.title1);
+	this.menuLogo.add(this.title2);
+
+	this.menuLogo.position.y = 100;
+
+	this.menuObj.add(this.menuLogo);
+	this.menuObj.add(this.menuScore);
+
+	this.menuObj.position.z = 15;
+	this.scene.add(this.menuObj);
 };
 
 
@@ -208,7 +269,7 @@ PuzzleGame.prototype.initLoaders = function(){
 
 PuzzleGame.prototype.resetGameVariables = function(){
 	//TODO:Sort these!
-	this.stopQueue = 0;
+	this.animationQueue = 0;
 	this.score = 0;
 	this.gameGrid = [];
 	this.boardHeight = 13;
@@ -231,20 +292,24 @@ PuzzleGame.prototype.resetGameVariables = function(){
 	this.rowsCreated = 0;
 	this.piTimer = 0;
 	this.debugSelection = false;
+	this.chainCount = 0;
+	this.chainTimer = null
 };
 
-PuzzleGame.prototype.resetGame = function(map){
-    if(this.stopQueue != 0){
-        console.warn('Cannot reset while things are happening! (stopQueue is not 0!)');
-        return;
-    }
+PuzzleGame.prototype.startGame = function(){
+	this.closeAndSetGameMode(MODE_ENDLESS);
+};
+
+PuzzleGame.prototype.resetGame = function(){
+
+    TWEEN.removeAll();
 
     this.resetGameVariables();
 
     if(this.hasOwnProperty('gameBoard')){
         this.scene.remove(this.gameBoard);
     }
-    this.gameBoard = this.cylinder(map);
+    this.gameBoard = this.cylinder();
     this.scene.add(this.gameBoard);
 
     this.generateNextRow();
@@ -288,7 +353,7 @@ PuzzleGame.prototype.resetGame = function(map){
         sThis.hasControl = true;
         sThis.gameActive = true;
         sThis.checkForMatches();
-        //sThis.stopQueue = 1;
+        //sThis.animationQueue = 1;
     });
 };
 
@@ -307,11 +372,11 @@ PuzzleGame.prototype.loseAnimation = function(){
             }
         }
     }
-	setTimeout(this.closeTube.bind(this),2500);
+	setTimeout(this.closeAndSetGameMode.bind(this,MODE_SCORECARD),2500);
 };
 
 PuzzleGame.prototype.checkToPushBlocks = function(){
-    if(this.stopQueue !== 0){
+    if(this.animationQueue !== 0){
     //if(TWEEN.getAll().length != 0){
         this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),this.pushDelay);
         return;
@@ -377,32 +442,36 @@ PuzzleGame.prototype.generateCursor = function(){
     return obj;
 };
 
-PuzzleGame.prototype.closeTube = function(){
+PuzzleGame.prototype.closeTube = function(completeFn){
 	var closeDelay = 1000;
 	var closeEase = TWEEN.Easing.Cubic.Out;
 
-	new TWEEN.Tween(this.title1.position).to({y:30},closeDelay).easing(closeEase).start();
-	new TWEEN.Tween(this.title2.position).to({y:-30},closeDelay).easing(closeEase).start();
+	//new TWEEN.Tween(this.title1.position).to({y:30},closeDelay).easing(closeEase).start();
+	//new TWEEN.Tween(this.title2.position).to({y:-30},closeDelay).easing(closeEase).start();
 
 	new TWEEN.Tween(this.tube.children[0].position).to({y:-this.boardPixelHeight/2},closeDelay).easing(closeEase).start();
 	new TWEEN.Tween(this.tube.children[0].rotation).to({y:-HALF_PI},closeDelay).easing(closeEase).start();
 
 	new TWEEN.Tween(this.tube.children[1].position).to({y:this.boardPixelHeight/2},closeDelay).easing(closeEase).start();
 	new TWEEN.Tween(this.tube.children[1].rotation).to({y:HALF_PI},closeDelay).easing(closeEase).start();
+
+	setTimeout(completeFn,closeDelay);
 };
 
-PuzzleGame.prototype.openTube = function(){
+PuzzleGame.prototype.openTube = function(completeFn){
 	var openDelay = 1000;
 	var openEase = TWEEN.Easing.Cubic.Out;
 
-	new TWEEN.Tween(this.title1.position).to({y:this.boardPixelHeight},openDelay).easing(openEase).start();
-	new TWEEN.Tween(this.title2.position).to({y:-this.boardPixelHeight},openDelay).easing(openEase).start();
+	//new TWEEN.Tween(this.title1.position).to({y:this.boardPixelHeight},openDelay).easing(openEase).start();
+	//new TWEEN.Tween(this.title2.position).to({y:-this.boardPixelHeight},openDelay).easing(openEase).start();
 
 	new TWEEN.Tween(this.tube.children[0].position).to({y:-this.boardPixelHeight+1},openDelay).easing(openEase).start();
 	new TWEEN.Tween(this.tube.children[0].rotation).to({y:0},openDelay).easing(openEase).start();
 
 	new TWEEN.Tween(this.tube.children[1].position).to({y:this.boardPixelHeight-1},openDelay).easing(openEase).start();
 	new TWEEN.Tween(this.tube.children[1].rotation).to({y:0},openDelay).easing(openEase).start();
+
+	setTimeout(completeFn,openDelay);
 };
 
 PuzzleGame.prototype.generateTube = function(){
@@ -410,11 +479,13 @@ PuzzleGame.prototype.generateTube = function(){
     var r = this.boardRadius+this.blockDepth/2+5;
     var material = new THREE.MeshBasicMaterial({color:0x222222,side:THREE.DoubleSide,map:this.tubeTexture});
     var geometry = new THREE.CylinderGeometry(r,r,this.boardPixelHeight,this.boardWidth,1,false);
-    var tube = new THREE.Mesh( geometry, material );
-    tube.position.y = -(this.boardPixelHeight)
+    var tube = new THREE.Mesh( geometry, material);
+    tube.position.y = -(this.boardPixelHeight/2);
+	tube.rotation.y = - HALF_PI;
 
     var tube2 = new THREE.Mesh( geometry, material );
-    tube2.position.y = (this.boardPixelHeight)
+    tube2.position.y = (this.boardPixelHeight/2);
+	tube2.rotation.y = HALF_PI;
 
     obj.add(tube);
     obj.add(tube2);
@@ -552,13 +623,32 @@ PuzzleGame.prototype.checkForMatches = function(){
     }
 
     if(comboCount > 1){
-    	console.log("x"+comboCount+"!");
+    	//console.log("x"+comboCount+"!");
+    }
+
+
+    if (blocksToBeDestroyed.length > 0) {
+	    this.chainCount++;
+
+	    if(this.chainTimer !== null){
+		    clearTimeout(this.chainTimer);
+	    }
+	    this.chainTimer = setTimeout(this.resetChain.bind(this),this.dropDelay+600);
+
+	    if (this.chainCount > 1) {
+		    console.log('CHAIN ' + this.chainCount);
+	    }
     }
 
     for(var d = 0;d<blocksToBeDestroyed.length;d++){
-    	this.score+=comboCount;
+    	this.score+=comboCount*this.chainCount;
         this.destroyBlock(blocksToBeDestroyed[d].x,blocksToBeDestroyed[d].y);
     }
+};
+
+PuzzleGame.prototype.resetChain = function(){
+	this.chainCount = 0;
+	this.chainTimer = null;
 };
 
 PuzzleGame.prototype.swapBlocks = function(x,y,x2){
@@ -576,23 +666,23 @@ PuzzleGame.prototype.swapBlocks = function(x,y,x2){
 
 	var sThis = this;
     if(block1 !== null){
-	    this.stopQueue++;
+	    this.animationQueue++;
         new TWEEN.Tween(block1.position).to({
             x:this.calcXBlockPos(x2),
             z:this.calcZBlockPos(x2)
         },50).easing( TWEEN.Easing.Bounce.Out).start().onComplete(function(){
-            sThis.stopQueue--;
+            sThis.animationQueue--;
         });
         block1.rotation.y = this.calcRBlockPos(x2);
     }
 
     if(block2 !== null) {
-	    this.stopQueue++;
+	    this.animationQueue++;
         new TWEEN.Tween(block2.position).to({
             x:this.calcXBlockPos(x),
             z:this.calcZBlockPos(x)
         },50).easing( TWEEN.Easing.Bounce.Out).start().onComplete(function(){
-	        sThis.stopQueue--;
+	        sThis.animationQueue--;
         });
         block2.rotation.y = this.calcRBlockPos(x);
     }
@@ -603,22 +693,22 @@ PuzzleGame.prototype.swapBlocks = function(x,y,x2){
     if(block1 !=  null && block2 == null){
         if(y-1>=0 && this.gameGrid[x2][y-1] == null){
             this.lockBlocksStartingAtPoint(x2,y);
-	        this.stopQueue++;
+	        this.animationQueue++;
             setTimeout(this.dropBlocksStartingAtPoint.bind(this,x2,y),this.dropDelay);
         }
         this.lockBlocksStartingAtPoint(x,y+1);
-	    this.stopQueue++;
+	    this.animationQueue++;
         setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y+1),this.dropDelay);
     }
 
     else if(block2 !=  null && block1 == null){
         if(y-1>=0 && this.gameGrid[x][y-1] == null){
             this.lockBlocksStartingAtPoint(x,y);
-	        this.stopQueue++;
+	        this.animationQueue++;
             setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y),this.dropDelay);
         }
         this.lockBlocksStartingAtPoint(x2,y+1);
-	    this.stopQueue++;
+	    this.animationQueue++;
         setTimeout(this.dropBlocksStartingAtPoint.bind(this,x2,y+1),this.dropDelay);
     }
 
@@ -631,16 +721,18 @@ PuzzleGame.prototype.destroyBlock = function(x,y){
     if(this.gameGrid[x][y] == null || this.gameGrid[x][y].userData.locked){
         return;
     }
-    this.stopQueue++;
+    this.animationQueue++;
 
     this.gameGrid[x][y].userData.locked = true;
     this.gameGrid[x][y].userData.exploding = true;
     //this.gameGrid[x][y].material.map = this.explodeTexture;
 
+	/*
 	new TWEEN.Tween(this.gameGrid[x][y].scale).to({
 		x:0.7,
 		y:0.7
 	},800).easing( TWEEN.Easing.Elastic.Out).start();
+	*/
 
     setTimeout(this.deleteBlock.bind(this,x,y),500);
 };
@@ -661,15 +753,15 @@ PuzzleGame.prototype.deleteBlock = function(x,y){
     this.gameGrid[x][y].userData.exploding = false;
     this.gameBoard.remove(this.gameGrid[x][y]);
     this.gameGrid[x][y] = null;
-	this.stopQueue--;
+	this.animationQueue--;
 
     this.lockBlocksStartingAtPoint(x,y+1);
-	this.stopQueue++;
+	this.animationQueue++;
     setTimeout(this.dropBlocksStartingAtPoint.bind(this,x,y+1),this.dropDelay);
 };
 
 PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
-	this.stopQueue--;
+	this.animationQueue--;
     var stillGottaFall = true;
     for(var i = y;i<this.boardHeight;i++) {
         if (this.gameGrid[x][i] !== null && !this.gameGrid[x][i].userData.exploding){
@@ -682,9 +774,9 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
                 continue;
             }
             sThis = this;
-            this.stopQueue++;
+            this.animationQueue++;
             new TWEEN.Tween(this.gameGrid[x][i].position).to({y:this.calcYBlockPos(i-1)},200).easing( TWEEN.Easing.Bounce.Out).start().onComplete(function(){
-                sThis.stopQueue--;
+                sThis.animationQueue--;
             });
             this.gameGrid[x][i-1] = this.gameGrid[x][i];
             this.gameGrid[x][i] = null;
@@ -695,7 +787,7 @@ PuzzleGame.prototype.dropBlocksStartingAtPoint = function(x,y){
     }
     if(stillGottaFall){
         if(y-1>=0){
-	        this.stopQueue++;
+	        this.animationQueue++;
             this.dropBlocksStartingAtPoint(x,y-1);
         }
     }else{
@@ -1042,6 +1134,11 @@ PuzzleGame.prototype.animate = function(){
 
 PuzzleGame.prototype.gameAnimations = function(){
 
+	var timer = performance.now();
+
+	this.menuObj.rotation.y = Math.sin(this.piTimer)*(HALF_PI/10);
+	//this.menuObj.rotation.x = Math.cos(this.piTimer*2)*(HALF_PI/10);
+
 	if(!this.gameActive){
 		return;
 	}
@@ -1082,11 +1179,11 @@ PuzzleGame.prototype.gameAnimations = function(){
 	for(var c =0; c< this.cursorObj.children.length;c++) {
 		this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = (0.05*Math.sin(this.piTimer)+1);
 	}
+
 };
 
 PuzzleGame.prototype.render = function() {
     TWEEN.update();
-	var timer = performance.now();
 	this.gameAnimations();
 	this.renderer.render(this.scene,this.camera);
     this.piTimer+=0.05;

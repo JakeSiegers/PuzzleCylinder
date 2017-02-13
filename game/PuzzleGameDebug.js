@@ -64,11 +64,12 @@ PuzzleGame.prototype.initDatGui = function(){
 	f4.add(this,"pushDelay",0,200).step(1).listen();
 	f4.add(this,"matches").listen();
 	f4.add(this,"score").listen();
+	f4.add(this,"chainCount").listen();
 	f4.add(this,"rowsCreated").listen();
-	f4.add(this,"resetGame");
+	f4.add(this,"startGame");
 	f4.open();
 
-	var f5 = gui.addFolder('VB12');
+	var f5 = gui.addFolder('VB13');
 
 	//gui.close();
 };
