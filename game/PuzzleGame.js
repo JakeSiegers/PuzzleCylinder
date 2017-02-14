@@ -6,12 +6,12 @@ const TWO_PI = PI*2;
 const HALF_PI = PI/2;
 const MODE_MENU = 0;
 const MODE_ENDLESS = 1;
-const MODE_SCORECARD = 2
+const MODE_SCORECARD = 2;
 
 function PuzzleGame(){
 
 	this.renderer = new THREE.WebGLRenderer( { antialias: false ,alpha: true} );
-	this.renderer.setClearColor(0x000000,0.5);
+	this.renderer.setClearColor(0x000000,0);
 	this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	this.renderer.setPixelRatio(window.devicePixelRatio);
