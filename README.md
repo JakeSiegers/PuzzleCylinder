@@ -1,6 +1,8 @@
 # PuzzleCylinder
 Re-creating The 3D Mode from [Pokemon Puzzle League](https://en.wikipedia.org/wiki/Pok%C3%A9mon_Puzzle_League) in Three JS
 
+## [Click Here To Play The Latest Version](https://jakesiegers.github.io/PuzzleCylinder/)
+
 ## How to Play
 Match blocks in groups of 3 or more vertically or horizontally to destroy blocks and earn points!
 
