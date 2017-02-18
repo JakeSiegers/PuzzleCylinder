@@ -6,7 +6,6 @@
   "repository": "https://github.com/JakeSiegers/PuzzleCylinder",
   "devDependencies": {
     "babel-cli": "^6.23.0",
-    "babel-preset-env": "^1.1.8",
-    "babel-preset-es2015": "^6.22.0"
+    "babel-preset-env": "^1.1.8"
   }
 }
