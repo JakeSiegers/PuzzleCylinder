@@ -376,27 +376,37 @@ PuzzleGame.prototype.loseAnimation = function(){
 };
 
 PuzzleGame.prototype.checkToPushBlocks = function(){
-    if(this.animationQueue !== 0){
+    if(!this.gameActive){
+    	return;
+    }
+
+	if(this.animationQueue !== 0){
     //if(TWEEN.getAll().length != 0){
         this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),this.pushDelay);
         return;
     }
-    for(var tx = 0;tx<this.boardWidth;tx++){
-        if(this.gameGrid[tx][this.boardHeight-1] !== null){
-            //YOU LOSE
-            this.hasControl = false;
-	        this.gameActive = false;
-            this.loseAnimation();
-            return;
-        }
-    }
 
-    this.pushTowerUp();
-    this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),this.pushDelay);
+    if(this.pushTowerUp()){
+	    this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this),this.pushDelay);
+    }
 };
 
-PuzzleGame.prototype.pushTowerUp = function(){
-    this.upOffset += this.blockHeight/100;
+PuzzleGame.prototype.pushTowerUp = function(divider){
+	if(!divider){
+		divider = 100;
+	}
+
+	for(var tx = 0;tx<this.boardWidth;tx++){
+		if(this.gameGrid[tx][this.boardHeight-1] !== null){
+			//YOU LOSE
+			this.hasControl = false;
+			this.gameActive = false;
+			this.loseAnimation();
+			return false;
+		}
+	}
+
+    this.upOffset += (this.blockHeight/divider);
     if(this.upOffset>this.blockHeight){
 
     	for(var x=0;x<this.boardWidth;x++){
@@ -424,6 +434,8 @@ PuzzleGame.prototype.pushTowerUp = function(){
     this.updateTowerPos();
     this.updateCursorPos();
     this.updateNextRowPos();
+
+    return true;
 };
 
 PuzzleGame.prototype.generateCursor = function(){
@@ -519,6 +531,7 @@ PuzzleGame.prototype.keyPress = function(event){
     switch(event.keyCode){
         case 88: //X
             //this.destroyBlock(this.selectorX,this.selectorY);
+	        this.pushTowerUp(10);
             break;
         case 90: //Z
 
