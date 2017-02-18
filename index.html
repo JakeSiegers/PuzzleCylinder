@@ -5,30 +5,28 @@
 	    <meta charset="utf-8">
 	    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link rel="stylesheet" href="css/style.css">
-
 	</head>
 	<body>
-	<div id="loader">
-		<div id="loaderWrap">
-			<div id="box"></div>
-			<div id="loaderText">0</div>
-		</div>
-	</div>
+	<!-- Render Preloader -->
+	<script src='dist/game/PuzzleCSSLoader.js'></script>
+
 	<!-- Three JS Itself -->
-	<script src="3js/three.min.js"></script>
+	<script src="js/three.min.js"></script>
 
 	<!-- External Libraries -->
-	<script src="3js/libs/stats.min.js"></script>
-	<script src='3js/libs/tween.min.js'></script>
-	<script src='3js/libs/dat.gui.min.js'></script>
+	<script src="js/libs/stats.min.js"></script>
+	<script src='js/libs/tween.min.js'></script>
+	<script src='js/libs/dat.gui.min.js'></script>
+	<script src='js/renderers/CSS3DRenderer.js'></script>
 
-	<!-- [INSERT DANK MEME HERE] -->
-	<script src='game/PuzzleGame.js'></script>
-	<script src='game/PuzzleGameDebug.js'></script>
-	<script src="game/PuzzleGameTouch.js"></script>
-	<script src="game/PuzzleGameInit.js"></script>
+	<!-- Game Code -->
+	<script src='dist/game/PuzzleGame.js'></script>
+	<script src='dist/game/PuzzleGameDebug.js'></script>
+	<script src="dist/game/PuzzleGameTouch.js"></script>
+	<script src="dist/game/PuzzleMenu.js"></script>
+	<script src="dist/game/PuzzleGameInit.js"></script>
 
 	<!-- Google Stats -->
-	<script src='game/GoogleAnalytics.js'></script>
+	<script src='js/GoogleAnalytics.js'></script>
 	</body>
 </html>

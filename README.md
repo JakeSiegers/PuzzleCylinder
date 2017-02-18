@@ -13,6 +13,7 @@ You keep playing until you're overrun with blocks, and the tower reaches the top
 ### Desktop Controls
 * **Arrow Keys** - Move Cursor 
 * **Spacebar** - Swap Blocks
+* **X** - Speeds Up Tower
 
 ### Mobile Controls
 * **Swipe Left / Right / Up / Down** - Move Cursor
