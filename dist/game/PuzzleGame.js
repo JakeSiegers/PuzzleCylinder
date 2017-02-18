@@ -165,17 +165,15 @@ PuzzleGame.prototype.makeMenuText = function () {
 	this.menuObj.add(this.menuLogo);
 	this.menuObj.add(this.menuScore);
 
-	var number = document.createElement('div');
-	number.className = 'menuText';
-	number.textContent = "THREE.JS";
-
+	//Playing around with floating canvas... Making a menu won't be easy, sadly....
+	//It will probably have to be just regular dom elements.... which kinda blows.
+	//let number = document.createElement( 'div' );
+	//number.className = 'menuText';
+	//number.textContent = "THREE.JS";
 	//this.menuTexture = new CanvasTexture(number);
-
-	var plane = new THREE.PlaneGeometry(100, 100);
-
-	var numberObj = new THREE.Mesh(plane, material);
-
-	this.menuObj.add(numberObj);
+	//let plane = new THREE.PlaneGeometry(100,100);
+	//let numberObj = new THREE.Mesh(plane,material);
+	//this.menuObj.add(numberObj);
 
 	this.menuObj.position.z = 15;
 	this.scene.add(this.menuObj);
