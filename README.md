@@ -20,3 +20,10 @@ You keep playing until you're overrun with blocks, and the tower reaches the top
 * **Double Tap** - Swap Blocks 
 
 ![Game Screenshot](readme/2017-02-04 13_18_35-Jake's Puzzle Cylinder.png)
+
+
+## Setting Up Development Environment
+(These are mainly notes for myself, you may not be working in the same environment)
+* Clone Repo
+* Run `npm install` to get all the required babel binaries
+* Set up PHPStorm / WebStorm to auto-compile with babel javascript to dist with "file watchers"
