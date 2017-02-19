@@ -20,6 +20,7 @@ PuzzleGame.prototype.debugSelectionUpdate = function(){
 			}
 		}
 
+
 		if (this.gameGrid[this.selectorX][this.selectorY] !== null) {
 			this.gameGrid[this.selectorX][this.selectorY].material.color.setHex(0x00ff00);
 		}
@@ -36,7 +37,7 @@ PuzzleGame.prototype.debugSelectionUpdate = function(){
 };
 
 PuzzleGame.prototype.initDatGui = function(){
-	var gui = new dat.GUI();
+	let gui = new dat.GUI();
 
 	/*
 	var f1 = gui.addFolder('SELECTION');
@@ -59,7 +60,7 @@ PuzzleGame.prototype.initDatGui = function(){
 	//f3.open();
 	*/
 
-	var f4 = gui.addFolder('GAMEPLAY');
+	let f4 = gui.addFolder('GAMEPLAY');
 	f4.add(this,"handicap",0,4).step(1).listen();
 	f4.add(this,"pushDelay",0,200).step(1).listen();
 	f4.add(this,"matches").listen();
@@ -67,9 +68,10 @@ PuzzleGame.prototype.initDatGui = function(){
 	f4.add(this,"chainCount").listen();
 	f4.add(this,"rowsCreated").listen();
 	f4.add(this,"startGame");
-	f4.open();
+	//f4.open();
 
-	var f5 = gui.addFolder('VB13');
+	let versionDate = new Date(PG.lastUpdateTime*1000);
+	let f5 = gui.addFolder("Built: "+versionDate.toLocaleString());
 
-	gui.close();
+	//gui.close();
 };

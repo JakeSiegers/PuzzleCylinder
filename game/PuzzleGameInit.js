@@ -1,5 +1,4 @@
 PuzzleMenu.init();
-
 let PG = null;
 
 // Auto refresh on new version
@@ -26,5 +25,6 @@ http.onreadystatechange = function() {//Call a function when the state changes.
 			PG = new PuzzleGame();
 		}
 	}
+	PG.lastUpdateTime = localStorage.getItem("version");
 };
 http.send(params);

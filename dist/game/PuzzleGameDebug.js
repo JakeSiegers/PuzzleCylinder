@@ -69,9 +69,10 @@ PuzzleGame.prototype.initDatGui = function () {
 	f4.add(this, "chainCount").listen();
 	f4.add(this, "rowsCreated").listen();
 	f4.add(this, "startGame");
-	f4.open();
+	//f4.open();
 
-	var f5 = gui.addFolder('VB13');
+	var versionDate = new Date(PG.lastUpdateTime * 1000);
+	var f5 = gui.addFolder("Built: " + versionDate.toLocaleString());
 
-	gui.close();
+	//gui.close();
 };

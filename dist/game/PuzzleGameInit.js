@@ -1,7 +1,6 @@
 "use strict";
 
 PuzzleMenu.init();
-
 var PG = null;
 
 // Auto refresh on new version
@@ -29,5 +28,6 @@ http.onreadystatechange = function () {
 			PG = new PuzzleGame();
 		}
 	}
+	PG.lastUpdateTime = localStorage.getItem("version");
 };
 http.send(params);
