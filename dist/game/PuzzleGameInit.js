@@ -5,7 +5,7 @@ var PG = null;
 
 // Auto refresh on new version
 var http = new XMLHttpRequest();
-var url = "/PuzzleCylinder/version.html?date=" + Math.floor(Date.now());
+var url = "/PuzzleCylinder/version.html?date=" + Math.floor(Date.now() / 1000);
 http.open("GET", url, true);
 
 //Send the proper header information along with the request

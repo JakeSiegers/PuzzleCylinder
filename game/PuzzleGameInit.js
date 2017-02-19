@@ -3,7 +3,7 @@ let PG = null;
 
 // Auto refresh on new version
 let http = new XMLHttpRequest();
-let url = "/PuzzleCylinder/version.html?date="+Math.floor(Date.now());
+let url = "/PuzzleCylinder/version.html?date="+Math.floor(Date.now()/1000);
 http.open("GET", url, true);
 
 //Send the proper header information along with the request
