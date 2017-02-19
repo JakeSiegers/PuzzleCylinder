@@ -75,3 +75,5 @@ PuzzleGame.prototype.initDatGui = function () {
 
 	gui.close();
 };
+
+console.log('test');
