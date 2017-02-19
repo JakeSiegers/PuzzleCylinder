@@ -124,13 +124,6 @@ body{
 	transition: all 2s ease;
 }
 
-.hideMenu{
-
-}
-
-.hideMenuDisplayNone{
-
-}
 
 .menuTitle{
 	position: absolute;
@@ -142,4 +135,18 @@ body{
 	left:50%;
 	width:500px;
 	margin-left:-250px;
+}
+
+.score{
+	font-family: Righteous, serif;
+	width:100%;
+	height:100%;
+	position: absolute;
+	top:0;
+	left:0;
+	z-index:-1;
+	font-size:100px;
+	color:#F44336;
+	text-align:center;
+	margin-top:30%;
 }

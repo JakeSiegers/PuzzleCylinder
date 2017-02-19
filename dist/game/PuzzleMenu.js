@@ -25,11 +25,19 @@ var PuzzleMenu = function () {
 			self.MainMenuDom.addEventListener('touchstart', PuzzleMenu.keypressed, false);
 
 			document.body.appendChild(self.MainMenuDom);
+
+			self.ScoreDom = document.createElement('div');
+			self.ScoreDom.className = 'score';
+
+			document.body.appendChild(self.ScoreDom);
+
+			self.firstTap = false;
 		}
 	}, {
 		key: 'keypressed',
 		value: function keypressed() {
-			if (PG.gameState === STATE_MENU) {
+			if (!self.firstTap && PG.gameState == STATE_MENU) {
+				self.firstTap = true;
 				console.log(arguments);
 				PG.closeAndSetGameState(STATE_ENDLESS);
 			}
@@ -45,7 +53,31 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'hideMenu',
 		value: function hideMenu() {
-			self.MainMenuDom.style.display = "none";
+			self.MainMenuDom.style.opacity = "0";
+			setTimeout(function () {
+				self.MainMenuDom.style.display = "none";
+			}, 1000);
+		}
+	}, {
+		key: 'showScore',
+		value: function showScore() {
+			self.ScoreDom.style.display = "inherit";
+			setTimeout(function () {
+				self.ScoreDom.style.opacity = "1";
+			}, 10);
+		}
+	}, {
+		key: 'hideScore',
+		value: function hideScore() {
+			self.ScoreDom.style.opacity = "0";
+			setTimeout(function () {
+				self.ScoreDom.style.display = "none";
+			}, 1000);
+		}
+	}, {
+		key: 'ScoreDom',
+		get: function get() {
+			return self.ScoreDom;
 		}
 	}]);
 

@@ -69,15 +69,21 @@ PuzzleGame.prototype.setGameState = function (newMode) {
 	this.gameBoard.visible = false;
 	this.cursorObj.visible = false;
 	this.nextRow.visible = false;
-	PuzzleMenu.hideMenu();
+
+	if (newMode === STATE_MENU) {
+		PuzzleMenu.showMenu();
+	} else {
+		PuzzleMenu.hideMenu();
+	}
 
 	this.gameState = newMode;
 	switch (newMode) {
 		case STATE_MENU:
 			this.menuObj.visible = true;
 			this.menuLogo.visible = true;
-			PuzzleMenu.showMenu();
 			this.openTube();
+
+			PuzzleMenu.hideScore();
 
 			//TEMP BEFORE MENU IS FINISHED
 			//setTimeout(this.closeAndSetGameState.bind(this,STATE_ENDLESS),2000);
@@ -89,6 +95,8 @@ PuzzleGame.prototype.setGameState = function (newMode) {
 			this.nextRow.visible = true;
 			this.resetGame();
 			this.openTube();
+
+			PuzzleMenu.showScore();
 			break;
 		case STATE_SCORECARD:
 			this.menuObj.visible = true;
@@ -96,6 +104,7 @@ PuzzleGame.prototype.setGameState = function (newMode) {
 			this.menuScore.visible = true;
 			this.setScoreCardText();
 			this.openTube();
+			PuzzleMenu.hideScore();
 			break;
 	}
 };
@@ -664,6 +673,7 @@ PuzzleGame.prototype.checkForMatches = function () {
 
 	for (var d = 0; d < blocksToBeDestroyed.length; d++) {
 		this.score += comboCount * this.chainCount;
+		PuzzleMenu.ScoreDom.innerHTML = "" + this.score;
 		this.destroyBlock(blocksToBeDestroyed[d].x, blocksToBeDestroyed[d].y);
 	}
 };
