@@ -71,5 +71,5 @@ PuzzleGame.prototype.initDatGui = function(){
 
 	var f5 = gui.addFolder('VB13');
 
-	//gui.close();
+	gui.close();
 };

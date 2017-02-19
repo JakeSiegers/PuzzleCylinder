@@ -1,5 +1,5 @@
 class PuzzleCSSLoader{
-	static renderHTML() {
+	static init() {
 		self.cssLoader = document.createElement( 'div' );
 		self.cssLoader.className = 'cssLoader';
 
@@ -34,5 +34,3 @@ class PuzzleCSSLoader{
 		},1000);
 	}
 }
-
-PuzzleCSSLoader.renderHTML();

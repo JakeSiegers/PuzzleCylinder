@@ -10,8 +10,8 @@ var PuzzleCSSLoader = function () {
 	}
 
 	_createClass(PuzzleCSSLoader, null, [{
-		key: 'renderHTML',
-		value: function renderHTML() {
+		key: 'init',
+		value: function init() {
 			self.cssLoader = document.createElement('div');
 			self.cssLoader.className = 'cssLoader';
 
@@ -52,5 +52,3 @@ var PuzzleCSSLoader = function () {
 
 	return PuzzleCSSLoader;
 }();
-
-PuzzleCSSLoader.renderHTML();

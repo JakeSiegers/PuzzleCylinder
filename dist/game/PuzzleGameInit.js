@@ -1,3 +1,6 @@
 "use strict";
 
-new PuzzleGame();
+PuzzleCSSLoader.init();
+PuzzleStateManager.setState(STATE_MENU);
+PuzzleMenu.init();
+var PG = new PuzzleGame();

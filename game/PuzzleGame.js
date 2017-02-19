@@ -1,9 +1,6 @@
 const PI = Math.PI;
 const TWO_PI = PI*2;
 const HALF_PI = PI/2;
-const MODE_MENU = 0;
-const MODE_ENDLESS = 1;
-const MODE_SCORECARD = 2;
 
 function PuzzleGame(){
 
@@ -40,7 +37,7 @@ PuzzleGame.prototype.preloadComplete = function(){
 	this.cursorObj = new THREE.Object3D();
 	this.makeMenuText();
 
-	this.closeAndSetGameMode(MODE_MENU);
+	this.closeAndSetGameState(STATE_MENU);
 
 	//setTimeout(this.resetGame.bind(this),2000);
 
@@ -59,39 +56,39 @@ PuzzleGame.prototype.preloadComplete = function(){
 	this.animate();
 };
 
-PuzzleGame.prototype.closeAndSetGameMode = function(newMode){
-	this.closeTube(this.setGameMode.bind(this,newMode));
+PuzzleGame.prototype.closeAndSetGameState = function(newMode){
+	this.closeTube(this.setGameState.bind(this,newMode));
 };
 
-PuzzleGame.prototype.setGameMode = function(newMode){
+PuzzleGame.prototype.setGameState = function(newMode){
 	this.menuObj.visible = false;
 	this.menuLogo.visible = false;
 	this.menuScore.visible = false;
 	this.gameBoard.visible = false;
 	this.cursorObj.visible = false;
 	this.nextRow.visible = false;
+	PuzzleMenu.hideMenu();
 
-	this.gameMode = newMode;
+	this.gameState = newMode;
 	switch(newMode){
-		case MODE_MENU:
-			this.menuSelection = 0;
-			this.menuOptions = ["Play Endless","Options","Credits"];
+		case STATE_MENU:
 			this.menuObj.visible = true;
 			this.menuLogo.visible = true;
+			PuzzleMenu.showMenu();
 			this.openTube();
 
 			//TEMP BEFORE MENU IS FINISHED
-			setTimeout(this.closeAndSetGameMode.bind(this,MODE_ENDLESS),2000);
+			//setTimeout(this.closeAndSetGameState.bind(this,STATE_ENDLESS),2000);
 
 			break;
-		case MODE_ENDLESS:
+		case STATE_ENDLESS:
 			this.gameBoard.visible = true;
 			this.cursorObj.visible = true;
 			this.nextRow.visible = true;
 			this.resetGame();
 			this.openTube();
 			break;
-		case MODE_SCORECARD:
+		case STATE_SCORECARD:
 			this.menuObj.visible = true;
 			this.menuLogo.visible = true;
 			this.menuScore.visible = true;
@@ -299,7 +296,7 @@ PuzzleGame.prototype.resetGameVariables = function(){
 };
 
 PuzzleGame.prototype.startGame = function(){
-	this.closeAndSetGameMode(MODE_ENDLESS);
+	this.closeAndSetGameState(STATE_ENDLESS);
 };
 
 PuzzleGame.prototype.resetGame = function(){
@@ -374,7 +371,7 @@ PuzzleGame.prototype.loseAnimation = function(){
             }
         }
     }
-	setTimeout(this.closeAndSetGameMode.bind(this,MODE_SCORECARD),2500);
+	setTimeout(this.closeAndSetGameState.bind(this,STATE_SCORECARD),2500);
 };
 
 PuzzleGame.prototype.checkToPushBlocks = function(){
