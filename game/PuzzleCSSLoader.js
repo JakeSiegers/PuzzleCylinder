@@ -37,24 +37,3 @@ class PuzzleCSSLoader{
 
 //this needs to be here so the spinner shows up first
 PuzzleCSSLoader.init();
-
-// Check if a new cache is available on page load.
-window.addEventListener('load', function(e) {
-	console.log('loaded');
-	window.applicationCache.addEventListener('updateready', function(e) {
-		if (window.applicationCache.status == window.applicationCache.UPDATEREADY) {
-			// Browser downloaded a new app cache.
-			// Swap it in and reload the page to get the new hotness.
-			window.applicationCache.swapCache();
-
-			console.log('UPDATE READY');
-
-			if (confirm('A new version of this site is available. Load it?')) {
-				window.location.reload();
-			}
-		} else {
-			// Manifest didn't changed. Nothing new to server.
-		}
-	}, false);
-
-}, false);
