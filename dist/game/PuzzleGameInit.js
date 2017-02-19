@@ -5,9 +5,8 @@ var PG = null;
 
 // Auto refresh on new version
 var http = new XMLHttpRequest();
-var url = "/PuzzleCylinder/version.html";
-var params = "date=" + Math.floor(Date.now() / 1000);
-http.open("POST", url, true);
+var url = "/PuzzleCylinder/version.html?date=" + Math.floor(Date.now());
+http.open("GET", url, true);
 
 //Send the proper header information along with the request
 http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -30,4 +29,4 @@ http.onreadystatechange = function () {
 		PG.lastUpdateTime = http.responseText;
 	}
 };
-http.send(params);
+http.send(null);

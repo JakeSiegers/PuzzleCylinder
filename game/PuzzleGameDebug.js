@@ -70,7 +70,7 @@ PuzzleGame.prototype.initDatGui = function(){
 	f4.add(this,"startGame");
 	//f4.open();
 
-	let versionDate = new Date(PG.lastUpdateTime*1000);
+	let versionDate = new Date(PG.lastUpdateTime);
 	let f5 = gui.addFolder("Built: "+versionDate.toLocaleString());
 
 	//gui.close();
