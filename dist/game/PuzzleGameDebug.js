@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 PuzzleGame.prototype.debugLoadMap = function () {
 	this.loadMap('map' + this.debugMapNumber);
@@ -61,20 +61,20 @@ PuzzleGame.prototype.initDatGui = function () {
  //f3.open();
  */
 
-	var f4 = gui.addFolder('GAMEPLAY');
-	f4.add(this, "handicap", 0, 4).step(1).listen();
-	f4.add(this, "pushDelay", 0, 200).step(1).listen();
-	f4.add(this, "matches").listen();
-	f4.add(this, "score").listen();
-	f4.add(this, "chainCount").listen();
-	f4.add(this, "rowsCreated").listen();
-	f4.add(this, "startGame");
-	//f4.open();
+	/*
+ let f4 = gui.addFolder('GAMEPLAY');
+ f4.add(this,"handicap",0,4).step(1).listen();
+ f4.add(this,"pushDelay",0,200).step(1).listen();
+ f4.add(this,"matches").listen();
+ f4.add(this,"score").listen();
+ f4.add(this,"chainCount").listen();
+ f4.add(this,"rowsCreated").listen();
+ f4.add(this,"startGame");
+ f4.open();
+ */
 
-	var versionDate = new Date(PG.lastUpdateTime * 1000);
-	var f5 = gui.addFolder("Built: " + versionDate.toLocaleString());
+	var versionDate = new Date(lastUpdateTime * 1000);
+	var f5 = gui.addFolder("Build Date: " + versionDate.toLocaleString());
 
 	//gui.close();
 };
-
-console.log('test3');

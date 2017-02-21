@@ -4,9 +4,13 @@ var PI = Math.PI;
 var TWO_PI = PI * 2;
 var HALF_PI = PI / 2;
 
+var STATE_MENU = 0;
+var STATE_ENDLESS = 1;
+var STATE_SCORECARD = 2;
+
 function PuzzleGame() {
 
-	this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+	this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 	this.renderer.setClearColor(0x000000, 0);
 	this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -23,7 +27,6 @@ function PuzzleGame() {
 
 	//Timer Objects
 	this.pushTimeoutObj = null;
-	this.difficultyTimeoutObj = null;
 
 	this.initLoaders();
 
@@ -188,19 +191,20 @@ PuzzleGame.prototype.makeMenuText = function () {
 PuzzleGame.prototype.makeHarder = function () {
 	if (this.pushDelay > 0) {
 		this.pushDelay = 100 - this.matches / 5;
+
 		if (this.pushDelay < 0) {
 			this.pushDelay = 0;
 		}
-		if (this.pushDelay <= 90) {
+		if (this.pushDelay <= 80) {
 			this.handicap = 3;
 		}
 		if (this.pushDelay <= 70) {
 			this.handicap = 2;
 		}
-		if (this.pushDelay <= 50) {
+		if (this.pushDelay <= 60) {
 			this.handicap = 1;
 		}
-		if (this.pushDelay <= 30) {
+		if (this.pushDelay <= 50) {
 			this.handicap = 0;
 		}
 	}
@@ -229,6 +233,9 @@ PuzzleGame.prototype.initLoaders = function () {
 	var fontLoader = new THREE.FontLoader(manager);
 
 	this.blankTexture = textureLoader.load('img/block.png');
+	this.blockSideTexture = textureLoader.load('img/blockSide.png');
+	this.blockTopTexture = textureLoader.load('img/blockTop.png');
+
 	//this.explodeTexture = textureLoader.load('img/block_explode.png');
 	//this.lockTexture = textureLoader.load('img/block_locked.png');
 	this.tubeTexture = textureLoader.load('img/block.png');
@@ -242,8 +249,7 @@ PuzzleGame.prototype.initLoaders = function () {
 	});
 
 	this.cursorTexture = textureLoader.load('img/cursor.png');
-	this.cursorTexture.magFilter = THREE.NearestFilter;
-	this.cursorTexture.minFilter = THREE.NearestFilter;
+	this.sharpenTexture(this.cursorTexture);
 
 	this.blockTextures = {
 		circle: textureLoader.load('img/block_circle.png'),
@@ -255,14 +261,6 @@ PuzzleGame.prototype.initLoaders = function () {
 		penta: textureLoader.load('img/block_penta.png')
 	};
 
-	//Sharpen out textures - prevent scale blurring
-	//let maxAnisotropy = this.renderer.getMaxAnisotropy();
-	//for(let i in this.blockTextures){
-	//this.blockTextures[i].magFilter = THREE.NearestFilter;
-	//this.blockTextures[i].minFilter = THREE.NearestFilter;
-	//this.blockTextures[i].anisotropy = maxAnisotropy;
-	//}
-
 	this.blockColors = {
 		circle: 0x4CAF50,
 		diamond: 0x9C27B0,
@@ -272,6 +270,45 @@ PuzzleGame.prototype.initLoaders = function () {
 		triangle2: 0x3F51B5,
 		penta: 0x607D8B
 	};
+
+	this.blockMaterials = {};
+	this.nextRowBlockMaterials = {};
+	for (var i in this.blockTextures) {
+		this.sharpenTexture(this.blockTextures[i], true);
+
+		var faceMaterial = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockTextures[i] });
+		var sideMaterial = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockSideTexture });
+		var topMaterial = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockTopTexture });
+		this.blockMaterials[i] = faceMaterial; /*new THREE.MultiMaterial([
+                                         sideMaterial,   //right
+                                         sideMaterial,   //left
+                                         topMaterial,   //top
+                                         topMaterial,   //bottom
+                                         faceMaterial,   //back
+                                         faceMaterial    //front
+                                         ]);*/
+
+		var adjustedColor = new THREE.Color(this.blockColors[i]);
+		adjustedColor.add(new THREE.Color(0x505050));
+		this.nextRowBlockMaterials[i] = new THREE.MeshBasicMaterial({ color: adjustedColor, map: this.blockTextures[i] });
+	}
+
+	this.sharpenTexture(this.blockSideTexture, true);
+	this.sharpenTexture(this.blockTopTexture, true);
+	this.sharpenTexture(this.blankTexture, true);
+	this.sharpenTexture(this.tubeTexture, true);
+};
+
+//Sharpen out textures - prevent scale blurring
+PuzzleGame.prototype.sharpenTexture = function (texture, maxAnisotropy) {
+
+	texture.magFilter = THREE.NearestFilter;
+	texture.minFilter = THREE.NearestFilter;
+
+	if (maxAnisotropy) {
+		var _maxAnisotropy = this.renderer.getMaxAnisotropy();
+		texture.anisotropy = _maxAnisotropy;
+	}
 };
 
 PuzzleGame.prototype.resetGameVariables = function () {
@@ -302,6 +339,8 @@ PuzzleGame.prototype.resetGameVariables = function () {
 	this.chainCount = 0;
 	this.chainTimer = null;
 	this.quickPush = false;
+
+	PuzzleMenu.ScoreDom.innerHTML = "0";
 };
 
 PuzzleGame.prototype.startGame = function () {
@@ -326,11 +365,6 @@ PuzzleGame.prototype.resetGame = function () {
 		clearTimeout(this.pushTimeoutObj);
 	}
 	this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this), 2000);
-
-	if (this.difficultyTimeoutObj !== null) {
-		clearInterval(this.difficultyTimeoutObj);
-	}
-	this.difficultyTimeoutObj = setInterval(this.makeHarder.bind(this), 1000);
 
 	if (this.hasOwnProperty('cursorObj')) {
 		this.scene.remove(this.cursorObj);
@@ -674,6 +708,7 @@ PuzzleGame.prototype.checkForMatches = function () {
 	for (var d = 0; d < blocksToBeDestroyed.length; d++) {
 		this.score += comboCount * this.chainCount;
 		PuzzleMenu.ScoreDom.innerHTML = "" + this.score;
+		this.makeHarder();
 		this.destroyBlock(blocksToBeDestroyed[d].x, blocksToBeDestroyed[d].y);
 	}
 };
@@ -992,9 +1027,20 @@ PuzzleGame.prototype.generateNextRowMeshArray = function (colorPoolIn) {
 
 		var blockType = colorPool[Math.floor(Math.random() * colorPool.length)];
 
-		var adjustedColor = new THREE.Color(this.blockColors[blockType]);
-		adjustedColor.add(new THREE.Color(0x505050));
-		var material = new THREE.MeshBasicMaterial({ color: adjustedColor, map: this.blockTextures[blockType], transparent: true, opacity: 1 });
+		//let adjustedColor = new THREE.Color(this.blockColors[blockType]);
+		//adjustedColor.add( new THREE.Color(0x505050));
+		//let faceMaterial = new THREE.MeshBasicMaterial({color: adjustedColor,map:this.blockTextures[blockType]});
+		//let sideMaterial = new THREE.MeshBasicMaterial({color: adjustedColor,map:this.blockSideTexture});
+		//let topMaterial = new THREE.MeshBasicMaterial({color: adjustedColor,map:this.blockTopTexture});
+		var material = this.nextRowBlockMaterials[blockType]; /*new THREE.MultiMaterial([
+                                                        sideMaterial,   //right
+                                                        sideMaterial,   //left
+                                                        topMaterial,   //top
+                                                        topMaterial,   //bottom
+                                                        faceMaterial,   //back
+                                                        faceMaterial    //front
+                                                        ]);*/
+
 		var mesh = new THREE.Mesh(geometry, material);
 		//mesh.userData.color = mesh.material.color.getHex();
 		mesh.userData.blockType = blockType;
@@ -1009,8 +1055,22 @@ PuzzleGame.prototype.generateNextRowMeshArray = function (colorPoolIn) {
 
 PuzzleGame.prototype.generateBlockMesh = function (blockType, x, y) {
 	var geometry = new THREE.BoxGeometry(this.blockWidth, this.blockHeight, this.blockDepth);
-	var material = new THREE.MeshBasicMaterial({ color: this.blockColors[blockType], map: this.blockTextures[blockType] });
-	var mesh = new THREE.Mesh(geometry, material);
+
+	/*
+ let faceMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[blockType],map:this.blockTextures[blockType]});
+ let sideMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[blockType],map:this.blockSideTexture});
+ let topMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[blockType],map:this.blockTopTexture});
+ let material = new THREE.MultiMaterial([
+  sideMaterial,   //right
+  sideMaterial,   //left
+  topMaterial,   //top
+  topMaterial,   //bottom
+  faceMaterial,   //back
+  faceMaterial    //front
+ ]);
+ */
+
+	var mesh = new THREE.Mesh(geometry, this.blockMaterials[blockType]);
 	//mesh.userData.color = mesh.material.color.getHex();
 
 	mesh.userData.blockType = blockType;

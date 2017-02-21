@@ -1,8 +1,8 @@
 @font-face {
-	font-family: 'righteousregular';
-	src: url('fonts/righteous-regular-webfont.woff2') format('woff2'),
-	url('fonts/righteous-regular-webfont.woff') format('woff'),
-	url('fonts/righteous-regular-webfont.ttf') format('truetype');
+	font-family: 'Righteous';
+	src: url('../fonts/righteous-regular-webfont.woff2') format('woff2'),
+	url('../fonts/righteous-regular-webfont.woff') format('woff'),
+	url('../fonts/righteous-regular-webfont.ttf') format('truetype');
 	font-weight: normal;
 	font-style: normal;
 }

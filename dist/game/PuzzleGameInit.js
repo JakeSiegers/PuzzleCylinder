@@ -1,7 +1,9 @@
 "use strict";
 
-PuzzleMenu.init();
 var PG = null;
+var lastUpdateTime = 0;
+
+PuzzleMenu.init();
 
 // Auto refresh on new version
 var http = new XMLHttpRequest();
@@ -14,6 +16,7 @@ http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 http.onreadystatechange = function () {
 	//Call a function when the state changes.
 	if (http.readyState == 4 && http.status == 200) {
+		lastUpdateTime = http.responseText;
 		if (typeof Storage !== "undefined") {
 			console.log("Your Version: " + localStorage.getItem("version"));
 			console.log("Server Version: " + http.responseText);
@@ -26,7 +29,7 @@ http.onreadystatechange = function () {
 		} else {
 			PG = new PuzzleGame();
 		}
-		PG.lastUpdateTime = http.responseText;
 	}
 };
+
 http.send(null);
