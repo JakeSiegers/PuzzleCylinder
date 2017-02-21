@@ -406,10 +406,11 @@ PuzzleGame.prototype.loseAnimation = function () {
 				this.gameGrid[x][y].material.map = this.blankTexture;
 				var delay = 500;
 				if (this.gameGrid[x][this.boardHeight - 1] != null) {
-					delay = 2000;
+					//delay = 2000;
+					continue;
 				}
 				new TWEEN.Tween(this.gameGrid[x][y].position).to({
-					y: -this.boardPixelHeight * 2
+					y: -this.boardPixelHeight * 2.1
 				}, 4000).easing(TWEEN.Easing.Exponential.Out).delay(delay).start();
 			}
 		}
