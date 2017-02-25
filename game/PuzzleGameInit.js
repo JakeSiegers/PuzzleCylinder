@@ -21,10 +21,10 @@ http.onreadystatechange = function() {//Call a function when the state changes.
 				localStorage.setItem("version", http.responseText);
 				location.reload(true);
 			}else{
-				PG = new PuzzleGame();
+				PG = new PuzzleTower();
 			}
 		}else{
-			PG = new PuzzleGame();
+			PG = new PuzzleTower();
 		}
 	}
 };

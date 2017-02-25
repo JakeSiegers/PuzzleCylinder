@@ -24,10 +24,10 @@ http.onreadystatechange = function () {
 				localStorage.setItem("version", http.responseText);
 				location.reload(true);
 			} else {
-				PG = new PuzzleGame();
+				PG = new PuzzleTower();
 			}
 		} else {
-			PG = new PuzzleGame();
+			PG = new PuzzleTower();
 		}
 	}
 };
