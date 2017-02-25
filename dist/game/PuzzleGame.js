@@ -8,7 +8,7 @@ var STATE_MENU = 0;
 var STATE_ENDLESS = 1;
 var STATE_SCORECARD = 2;
 
-function PuzzleGame() {
+function PuzzleTower() {
 
 	this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 	this.renderer.setClearColor(0x000000, 0);
@@ -29,13 +29,13 @@ function PuzzleGame() {
 	this.pushTimeoutObj = null;
 
 	this.initLoaders();
+}
+
+PuzzleGame.prototype.preloadComplete = function () {
 
 	this.tube = this.generateTube();
 	this.scene.add(this.tube);
 	this.scene.add(this.generateCylinderDepthFilter());
-}
-
-PuzzleGame.prototype.preloadComplete = function () {
 
 	this.gameBoard = new THREE.Object3D();
 	this.nextRow = new THREE.Object3D();
