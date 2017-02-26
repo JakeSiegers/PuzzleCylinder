@@ -6,9 +6,14 @@ const STATE_MENU = 0;
 const STATE_ENDLESS = 1;
 const STATE_SCORECARD = 2;
 
+const MODE_2D = 100;
+const MODE_3D = 200;
+
 class PuzzleTower {
 
 	constructor() {
+		this.mapMode = MODE_3D;
+
 		this.debug = new PuzzleDebug(this);
 
 		this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
@@ -1001,14 +1006,23 @@ class PuzzleTower {
 	}
 
 	calcXBlockPos(x){
+		if(this.mapMode === MODE_2D) {
+			return (x * this.blockWidth) - (this.blockWidth / 2);
+		}
 		return Math.cos(this.circlePieceSize * x) * this.boardRadius;
 	}
 
 	calcZBlockPos(x) {
+		if(this.mapMode === MODE_2D) {
+			return 0;
+		}
 		return Math.sin(this.circlePieceSize * x) * this.boardRadius;
 	}
 
 	calcRBlockPos(x){
+		if(this.mapMode === MODE_2D) {
+			return 0;
+		}
 		return -this.circlePieceSize * x + HALF_PI;
 	}
 

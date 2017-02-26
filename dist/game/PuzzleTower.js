@@ -12,9 +12,14 @@ var STATE_MENU = 0;
 var STATE_ENDLESS = 1;
 var STATE_SCORECARD = 2;
 
+var MODE_2D = 100;
+var MODE_3D = 200;
+
 var PuzzleTower = function () {
 	function PuzzleTower() {
 		_classCallCheck(this, PuzzleTower);
+
+		this.mapMode = MODE_3D;
 
 		this.debug = new PuzzleDebug(this);
 
@@ -1053,16 +1058,25 @@ var PuzzleTower = function () {
 	}, {
 		key: 'calcXBlockPos',
 		value: function calcXBlockPos(x) {
+			if (this.mapMode === MODE_2D) {
+				return x * this.blockWidth - this.blockWidth / 2;
+			}
 			return Math.cos(this.circlePieceSize * x) * this.boardRadius;
 		}
 	}, {
 		key: 'calcZBlockPos',
 		value: function calcZBlockPos(x) {
+			if (this.mapMode === MODE_2D) {
+				return 0;
+			}
 			return Math.sin(this.circlePieceSize * x) * this.boardRadius;
 		}
 	}, {
 		key: 'calcRBlockPos',
 		value: function calcRBlockPos(x) {
+			if (this.mapMode === MODE_2D) {
+				return 0;
+			}
 			return -this.circlePieceSize * x + HALF_PI;
 		}
 	}, {
