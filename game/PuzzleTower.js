@@ -881,7 +881,7 @@ class PuzzleTower {
 		 },800).easing( TWEEN.Easing.Elastic.Out).start();
 		 */
 
-		setTimeout(this.deleteBlock.bind(this, x, y), 500);
+		setTimeout(this.deleteBlock.bind(this, x, y), 750);
 	}
 
 	lockBlocksStartingAtPoint(x, y){
