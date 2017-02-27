@@ -18,8 +18,10 @@ var PuzzleMenu = function () {
 		this.MenuWrapDom.className = 'menuWrap';
 		document.body.appendChild(this.MenuWrapDom);
 
-		//console.log(1);
-		//document.addEventListener('ontouchmove', function(e) {e.preventDefault();console.log('nove')}, false);
+		console.log(1);
+		document.addEventListener('ontouchmove', function (e) {
+			e.preventDefault();console.log('nove');
+		}, false);
 
 		this.MenuTitleDom = document.createElement('div');
 		this.MenuTitleDom.className = 'menuTitle';
