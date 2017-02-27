@@ -2,16 +2,18 @@ const PI = Math.PI;
 const TWO_PI = PI*2;
 const HALF_PI = PI/2;
 
-const STATE_MENU = 0;
-const STATE_ENDLESS = 1;
-const STATE_SCORECARD = 2;
-
 const MODE_2D = 100;
 const MODE_3D = 200;
 
 class PuzzleTower {
 
-	constructor() {
+	/**
+	 * @param {PuzzleGame} PuzzleGame
+	 * */
+	constructor(PuzzleGame) {
+		this.PuzzleGame = PuzzleGame;
+
+		this.loaded = false;
 		this.mapMode = MODE_3D;
 
 		this.debug = new PuzzleDebug(this);
@@ -34,7 +36,7 @@ class PuzzleTower {
 		//Timer Objects
 		this.pushTimeoutObj = null;
 
-		this.initLoaders();
+		//this.initLoaders();
 	}
 
 
@@ -42,14 +44,19 @@ class PuzzleTower {
 
 		this.tube = this.generateTube();
 		this.scene.add(this.tube);
-		this.scene.add(this.generateCylinderDepthFilter());
+		this.depthFilter = this.generateCylinderDepthFilter();
+		this.scene.add(this.depthFilter);
+
+
+
 
 		this.gameBoard = new THREE.Object3D();
 		this.nextRow = new THREE.Object3D();
 		this.cursorObj = new THREE.Object3D();
-		this.makeMenuText();
+		//this.makeMenuText();
 
-		this.closeAndSetGameState(STATE_MENU);
+
+		this.setGameState(STATE_ENDLESS);
 
 		//setTimeout(this.resetGame.bind(this),2000);
 
@@ -59,8 +66,6 @@ class PuzzleTower {
 		this.debugMapNumber = 1;
 
 		window.addEventListener('resize', this.onWindowResize.bind(this), false);
-		document.addEventListener('keydown', this.keyPress.bind(this));
-		document.addEventListener('keyup', this.keyUp.bind(this));
 
 		this.initTouch();
 		this.debug.initDatGui();
@@ -131,48 +136,51 @@ class PuzzleTower {
 	}
 
 	setGameState(newMode) {
-		this.menuObj.visible = false;
-		this.menuLogo.visible = false;
-		this.menuScore.visible = false;
+		//this.menuObj.visible = false;
+		//this.menuLogo.visible = false;
+		//this.menuScore.visible = false;
 		this.gameBoard.visible = false;
 		this.cursorObj.visible = false;
 		this.nextRow.visible = false;
-
-		if (newMode === STATE_MENU) {
-			PuzzleMenu.showMenu();
-		} else {
-			PuzzleMenu.hideMenu();
-		}
+		
 
 		this.gameState = newMode;
 		switch (newMode) {
 			case STATE_MENU:
-				this.menuObj.visible = true;
-				this.menuLogo.visible = true;
+				//this.menuObj.visible = true;
+				//this.menuLogo.visible = true;
 				this.openTube();
 
-				PuzzleMenu.hideScore();
-
-				//TEMP BEFORE MENU IS FINISHED
-				//setTimeout(this.closeAndSetGameState.bind(this,STATE_ENDLESS),2000);
+				//PuzzleMenu.hideScore();
 
 				break;
 			case STATE_ENDLESS:
-				this.gameBoard.visible = true;
-				this.cursorObj.visible = true;
-				this.nextRow.visible = true;
-				this.resetGame();
-				this.openTube();
 
-				PuzzleMenu.showScore();
+
+				this.openTube();
+				let sThis = this;
+				this.PuzzleGame.menu.showScore();
+				setTimeout(function(){
+					sThis.gameBoard.visible = true;
+					sThis.cursorObj.visible = true;
+					sThis.nextRow.visible = true;
+					sThis.resetGame();
+					new TWEEN.Tween(sThis.depthFilter.material).to({
+						opacity:0.5
+					},2000).easing(TWEEN.Easing.Exponential.Out).start();
+				},1000);
+
+
+
+				//PuzzleMenu.showScore();
 				break;
 			case STATE_SCORECARD:
-				this.menuObj.visible = true;
-				this.menuLogo.visible = true;
-				this.menuScore.visible = true;
-				this.setScoreCardText();
+				//this.menuObj.visible = true;
+				//this.menuLogo.visible = true;
+				//this.menuScore.visible = true;
+				//this.setScoreCardText();
 				this.openTube();
-				PuzzleMenu.hideScore();
+				//PuzzleMenu.hideScore();
 				break;
 		}
 	}
@@ -276,13 +284,15 @@ class PuzzleTower {
 	}
 
 	initLoaders(){
-
+		console.log('show loader');
+		PuzzleCSSLoader.showLoader();
 		let manager = new THREE.LoadingManager();
 		console.log('New LoadingManager');
 		let sThis = this;
 		manager.onLoad = function () {
 			console.log('Loading complete!');
 			sThis.preloadComplete();
+			sThis.loaded = true;
 			PuzzleCSSLoader.hideLoader();
 		};
 		manager.onProgress = function (url, itemsLoaded, itemsTotal) {
@@ -406,8 +416,6 @@ class PuzzleTower {
 		this.chainCount = 0;
 		this.chainTimer = null;
 		this.quickPush = false;
-
-		PuzzleMenu.ScoreDom.innerHTML = "0";
 	}
 
 	startGame(){
@@ -608,11 +616,11 @@ class PuzzleTower {
 		let material = new THREE.MeshBasicMaterial({color: 0x222222, side: THREE.DoubleSide, map: this.tubeTexture});
 		let geometry = new THREE.CylinderGeometry(r, r, this.boardPixelHeight, this.boardWidth, 1, false);
 		let tube = new THREE.Mesh(geometry, material);
-		tube.position.y = -(this.boardPixelHeight / 2);
+		tube.position.y = -(this.boardPixelHeight*2);
 		tube.rotation.y = -HALF_PI;
 
 		let tube2 = new THREE.Mesh(geometry, material);
-		tube2.position.y = (this.boardPixelHeight / 2);
+		tube2.position.y = (this.boardPixelHeight*2);
 		tube2.rotation.y = HALF_PI;
 
 		obj.add(tube);
@@ -621,41 +629,17 @@ class PuzzleTower {
 	}
 
 	generateCylinderDepthFilter(){
-		let obj = new THREE.Object3D();
 		let material = new THREE.MeshBasicMaterial({
 			color: 0x000000,
 			side: THREE.DoubleSide,
 			transparent: true,
-			opacity: 0.6
+			opacity: 0
 		});
 		let geometry = new THREE.PlaneGeometry((this.boardRadius + this.blockDepth) * 2, this.boardPixelHeight);
-		let plane = new THREE.Mesh(geometry, material);
-
-		/*
-		//Not Using the glass anymore
-
-		let r = this.boardRadius + this.blockDepth;
-		material = new THREE.MeshBasicMaterial({
-			color: 0xffffff,
-			side: THREE.DoubleSide,
-			transparent: true,
-			opacity: 0.1,
-			depthWrite: false,
-			depthTest: false
-		});
-		geometry = new THREE.CylinderGeometry(r, r, this.boardPixelHeight, this.boardWidth, 1, true, -HALF_PI, PI);
-		let tube = new THREE.Mesh(geometry, material);
-		 */
-
-		obj.add(plane);
-		//obj.add(tube);
-
-		return obj;
+		return new THREE.Mesh(geometry, material);
 	}
 
 	keyPress(event){
-		event.preventDefault();
-
 		if (!this.hasControl) {
 			return;
 		}
@@ -792,7 +776,7 @@ class PuzzleTower {
 
 		for (let d = 0; d < blocksToBeDestroyed.length; d++) {
 			this.score += comboCount * this.chainCount;
-			PuzzleMenu.ScoreDom.innerHTML = "" + this.score;
+			this.PuzzleGame.menu.ScoreDom.innerHTML = "" + this.score;
 			this.makeHarder();
 			this.destroyBlock(blocksToBeDestroyed[d].x, blocksToBeDestroyed[d].y);
 		}
@@ -1007,7 +991,7 @@ class PuzzleTower {
 
 	calcXBlockPos(x){
 		if(this.mapMode === MODE_2D) {
-			return (x * this.blockWidth) - (this.blockWidth / 2);
+			return (x-(this.boardWidth/2)) * this.blockWidth
 		}
 		return Math.cos(this.circlePieceSize * x) * this.boardRadius;
 	}
@@ -1328,7 +1312,7 @@ class PuzzleTower {
 
 		//let timer = performance.now();
 
-		this.menuObj.rotation.y = Math.sin(this.piTimer) * (HALF_PI / 10);
+		//this.menuObj.rotation.y = Math.sin(this.piTimer) * (HALF_PI / 10);
 
 		if (!this.gameActive) {
 			return;

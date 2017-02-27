@@ -10,19 +10,33 @@
 body{
 	margin:0;
 	overflow: hidden;
-	background: url(https://source.unsplash.com/mwhklqGVzck/1920x1080) no-repeat center center fixed;
+	background: black url(https://source.unsplash.com/mwhklqGVzck/1920x1080) no-repeat center center fixed;
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
 	background-size: cover;
+	font-family: Righteous, serif;
+
+	-webkit-touch-callout: none; /* iOS Safari */
+	-webkit-user-select: none; /* Safari */
+	-khtml-user-select: none; /* Konqueror HTML */
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* Internet Explorer/Edge */
+	user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+
+	cursor:default;
+}
+
+html,body{
+	height:100%;
 }
 
 .cssLoader {
-	background:black;
 	width:100%;
 	height:100%;
 	position: absolute;
-	transition: all 1s ease;
+	transition: all .2s ease;
 	z-index:1000
 }
 
@@ -112,29 +126,56 @@ body{
 	}
 }
 
-.menu{
-	width:100%;
-	height:100%;
-	position: absolute;
-	top:0;
-	left:0;
+.menuWrap{
 	z-index:900;
 	display:none;
 	opacity: 0;
-	transition: all 2s ease;
+	transition: all .2s ease;
+	border:solid 1px red;
+	background:rgba(0,0,0,0.8);
+
+	width:400px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translateY(-50%) translateX(-50%);;
 }
 
-
 .menuTitle{
-	position: absolute;
+	/*position: relative;*/
 	text-align: center;
 	font-family: Righteous, serif;
-	color:red;
-	font-size:25px;
+	color:#673AB7;
+	font-size:35px;
+	/*
 	top:50%;
 	left:50%;
 	width:500px;
 	margin-left:-250px;
+	*/
+}
+
+.menuTitle span{
+	display:block;
+	font-size:12px;
+	color:white;
+	font-family: Arial, serif;
+}
+
+.menuItemWrap{
+	border:solid 1px green;
+
+}
+
+.menuItem{
+	text-align:center;
+	font-size:20px;
+	color:white;
+	cursor:pointer;
+}
+
+.menuItem.selected{
+	color: #F44336;
 }
 
 .score{

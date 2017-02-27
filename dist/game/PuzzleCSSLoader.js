@@ -38,7 +38,8 @@ var PuzzleCSSLoader = function () {
 	}, {
 		key: 'showLoader',
 		value: function showLoader() {
-			self.cssLoader.className = "cssLoader";
+			PuzzleUtils.removeCls(self.cssLoader, 'hideLoaderDisplayNone');
+			PuzzleUtils.removeCls(self.cssLoader, 'hideLoader');
 		}
 	}, {
 		key: 'hideLoader',
@@ -46,7 +47,7 @@ var PuzzleCSSLoader = function () {
 			self.cssLoader.className += " hideLoader";
 			setTimeout(function () {
 				self.cssLoader.className += " hideLoaderDisplayNone";
-			}, 1000);
+			}, 200);
 		}
 	}]);
 

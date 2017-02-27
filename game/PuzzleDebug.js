@@ -42,7 +42,8 @@ class PuzzleDebug{
 	};
 
 	initDatGui(){
-		let gui = new dat.GUI();
+
+		//let gui = new dat.GUI();
 
 		/*
 		 let f1 = gui.addFolder('SELECTION');
@@ -77,8 +78,8 @@ class PuzzleDebug{
 		 f4.open();
 		 */
 
-		let versionDate = new Date(lastUpdateTime*1000);
-		let f5 = gui.addFolder("Build Date: "+versionDate.toLocaleString());
+		//let versionDate = new Date(lastUpdateTime*1000);
+		//let f5 = gui.addFolder("Build Date: "+versionDate.toLocaleString());
 
 		//gui.close();
 	};

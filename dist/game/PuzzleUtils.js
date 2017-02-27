@@ -12,7 +12,11 @@ var PuzzleUtils = function () {
 	_createClass(PuzzleUtils, null, [{
 		key: "addCls",
 		value: function addCls(el, clsToAdd) {
-			el.className += " " + clsToAdd;
+			if (el.className.trim() == '') {
+				el.className += clsToAdd;
+			} else {
+				el.className += " " + clsToAdd;
+			}
 		}
 	}, {
 		key: "removeCls",

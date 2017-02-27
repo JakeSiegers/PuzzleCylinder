@@ -24,14 +24,15 @@ class PuzzleCSSLoader{
 	}
 
 	static showLoader(){
-		self.cssLoader.className = "cssLoader";
+		PuzzleUtils.removeCls(self.cssLoader,'hideLoaderDisplayNone');
+		PuzzleUtils.removeCls(self.cssLoader,'hideLoader');
 	}
 
 	static hideLoader(){
 		self.cssLoader.className += " hideLoader";
 		setTimeout(function(){
 			self.cssLoader.className += " hideLoaderDisplayNone";
-		},1000);
+		},200);
 	}
 }
 

@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -12,12 +12,12 @@ var PuzzleDebug = function () {
 	}
 
 	_createClass(PuzzleDebug, [{
-		key: "debugLoadMap",
+		key: 'debugLoadMap',
 		value: function debugLoadMap() {
 			this.PuzzleTower.loadMap('map' + this.PuzzleTower.debugMapNumber);
 		}
 	}, {
-		key: "debugDelete10",
+		key: 'debugDelete10',
 		value: function debugDelete10() {
 			for (var i = 0; i < 10; i++) {
 				var x = Math.floor(Math.random() * this.PuzzleTower.boardWidth);
@@ -26,7 +26,7 @@ var PuzzleDebug = function () {
 			}
 		}
 	}, {
-		key: "debugSelectionUpdate",
+		key: 'debugSelectionUpdate',
 		value: function debugSelectionUpdate() {
 			if (this.PuzzleTower.debugSelection) {
 				for (var x = 0; x < this.PuzzleTower.boardWidth; x++) {
@@ -52,9 +52,10 @@ var PuzzleDebug = function () {
 			}
 		}
 	}, {
-		key: "initDatGui",
+		key: 'initDatGui',
 		value: function initDatGui() {
-			var gui = new dat.GUI();
+
+			//let gui = new dat.GUI();
 
 			/*
     let f1 = gui.addFolder('SELECTION');
@@ -87,8 +88,8 @@ var PuzzleDebug = function () {
     f4.open();
     */
 
-			var versionDate = new Date(lastUpdateTime * 1000);
-			var f5 = gui.addFolder("Build Date: " + versionDate.toLocaleString());
+			//let versionDate = new Date(lastUpdateTime*1000);
+			//let f5 = gui.addFolder("Build Date: "+versionDate.toLocaleString());
 
 			//gui.close();
 		}

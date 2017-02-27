@@ -1,6 +1,10 @@
 class PuzzleUtils{
 	static addCls(el,clsToAdd){
-		el.className += " "+clsToAdd;
+		if(el.className.trim() == ''){
+			el.className += clsToAdd;
+		}else{
+			el.className += " "+clsToAdd;
+		}
 	}
 
 	static removeCls(el,clsToRemove){
