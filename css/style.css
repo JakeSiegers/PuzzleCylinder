@@ -26,6 +26,8 @@ body{
                                   supported by Chrome and Opera */
 
 	cursor:default;
+
+	overflow:hidden;
 }
 
 html,body{
