@@ -28,6 +28,7 @@ class PuzzleMenu{
 		this.ScoreDom.className = 'score';
 		document.body.appendChild(this.ScoreDom);
 
+
 		//document.onkeyup = PuzzleMenu.keypressed;
 		//this.MenuWrapDom.addEventListener( 'touchstart', PuzzleMenu.keypressed, false );
 

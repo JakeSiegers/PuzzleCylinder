@@ -26,12 +26,11 @@ body{
                                   supported by Chrome and Opera */
 
 	cursor:default;
-
-	overflow:hidden;
 }
 
 html,body{
 	height:100%;
+	overflow:hidden;
 }
 
 .cssLoader {
