@@ -19,7 +19,7 @@ var PuzzleMenu = function () {
 		document.body.appendChild(this.MenuWrapDom);
 
 		console.log(1);
-		document.addEventListener('ontouchmove', function (e) {
+		document.addEventListener('touchmove', function (e) {
 			e.preventDefault();console.log('nove');
 		}, false);
 
