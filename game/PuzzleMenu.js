@@ -11,7 +11,7 @@ class PuzzleMenu{
 		document.body.appendChild(this.MenuWrapDom);
 
 		console.log(1);
-		document.addEventListener('touchmove', function(e) {e.preventDefault();console.log('nove')}, false);
+		document.addEventListener('touchmove', function(e) {e.preventDefault();console.log('nove')});
 
 		this.MenuTitleDom = document.createElement( 'div' );
 		this.MenuTitleDom.className = 'menuTitle';

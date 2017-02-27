@@ -21,7 +21,7 @@ var PuzzleMenu = function () {
 		console.log(1);
 		document.addEventListener('touchmove', function (e) {
 			e.preventDefault();console.log('nove');
-		}, false);
+		});
 
 		this.MenuTitleDom = document.createElement('div');
 		this.MenuTitleDom.className = 'menuTitle';
