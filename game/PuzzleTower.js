@@ -83,6 +83,7 @@ class PuzzleTower {
 
 	onDocumentTouchStart( event ){
 		let sThis = this;
+		event.preventDefault();
 		if ( event.touches.length === 1 ) {
 			if (this.touchTimer == null) {
 				this.touchTimer = setTimeout(function () {
@@ -95,7 +96,7 @@ class PuzzleTower {
 					this.swapSelectedBlocks();
 				}
 			}
-			event.preventDefault();
+
 			this.lastXTouch = event.touches[ 0 ].pageX;
 			this.lastYTouch = event.touches[ 0 ].pageY;
 			this.xTouchChain = 0;
@@ -104,8 +105,9 @@ class PuzzleTower {
 	}
 
 	onDocumentTouchMove(event){
+		event.preventDefault();
+
 		if ( event.touches.length === 1 ) {
-			event.preventDefault();
 			let mouseX = event.touches[ 0 ].pageX;
 			let mouseY = event.touches[ 0 ].pageY;
 			let xDelta = ( mouseX - this.lastXTouch );

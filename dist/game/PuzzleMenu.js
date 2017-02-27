@@ -18,6 +18,10 @@ var PuzzleMenu = function () {
 		this.MenuWrapDom.className = 'menuWrap';
 		document.body.appendChild(this.MenuWrapDom);
 
+		this.MenuWrapDom.addEventListener('touchmove', function (event) {
+			event.preventDefault();
+		}, false);
+
 		this.MenuTitleDom = document.createElement('div');
 		this.MenuTitleDom.className = 'menuTitle';
 		this.MenuTitleDom.innerHTML = 'Block Galaxy<span>(Working title) Build Date - ' + new Date(lastUpdateTime * 1000).toLocaleString() + '<br />YES THIS IS A UGLY MENU, I KNOW!</span>';

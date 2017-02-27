@@ -103,7 +103,7 @@ var PuzzleTower = function () {
 						this.swapSelectedBlocks();
 					}
 				}
-				event.preventDefault();
+
 				this.lastXTouch = event.touches[0].pageX;
 				this.lastYTouch = event.touches[0].pageY;
 				this.xTouchChain = 0;
@@ -113,8 +113,9 @@ var PuzzleTower = function () {
 	}, {
 		key: 'onDocumentTouchMove',
 		value: function onDocumentTouchMove(event) {
+			event.preventDefault();
+
 			if (event.touches.length === 1) {
-				event.preventDefault();
 				var mouseX = event.touches[0].pageX;
 				var mouseY = event.touches[0].pageY;
 				var xDelta = mouseX - this.lastXTouch;
