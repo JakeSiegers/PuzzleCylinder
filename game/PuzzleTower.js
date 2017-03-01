@@ -18,7 +18,7 @@ class PuzzleTower {
 
 		this.debug = new PuzzleDebug(this);
 
-		this.renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+		this.renderer = new THREE.WebGLRenderer({antialias: this.PuzzleGame.settings.antiAlias, alpha: true});
 		this.renderer.setClearColor(0x000000, 0);
 		this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 		this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -351,7 +351,9 @@ class PuzzleTower {
 		this.blockMaterials = {};
 		this.nextRowBlockMaterials = {};
 		for (let i in this.blockTextures) {
-			this.sharpenTexture(this.blockTextures[i], true);
+			if(this.PuzzleGame.settings.textureFiltering) {
+				this.sharpenTexture(this.blockTextures[i], true);
+			}
 
 			let faceMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTextures[i]});
 			let sideMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockSideTexture});
@@ -374,10 +376,12 @@ class PuzzleTower {
 			});
 		}
 
-		this.sharpenTexture(this.blockSideTexture, true);
-		this.sharpenTexture(this.blockTopTexture, true);
-		this.sharpenTexture(this.blankTexture, true);
-		this.sharpenTexture(this.tubeTexture, true);
+		if(this.PuzzleGame.settings.textureFiltering) {
+			this.sharpenTexture(this.blockSideTexture, true);
+			this.sharpenTexture(this.blockTopTexture, true);
+			this.sharpenTexture(this.blankTexture, true);
+			this.sharpenTexture(this.tubeTexture, true);
+		}
 
 	}
 

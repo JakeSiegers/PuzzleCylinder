@@ -25,4 +25,8 @@ class PuzzleUtils{
 	static get windowWidth(){
 		return Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	}
+
+	static openLink(link){
+		window.open(link, '_blank');
+	}
 }

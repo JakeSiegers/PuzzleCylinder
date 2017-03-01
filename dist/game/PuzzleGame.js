@@ -23,6 +23,11 @@ var PuzzleGame = function () {
 		document.addEventListener('keydown', this.keyPress.bind(this));
 		document.addEventListener('keyup', this.keyUp.bind(this));
 
+		this.settings = {
+			antiAlias: true,
+			textureFiltering: true
+		};
+
 		this.menu = new PuzzleMenu(this);
 		this.tower = new PuzzleTower(this);
 		this.menu.showMenu();
@@ -32,6 +37,9 @@ var PuzzleGame = function () {
 	_createClass(PuzzleGame, [{
 		key: 'startGame',
 		value: function startGame(options) {
+
+			console.log(this);
+
 			this.tower.initLoaders();
 			this.menu.hideMenu();
 			this.setState(STATE_ENDLESS);

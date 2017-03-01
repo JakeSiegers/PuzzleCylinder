@@ -35,22 +35,74 @@ class PuzzleMenu{
 		//console.log('init menu');
 
 		this.menuOptions = {
-			'3dGame':'Start 3D Game',
-			'2dGame':'Start 2D Game',
-			'settings':'Settings',
-			'credits':'Credits'
+			'Start 3D Game':this.PuzzleGame.startGame.bind(this.PuzzleGame),
+			'Start 2D Game':{
+				'Coming Soon...':[],
+			},
+			'Settings':{
+				'Anti Aliasing': ['bool','antiAlias',this.PuzzleGame.settings],
+				'Texture Filtering': ['bool','textureFiltering',this.PuzzleGame.settings],
+			},
+			'Credits':{
+				'Temporary Credits':[],
+				'Designed And Programmed By:':[],
+				' --> Jake Siegers <-- ':PuzzleUtils.openLink.bind(this,'http://jakesiegers.com/'),
+				'Open Source Libraries Used':[],
+				'https://github.com/mrdoob/three.js/':PuzzleUtils.openLink.bind(this,'https://github.com/mrdoob/three.js/'),
+				'https://github.com/tweenjs/tween.js/':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
+			}
 		};
-		this.menuOptionKeys = Object.keys(this.menuOptions);
-		this.menuOptionsLength = this.menuOptionKeys.length;
+
+		this.setMenu(this.menuOptions,"");
+
+	}
+
+	setMenu(parentObject,labelClicked){
+
+		//Maybe add a sweet animation????
+
+		while (this.MenuItemWrap.hasChildNodes()) {
+			this.MenuItemWrap.removeChild(this.MenuItemWrap.lastChild);
+		}
+
+		let currentMenu = parentObject;
+
+		if(labelClicked !== ""){
+			currentMenu = currentMenu[labelClicked];
+			currentMenu['< Back'] = this.setMenu.bind(this,parentObject,"");
+		}
+
+		this.currentMenuKeys = Object.keys(currentMenu);
+		this.currentMenuLength = this.currentMenuKeys.length;
 
 		this.menuOptionDoms = [];
 		let index = 0;
-		for(let i in this.menuOptions){
+		for(let label in currentMenu){
 			let item = document.createElement( 'div' );
-			item.innerHTML = this.menuOptions[i];
+			item.label = label;
+			item.innerHTML = label;
 			item.className = 'menuItem';
+
 			item.addEventListener('mouseover',this.setMenuIndex.bind(this,index));
-			item.addEventListener('click',this.selectMenuItem.bind(this,i));
+
+			let menuAction = currentMenu[label];
+			if (typeof menuAction === "function") {
+				item.addEventListener('click',menuAction);
+			}else if(Array.isArray(menuAction)){
+				switch(menuAction[0]){
+					case 'bool':
+						let boolName = menuAction[1];
+						let boolScope = menuAction[2];
+						item.innerHTML += ': '+(boolScope[boolName]?'ON':'OFF');
+						item.addEventListener('click',function(){
+							boolScope[boolName] = !boolScope[boolName];
+							item.innerHTML = item.label+': '+(boolScope[boolName]?'ON':'OFF');
+						});
+						break;
+				}
+			}else{
+				item.addEventListener('click',this.setMenu.bind(this,currentMenu,label));
+			}
 			this.menuOptionDoms.push(item);
 			this.MenuItemWrap.appendChild(item);
 			index++;
@@ -60,11 +112,12 @@ class PuzzleMenu{
 		this.setMenuIndex(this.menuIndex);
 	}
 
+
 	setMenuIndex(index){
 		PuzzleUtils.removeCls(this.menuOptionDoms[this.menuIndex],'selected');
-		let adj = index%(this.menuOptionsLength);
+		let adj = index%(this.currentMenuLength);
 		if(adj < 0){
-			this.menuIndex = this.menuOptionsLength-adj-2;
+			this.menuIndex = this.currentMenuLength-adj-2;
 		}else{
 			this.menuIndex = adj;
 		}
@@ -81,7 +134,7 @@ class PuzzleMenu{
 				this.setMenuIndex(this.menuIndex+1);
 				break;
 			case KEY_SPACE:
-				this.selectMenuItem(this.menuOptionKeys[this.menuIndex]);
+				this.MenuItemWrap.getElementsByClassName("selected")[0].click();
 				break;
 
 		}
@@ -93,12 +146,6 @@ class PuzzleMenu{
 
 	selectMenuItem(item){
 		console.log(item);
-		//switch(selectMenuItem)
-		switch(item){
-			case '3dGame':
-				this.PuzzleGame.startGame();
-				break;
-		}
 	}
 /*
 	keypressed(){

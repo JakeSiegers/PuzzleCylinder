@@ -26,7 +26,7 @@ var PuzzleTower = function () {
 
 		this.debug = new PuzzleDebug(this);
 
-		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+		this.renderer = new THREE.WebGLRenderer({ antialias: this.PuzzleGame.settings.antiAlias, alpha: true });
 		this.renderer.setClearColor(0x000000, 0);
 		this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 		this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
@@ -91,6 +91,7 @@ var PuzzleTower = function () {
 		key: 'onDocumentTouchStart',
 		value: function onDocumentTouchStart(event) {
 			var sThis = this;
+			event.preventDefault();
 			if (event.touches.length === 1) {
 				if (this.touchTimer == null) {
 					this.touchTimer = setTimeout(function () {
@@ -361,7 +362,9 @@ var PuzzleTower = function () {
 			this.blockMaterials = {};
 			this.nextRowBlockMaterials = {};
 			for (var i in this.blockTextures) {
-				this.sharpenTexture(this.blockTextures[i], true);
+				if (this.PuzzleGame.settings.textureFiltering) {
+					this.sharpenTexture(this.blockTextures[i], true);
+				}
 
 				var faceMaterial = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockTextures[i] });
 				var sideMaterial = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockSideTexture });
@@ -384,10 +387,12 @@ var PuzzleTower = function () {
 				});
 			}
 
-			this.sharpenTexture(this.blockSideTexture, true);
-			this.sharpenTexture(this.blockTopTexture, true);
-			this.sharpenTexture(this.blankTexture, true);
-			this.sharpenTexture(this.tubeTexture, true);
+			if (this.PuzzleGame.settings.textureFiltering) {
+				this.sharpenTexture(this.blockSideTexture, true);
+				this.sharpenTexture(this.blockTopTexture, true);
+				this.sharpenTexture(this.blankTexture, true);
+				this.sharpenTexture(this.tubeTexture, true);
+			}
 		}
 
 		//Sharpen out textures - prevent scale blurring

@@ -31,6 +31,11 @@ var PuzzleUtils = function () {
 			el.className = newClasses.join(" ");
 		}
 	}, {
+		key: "openLink",
+		value: function openLink(link) {
+			window.open(link, '_blank');
+		}
+	}, {
 		key: "windowHeight",
 		get: function get() {
 			return Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
