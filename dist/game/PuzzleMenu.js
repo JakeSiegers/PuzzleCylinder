@@ -24,7 +24,7 @@ var PuzzleMenu = function () {
 
 		this.MenuTitleDom = document.createElement('div');
 		this.MenuTitleDom.className = 'menuTitle';
-		this.MenuTitleDom.innerHTML = 'Block Galaxy<span>(Working title) Build Date - ' + new Date(lastUpdateTime * 1000).toLocaleString() + '<br />YES THIS IS A UGLY MENU, I KNOW!</span>';
+		this.MenuTitleDom.innerHTML = 'Block Galaxy<span>(Working title) Build Date - ' + new Date(lastUpdateTime * 1000).toLocaleString() + '</span>';
 
 		this.MenuItemWrap = document.createElement('div');
 		this.MenuItemWrap.className = 'menuItemWrap';
@@ -43,8 +43,11 @@ var PuzzleMenu = function () {
 		//console.log('init menu');
 
 		this.menuOptions = {
-			'Start 3D Game': this.PuzzleGame.startGame.bind(this.PuzzleGame),
-			'Start 2D Game': {
+			'3D Mode': {
+				'Start 3D': this.PuzzleGame.startGame.bind(this.PuzzleGame),
+				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower, 1, 12]
+			},
+			'2D Mode': {
 				'Coming Soon...': []
 			},
 			'Settings': {
@@ -75,14 +78,14 @@ var PuzzleMenu = function () {
 				this.MenuItemWrap.removeChild(this.MenuItemWrap.lastChild);
 			}
 
-			var currentMenu = parentObject;
+			this.currentMenu = parentObject;
 
 			if (labelClicked !== "") {
-				currentMenu = currentMenu[labelClicked];
-				currentMenu['< Back'] = this.setMenu.bind(this, parentObject, "");
+				this.currentMenu = this.currentMenu[labelClicked];
+				this.currentMenu['< Back'] = this.setMenu.bind(this, parentObject, "");
 			}
 
-			this.currentMenuKeys = Object.keys(currentMenu);
+			this.currentMenuKeys = Object.keys(this.currentMenu);
 			this.currentMenuLength = this.currentMenuKeys.length;
 
 			this.menuOptionDoms = [];
@@ -96,7 +99,7 @@ var PuzzleMenu = function () {
 
 				item.addEventListener('mouseover', _this.setMenuIndex.bind(_this, index));
 
-				var menuAction = currentMenu[label];
+				var menuAction = _this.currentMenu[label];
 				if (typeof menuAction === "function") {
 					item.addEventListener('click', menuAction);
 				} else if (Array.isArray(menuAction)) {
@@ -110,16 +113,46 @@ var PuzzleMenu = function () {
 								item.innerHTML = item.label + ': ' + (boolScope[boolName] ? 'ON' : 'OFF');
 							});
 							break;
+						case 'int':
+							var intName = menuAction[1];
+							var intScope = menuAction[2];
+							var intMin = menuAction[3];
+							var intMax = menuAction[4];
+							item.intValue = document.createElement('span');
+							item.intValue.innerHTML = intScope[intName];
+							item.intValue.style.display = 'inline-block';
+							item.intValue.style.minWidth = '30px';
+							item.upBtn = document.createElement('span');
+							item.upBtn.innerHTML = ' -> ';
+							item.upBtn.addEventListener('click', function () {
+								if (intScope[intName] < intMax) {
+									intScope[intName]++;
+									item.intValue.innerHTML = intScope[intName];
+								}
+							});
+							item.downBtn = document.createElement('span');
+							item.downBtn.innerHTML = ' <- ';
+							item.downBtn.addEventListener('click', function () {
+								if (intScope[intName] > intMin) {
+									intScope[intName]--;
+									item.intValue.innerHTML = intScope[intName];
+								}
+							});
+							item.innerHTML = item.label;
+							item.appendChild(item.downBtn);
+							item.appendChild(item.intValue);
+							item.appendChild(item.upBtn);
+							break;
 					}
 				} else {
-					item.addEventListener('click', _this.setMenu.bind(_this, currentMenu, label));
+					item.addEventListener('click', _this.setMenu.bind(_this, _this.currentMenu, label));
 				}
 				_this.menuOptionDoms.push(item);
 				_this.MenuItemWrap.appendChild(item);
 				index++;
 			};
 
-			for (var label in currentMenu) {
+			for (var label in this.currentMenu) {
 				_loop(label);
 			}
 
@@ -141,13 +174,22 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'keyPress',
 		value: function keyPress(event) {
-			//console.log('key down');
 			switch (event.keyCode) {
 				case KEY_UP:
 					this.setMenuIndex(this.menuIndex - 1);
 					break;
 				case KEY_DOWN:
 					this.setMenuIndex(this.menuIndex + 1);
+					break;
+				case KEY_RIGHT:
+					if (this.menuOptionDoms[this.menuIndex].hasOwnProperty('upBtn')) {
+						this.menuOptionDoms[this.menuIndex].upBtn.click();
+					}
+					break;
+				case KEY_LEFT:
+					if (this.menuOptionDoms[this.menuIndex].hasOwnProperty('downBtn')) {
+						this.menuOptionDoms[this.menuIndex].downBtn.click();
+					}
 					break;
 				case KEY_SPACE:
 					this.MenuItemWrap.getElementsByClassName("selected")[0].click();

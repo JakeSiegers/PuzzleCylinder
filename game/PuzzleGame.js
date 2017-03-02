@@ -1,11 +1,12 @@
 const STATE_MENU = 0;
 const STATE_ENDLESS = 1;
-const STATE_SCORECARD = 2;
+const STATE_PAUSE = 3;
+const STATE_SCORECARD = 4;
 
 const KEY_UP = 38;
 const KEY_DOWN = 40;
 const KEY_LEFT = 37;
-const KEY_RIGHT = 38;
+const KEY_RIGHT = 39;
 const KEY_SPACE = 32;
 
 class PuzzleGame{
@@ -21,8 +22,9 @@ class PuzzleGame{
 			textureFiltering:true
 		};
 
-		this.menu = new PuzzleMenu(this);
+
 		this.tower = new PuzzleTower(this);
+		this.menu = new PuzzleMenu(this);
 		this.menu.showMenu();
 		this.currentState = STATE_MENU;
 	}

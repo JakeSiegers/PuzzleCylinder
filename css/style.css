@@ -168,9 +168,10 @@ html,body{
 
 .menuItem{
 	text-align:center;
-	font-size:20px;
+	font-size:22px;
 	color:white;
 	cursor:pointer;
+	padding:5px 0 5px 0;
 }
 
 .menuItem.selected{

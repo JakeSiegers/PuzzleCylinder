@@ -32,6 +32,7 @@ class PuzzleTower {
 		this.camera.position.z = 500;
 
 		this.resetGameVariables();
+		this.startingHeight = 4;
 
 		//Timer Objects
 		this.pushTimeoutObj = null;
@@ -487,7 +488,7 @@ class PuzzleTower {
 					this.gameGrid[x][y].material.map = this.blankTexture;
 					let delay = 500;
 					if (this.gameGrid[x][this.boardHeight - 1] != null) {
-						//delay = 2000;
+						delay = 2000;
 						continue;
 					}
 					new TWEEN.Tween(this.gameGrid[x][y].position).to({
@@ -1180,7 +1181,7 @@ class PuzzleTower {
 		return this.gameGrid[x][y];
 	}
 
-	generateMap(colorPoolIn, heightPercent){
+	generateMap(colorPoolIn){
 		let grid = [];
 		for (let gx = 0; gx < this.boardWidth; gx++) {
 			let column = [];
@@ -1193,7 +1194,7 @@ class PuzzleTower {
 		for (let x = 0; x < this.boardWidth; x++) {
 			for (let y = 0; y < this.boardHeight; y++) {
 
-				if (y > this.boardHeight * heightPercent) {
+				if (y >= this.startingHeight) {
 					grid[x][y] = null;
 					continue;
 				}
@@ -1242,7 +1243,7 @@ class PuzzleTower {
 			colorPool.push(allColors[i]);
 		}
 
-		let goodMap = this.generateMap(colorPool, 0.3);
+		let goodMap = this.generateMap(colorPool);
 
 		for (let x = 0; x < this.boardWidth; x++) {
 			let column = [];

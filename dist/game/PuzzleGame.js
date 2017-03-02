@@ -6,12 +6,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var STATE_MENU = 0;
 var STATE_ENDLESS = 1;
-var STATE_SCORECARD = 2;
+var STATE_PAUSE = 3;
+var STATE_SCORECARD = 4;
 
 var KEY_UP = 38;
 var KEY_DOWN = 40;
 var KEY_LEFT = 37;
-var KEY_RIGHT = 38;
+var KEY_RIGHT = 39;
 var KEY_SPACE = 32;
 
 var PuzzleGame = function () {
@@ -28,8 +29,8 @@ var PuzzleGame = function () {
 			textureFiltering: true
 		};
 
-		this.menu = new PuzzleMenu(this);
 		this.tower = new PuzzleTower(this);
+		this.menu = new PuzzleMenu(this);
 		this.menu.showMenu();
 		this.currentState = STATE_MENU;
 	}

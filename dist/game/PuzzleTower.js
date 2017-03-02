@@ -40,6 +40,7 @@ var PuzzleTower = function () {
 		this.camera.position.z = 500;
 
 		this.resetGameVariables();
+		this.startingHeight = 4;
 
 		//Timer Objects
 		this.pushTimeoutObj = null;
@@ -504,7 +505,7 @@ var PuzzleTower = function () {
 						this.gameGrid[x][y].material.map = this.blankTexture;
 						var delay = 500;
 						if (this.gameGrid[x][this.boardHeight - 1] != null) {
-							//delay = 2000;
+							delay = 2000;
 							continue;
 						}
 						new TWEEN.Tween(this.gameGrid[x][y].position).to({
@@ -1234,7 +1235,7 @@ var PuzzleTower = function () {
 		}
 	}, {
 		key: 'generateMap',
-		value: function generateMap(colorPoolIn, heightPercent) {
+		value: function generateMap(colorPoolIn) {
 			var grid = [];
 			for (var gx = 0; gx < this.boardWidth; gx++) {
 				var column = [];
@@ -1247,7 +1248,7 @@ var PuzzleTower = function () {
 			for (var x = 0; x < this.boardWidth; x++) {
 				for (var y = 0; y < this.boardHeight; y++) {
 
-					if (y > this.boardHeight * heightPercent) {
+					if (y >= this.startingHeight) {
 						grid[x][y] = null;
 						continue;
 					}
@@ -1297,7 +1298,7 @@ var PuzzleTower = function () {
 				colorPool.push(allColors[i]);
 			}
 
-			var goodMap = this.generateMap(colorPool, 0.3);
+			var goodMap = this.generateMap(colorPool);
 
 			for (var x = 0; x < this.boardWidth; x++) {
 				var column = [];
