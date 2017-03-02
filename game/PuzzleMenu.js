@@ -186,19 +186,6 @@ class PuzzleMenu{
 		//console.log('key up');
 	}
 
-	selectMenuItem(item){
-		console.log(item);
-	}
-/*
-	keypressed(){
-		if(!this.firstTap && PG.gameState == STATE_MENU){
-			this.firstTap = true;
-			console.log(arguments);
-			PG.closeAndSetGameState(STATE_ENDLESS);
-		}
-	}
-*/
-
 	showMenu(){
 		this.MenuWrapDom.style.display = "inherit";
 		let sThis = this;

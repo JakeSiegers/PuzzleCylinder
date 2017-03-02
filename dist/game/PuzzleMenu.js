@@ -203,21 +203,6 @@ var PuzzleMenu = function () {
 			//console.log('key up');
 		}
 	}, {
-		key: 'selectMenuItem',
-		value: function selectMenuItem(item) {
-			console.log(item);
-		}
-		/*
-  	keypressed(){
-  		if(!this.firstTap && PG.gameState == STATE_MENU){
-  			this.firstTap = true;
-  			console.log(arguments);
-  			PG.closeAndSetGameState(STATE_ENDLESS);
-  		}
-  	}
-  */
-
-	}, {
 		key: 'showMenu',
 		value: function showMenu() {
 			this.MenuWrapDom.style.display = "inherit";
