@@ -46,8 +46,6 @@ var PuzzleMenu = function () {
 		//this.firstTap = false;
 		//console.log('init menu');
 
-		var sThis = this;
-
 		this.menuOptions = {
 			'3D Mode': {
 				'Start 3D': this.PuzzleGame.startGame.bind(this.PuzzleGame),
@@ -67,69 +65,6 @@ var PuzzleMenu = function () {
 				'Open Source Libraries Used': [],
 				'https://github.com/mrdoob/three.js/': PuzzleUtils.openLink.bind(this, 'https://github.com/mrdoob/three.js/'),
 				'https://github.com/tweenjs/tween.js/': PuzzleUtils.openLink.bind(this, 'https://github.com/tweenjs/tween.js/')
-			},
-			'[Think With Portals]': function ThinkWithPortals() {
-				var height = sThis.MenuWrapScreenshotDom.scrollHeight;
-				var width = sThis.MenuWrapScreenshotDom.scrollWidth;
-				sThis.transitionActive = true;
-				//domtoimage.toPng(sThis.MenuWrapScreenshotDom)
-				//	.then(function (dataUrl) {
-
-				html2canvas(sThis.MenuWrapScreenshotDom, {
-					onrendered: function onrendered(canvas) {
-						//document.body.appendChild(canvas);
-
-						//console.log();
-						var dataUrl = canvas.toDataURL("image/png");
-
-						var tileWrap = document.createElement('div');
-						tileWrap.className = 'menuScreenshot';
-						tileWrap.style.width = width + 'px';
-						tileWrap.style.height = height + 'px';
-						var cellXNum = 5;
-						var cellYNum = 5;
-
-						var style = document.createElement('div');
-						style.innerHTML = "<style>.imageCell{background:url(" + dataUrl + ");perspective:150px;transition: all 0.5s;backface-visibility: hidden;}</style>";
-						document.body.appendChild(style);
-
-						for (var y = 0; y < cellYNum; y++) {
-							var _loop = function _loop(x) {
-								var cell = document.createElement('div');
-								cell.style.width = width / cellXNum + 'px';
-								cell.style.height = height / cellYNum + 'px';
-								cell.style.position = 'absolute';
-								cell.style.top = height / cellYNum * y + 'px';
-								cell.style.left = width / cellXNum * x + 'px';
-								cell.className = 'imageCell';
-								cell.style.backgroundPosition = '-' + width / cellXNum * x + 'px -' + height / cellYNum * y + 'px';
-								tileWrap.appendChild(cell);
-								setTimeout(function () {
-
-									cell.style.transform = 'rotateY(180deg)';
-								}, 50 * x + 50 * y);
-							};
-
-							for (var x = 0; x < cellXNum; x++) {
-								_loop(x);
-							}
-						}
-
-						setTimeout(function () {
-							sThis.hideMenu();
-							sThis.setMenu(sThis.currentMenu, 'Credits');
-						}, 50);
-
-						setTimeout(function () {
-							sThis.showMenu();
-							document.body.removeChild(tileWrap);
-							document.body.removeChild(style);
-							sThis.transitionActive = false;
-						}, 50 * (cellXNum - 1) + 50 * (cellYNum - 1) + 500);
-						document.body.appendChild(tileWrap);
-					}
-				});
-				//});
 			}
 		};
 
@@ -137,6 +72,102 @@ var PuzzleMenu = function () {
 	}
 
 	_createClass(PuzzleMenu, [{
+		key: 'setMenuWithTransition',
+		value: function setMenuWithTransition(parentObject, labelClicked, direction) {
+			this.transitionActive = true;
+			html2canvas(this.MenuWrapScreenshotDom, {
+				onrendered: function (canvas) {
+					//document.body.appendChild(canvas);
+
+					var height = this.MenuWrapScreenshotDom.scrollHeight;
+					var width = this.MenuWrapScreenshotDom.scrollWidth;
+					this.splitAndAndAnimate(canvas, 'imageCell', direction, width, height, function () {});
+
+					this.setMenu(parentObject, labelClicked);
+
+					var height2 = this.MenuWrapScreenshotDom.scrollHeight;
+					var width2 = this.MenuWrapScreenshotDom.scrollWidth;
+					html2canvas(this.MenuWrapScreenshotDom, {
+						onrendered: function (canvas) {
+							this.splitAndAndAnimate(canvas, 'imageCell2', direction + '2', width2, height2, function () {
+								this.showMenu();
+								this.transitionActive = false;
+							});
+						}.bind(this)
+					});
+
+					this.hideMenu();
+				}.bind(this)
+			});
+		}
+	}, {
+		key: 'splitAndAndAnimate',
+		value: function splitAndAndAnimate(canvas, cellCls, direction, width, height, endFn) {
+
+			console.log(canvas);
+
+			var dataUrl = canvas.toDataURL("image/png");
+			var tileWrap = document.createElement('div');
+			tileWrap.className = 'menuScreenshot';
+			tileWrap.style.width = width + 'px';
+			tileWrap.style.height = height + 'px';
+			var cellXNum = 7;
+			var cellYNum = 7;
+
+			var style = document.createElement('div');
+			style.innerHTML = "<style>." + cellCls + "{background:url(" + dataUrl + ");perspective:150px;transition: all 0.2s;backface-visibility: hidden;-webkit-backface-visibility: hidden;}</style>";
+			document.body.appendChild(style);
+
+			for (var y = 0; y < cellYNum; y++) {
+				var _loop = function _loop(x) {
+					var cell = document.createElement('div');
+					cell.style.width = width / cellXNum + 'px';
+					cell.style.height = height / cellYNum + 'px';
+					cell.style.position = 'absolute';
+					cell.style.top = height / cellYNum * y + 'px';
+					cell.style.left = width / cellXNum * x + 'px';
+					cell.className = cellCls;
+					cell.style.backgroundPosition = '-' + width / cellXNum * x + 'px -' + height / cellYNum * y + 'px';
+					tileWrap.appendChild(cell);
+					switch (direction) {
+						case 'forward':
+							setTimeout(function () {
+								cell.style.transform = 'rotateY(180deg)';
+							}, 50 * x + 50 * y);
+							break;
+						case 'forward2':
+							cell.style.transform = 'rotateY(180deg)';
+							setTimeout(function () {
+								cell.style.transform = 'rotateY(0deg)';
+							}, 50 * x + 50 * y);
+							break;
+						case 'back':
+							setTimeout(function () {
+								cell.style.transform = 'rotateY(-180deg)';
+							}, 50 * (cellXNum - x) + 50 * (cellYNum - y));
+							break;
+						case 'back2':
+							cell.style.transform = 'rotateY(-180deg)';
+							setTimeout(function () {
+								cell.style.transform = 'rotateY(0deg)';
+							}, 50 * (cellXNum - x) + 50 * (cellYNum - y));
+							break;
+					}
+				};
+
+				for (var x = 0; x < cellXNum; x++) {
+					_loop(x);
+				}
+			}
+
+			setTimeout(function () {
+				document.body.removeChild(tileWrap);
+				document.body.removeChild(style);
+				endFn.call(this);
+			}.bind(this), 50 * (cellXNum - 1) + 50 * (cellYNum - 1) + 200);
+			document.body.appendChild(tileWrap);
+		}
+	}, {
 		key: 'setMenu',
 		value: function setMenu(parentObject, labelClicked) {
 			var _this = this;
@@ -151,7 +182,7 @@ var PuzzleMenu = function () {
 
 			if (labelClicked !== "") {
 				this.currentMenu = this.currentMenu[labelClicked];
-				this.currentMenu['< Back'] = this.setMenu.bind(this, parentObject, "");
+				this.currentMenu['< Back'] = this.setMenuWithTransition.bind(this, parentObject, "", "back");
 			}
 
 			this.currentMenuKeys = Object.keys(this.currentMenu);
@@ -214,7 +245,7 @@ var PuzzleMenu = function () {
 							break;
 					}
 				} else {
-					item.addEventListener('click', _this.setMenu.bind(_this, _this.currentMenu, label));
+					item.addEventListener('click', _this.setMenuWithTransition.bind(_this, _this.currentMenu, label, 'forward'));
 				}
 				_this.menuOptionDoms.push(item);
 				_this.MenuItemWrap.appendChild(item);
@@ -283,19 +314,13 @@ var PuzzleMenu = function () {
 		key: 'showMenu',
 		value: function showMenu() {
 			this.MenuWrapDom.style.display = "inherit";
-			var sThis = this;
-			//setTimeout(function(){
-			sThis.MenuWrapDom.style.opacity = "1";
-			//},10);
+			this.MenuWrapDom.style.opacity = "1";
 		}
 	}, {
 		key: 'hideMenu',
 		value: function hideMenu() {
 			this.MenuWrapDom.style.opacity = "0";
-			var sThis = this;
-			//setTimeout(function(){
-			sThis.MenuWrapDom.style.display = "none";
-			//},200);
+			this.MenuWrapDom.style.display = "none";
 		}
 	}, {
 		key: 'showScore',

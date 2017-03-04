@@ -37,8 +37,6 @@ class PuzzleMenu{
 		//this.firstTap = false;
 		//console.log('init menu');
 
-		let sThis = this;
-
 		this.menuOptions = {
 			'3D Mode': {
 				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame),
@@ -58,73 +56,102 @@ class PuzzleMenu{
 				'Open Source Libraries Used':[],
 				'https://github.com/mrdoob/three.js/':PuzzleUtils.openLink.bind(this,'https://github.com/mrdoob/three.js/'),
 				'https://github.com/tweenjs/tween.js/':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
-			},
-			'[Think With Portals]':function(){
-				let height = sThis.MenuWrapScreenshotDom.scrollHeight;
-				let width = sThis.MenuWrapScreenshotDom.scrollWidth;
-				sThis.transitionActive = true;
-				//domtoimage.toPng(sThis.MenuWrapScreenshotDom)
-				//	.then(function (dataUrl) {
-
-				html2canvas(sThis.MenuWrapScreenshotDom, {
-					onrendered: function(canvas) {
-						//document.body.appendChild(canvas);
-
-						//console.log();
-						let dataUrl = canvas.toDataURL("image/png");
-
-						let tileWrap = document.createElement('div');
-						tileWrap.className = 'menuScreenshot';
-						tileWrap.style.width=width+'px';
-						tileWrap.style.height=height+'px';
-						let cellXNum = 5;
-						let cellYNum = 5;
-
-						let style = document.createElement('div');
-						style.innerHTML="<style>.imageCell{background:url("+dataUrl+");perspective:150px;transition: all 0.5s;backface-visibility: hidden;}</style>";
-						document.body.appendChild(style);
-
-						for(let y=0;y<cellYNum;y++) {
-							for(let x=0;x<cellXNum;x++){
-								let cell = document.createElement('div');
-								cell.style.width = (width / cellXNum) + 'px';
-								cell.style.height = (height / cellYNum) + 'px';
-								cell.style.position = 'absolute';
-								cell.style.top = (height / cellYNum) * y+'px';
-								cell.style.left = (width / cellXNum) * x+'px';
-								cell.className = 'imageCell';
-								cell.style.backgroundPosition = '-' + (width / cellXNum) * x + 'px -' + (height / cellYNum) * y + 'px';
-								tileWrap.appendChild(cell);
-								setTimeout(function () {
-
-									cell.style.transform = 'rotateY(180deg)';
-								}, 50*x+50*y)
-							}
-						}
-
-						setTimeout(function(){
-							sThis.hideMenu();
-							sThis.setMenu(sThis.currentMenu,'Credits');
-						},50);
-
-						setTimeout(function(){
-							sThis.showMenu();
-							document.body.removeChild(tileWrap);
-							document.body.removeChild(style);
-							sThis.transitionActive = false;
-						},50*(cellXNum-1)+50*(cellYNum-1)+500);
-						document.body.appendChild(tileWrap);
-
-						}
-					});
-					//});
 			}
 		};
 
 		this.setMenu(this.menuOptions,"");
-
 	}
 
+	setMenuWithTransition(parentObject,labelClicked,direction){
+		this.transitionActive = true;
+		html2canvas(this.MenuWrapScreenshotDom, {
+			onrendered: function(canvas) {
+				//document.body.appendChild(canvas);
+
+				let height = this.MenuWrapScreenshotDom.scrollHeight;
+				let width = this.MenuWrapScreenshotDom.scrollWidth;
+				this.splitAndAndAnimate(canvas,'imageCell',direction,width,height,function(){});
+
+				this.setMenu(parentObject,labelClicked);
+
+				let height2 = this.MenuWrapScreenshotDom.scrollHeight;
+				let width2 = this.MenuWrapScreenshotDom.scrollWidth;
+				html2canvas(this.MenuWrapScreenshotDom, {
+					onrendered: function (canvas) {
+						this.splitAndAndAnimate(canvas,'imageCell2',direction+'2',width2,height2,function(){
+							this.showMenu();
+							this.transitionActive = false;
+						});
+					}.bind(this)
+				});
+
+				this.hideMenu();
+
+			}.bind(this)
+		});
+	}
+
+	splitAndAndAnimate(canvas,cellCls,direction,width,height,endFn){
+
+		console.log(canvas);
+
+		let dataUrl = canvas.toDataURL("image/png");
+		let tileWrap = document.createElement('div');
+		tileWrap.className = 'menuScreenshot';
+		tileWrap.style.width=width+'px';
+		tileWrap.style.height=height+'px';
+		let cellXNum = 7;
+		let cellYNum = 7;
+
+		let style = document.createElement('div');
+		style.innerHTML="<style>."+cellCls+"{background:url("+dataUrl+");perspective:150px;transition: all 0.2s;backface-visibility: hidden;-webkit-backface-visibility: hidden;}</style>";
+		document.body.appendChild(style);
+
+		for(let y=0;y<cellYNum;y++) {
+			for(let x=0;x<cellXNum;x++){
+				let cell = document.createElement('div');
+				cell.style.width = (width / cellXNum) + 'px';
+				cell.style.height = (height / cellYNum) + 'px';
+				cell.style.position = 'absolute';
+				cell.style.top = (height / cellYNum) * y+'px';
+				cell.style.left = (width / cellXNum) * x+'px';
+				cell.className = cellCls;
+				cell.style.backgroundPosition = '-' + (width / cellXNum) * x + 'px -' + (height / cellYNum) * y + 'px';
+				tileWrap.appendChild(cell);
+				switch(direction){
+					case 'forward':
+						setTimeout(function () {
+							cell.style.transform = 'rotateY(180deg)';
+						}, 50 * x + 50 * y);
+						break;
+					case 'forward2':
+						cell.style.transform = 'rotateY(180deg)';
+						setTimeout(function () {
+							cell.style.transform = 'rotateY(0deg)';
+						}, 50 * x + 50 * y);
+						break;
+					case 'back':
+						setTimeout(function () {
+							cell.style.transform = 'rotateY(-180deg)';
+						}, 50 * (cellXNum-x) + 50 * (cellYNum-y));
+						break;
+					case 'back2':
+						cell.style.transform = 'rotateY(-180deg)';
+						setTimeout(function () {
+							cell.style.transform = 'rotateY(0deg)';
+						}, 50 * (cellXNum-x) + 50 * (cellYNum-y));
+						break;
+				}
+			}
+		}
+
+		setTimeout(function(){
+			document.body.removeChild(tileWrap);
+			document.body.removeChild(style);
+			endFn.call(this)
+		}.bind(this),50*(cellXNum-1)+50*(cellYNum-1)+200);
+		document.body.appendChild(tileWrap);
+	}
 
 	setMenu(parentObject,labelClicked){
 
@@ -138,7 +165,7 @@ class PuzzleMenu{
 
 		if(labelClicked !== ""){
 			this.currentMenu = this.currentMenu[labelClicked];
-			this.currentMenu['< Back'] = this.setMenu.bind(this,parentObject,"");
+			this.currentMenu['< Back'] = this.setMenuWithTransition.bind(this,parentObject,"","back");
 		}
 
 		this.currentMenuKeys = Object.keys(this.currentMenu);
@@ -200,7 +227,7 @@ class PuzzleMenu{
 						break;
 				}
 			}else{
-				item.addEventListener('click',this.setMenu.bind(this,this.currentMenu,label));
+				item.addEventListener('click',this.setMenuWithTransition.bind(this,this.currentMenu,label,'forward'));
 			}
 			this.menuOptionDoms.push(item);
 			this.MenuItemWrap.appendChild(item);
@@ -263,18 +290,12 @@ class PuzzleMenu{
 
 	showMenu(){
 		this.MenuWrapDom.style.display = "inherit";
-		let sThis = this;
-		//setTimeout(function(){
-			sThis.MenuWrapDom.style.opacity = "1";
-		//},10);
+		this.MenuWrapDom.style.opacity = "1";
 	}
 
 	hideMenu(){
 		this.MenuWrapDom.style.opacity = "0";
-		let sThis = this;
-		//setTimeout(function(){
-			sThis.MenuWrapDom.style.display = "none";
-		//},200);
+		this.MenuWrapDom.style.display = "none";
 	}
 
 	showScore(){
