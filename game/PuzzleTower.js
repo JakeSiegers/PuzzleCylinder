@@ -1,9 +1,3 @@
-const PI = Math.PI;
-const TWO_PI = PI*2;
-const HALF_PI = PI/2;
-
-const MODE_2D = 100;
-const MODE_3D = 200;
 
 class PuzzleTower {
 
@@ -14,7 +8,8 @@ class PuzzleTower {
 		this.PuzzleGame = PuzzleGame;
 
 		this.loaded = false;
-		this.mapMode = MODE_3D;
+		this.mapType = MAP_3D;
+		this.currentMode = MODE_LOADING;
 
 		this.debug = new PuzzleDebug(this);
 
@@ -25,6 +20,9 @@ class PuzzleTower {
 		this.renderer.setPixelRatio(window.devicePixelRatio);
 		this.renderer.setSize(this.windowWidth, this.windowHeight);
 		document.body.appendChild(this.renderer.domElement);
+
+		this.stats = new Stats();
+		document.body.appendChild(this.stats.dom);
 
 		this.scene = new THREE.Scene();
 
@@ -40,270 +38,23 @@ class PuzzleTower {
 		//this.initLoaders();
 	}
 
-
-	preloadComplete(){
-
-		this.tube = this.generateTube();
-		this.scene.add(this.tube);
-		this.depthFilter = this.generateCylinderDepthFilter();
-		this.scene.add(this.depthFilter);
-
-
-
-
-		this.gameBoard = new THREE.Object3D();
-		this.nextRow = new THREE.Object3D();
-		this.cursorObj = new THREE.Object3D();
-		//this.makeMenuText();
-
-
-		this.setGameState(STATE_ENDLESS);
-
-		//setTimeout(this.resetGame.bind(this),2000);
-
-		this.stats = new Stats();
-		document.body.appendChild(this.stats.dom);
-
-		this.debugMapNumber = 1;
-
-		window.addEventListener('resize', this.onWindowResize.bind(this), false);
-
-		this.initTouch();
-		this.debug.initDatGui();
-
-		this.animate();
-	}
-
-	initTouch(){
-		this.touchTimer = null;
-		this.xTouchChain = 0;
-		this.yTouchChain = 0;
-		this.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
-		this.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
-	}
-
-	onDocumentTouchStart( event ){
-		let sThis = this;
-		event.preventDefault();
-		if ( event.touches.length === 1 ) {
-			if (this.touchTimer == null) {
-				this.touchTimer = setTimeout(function () {
-					sThis.touchTimer = null;
-				}, 200)
-			} else {
-				clearTimeout(this.touchTimer);
-				this.touchTimer = null;
-				if(Math.abs(this.xTouchChain) < 10 &&  Math.abs(this.yTouchChain) < 10) {
-					this.swapSelectedBlocks();
-				}
-			}
-
-			this.lastXTouch = event.touches[ 0 ].pageX;
-			this.lastYTouch = event.touches[ 0 ].pageY;
-			this.xTouchChain = 0;
-			this.yTouchChain = 0;
-		}
-	}
-
-	onDocumentTouchMove(event){
-		event.preventDefault();
-
-		if ( event.touches.length === 1 ) {
-			let mouseX = event.touches[ 0 ].pageX;
-			let mouseY = event.touches[ 0 ].pageY;
-			let xDelta = ( mouseX - this.lastXTouch );
-			let yDelta = ( mouseY - this.lastYTouch );
-			this.lastXTouch = mouseX;
-			this.lastYTouch = mouseY;
-			this.xTouchChain += xDelta;
-			this.yTouchChain += yDelta;
-			if(this.xTouchChain < -30){
-				this.adjustSelector('left');
-				this.xTouchChain = 0;
-			}else if(this.xTouchChain > 30){
-				this.adjustSelector('right');
-				this.xTouchChain = 0;
-			}
-			if(this.yTouchChain < -30){
-				this.adjustSelector('up');
-				this.yTouchChain = 0;
-			}else if(this.yTouchChain > 30){
-				this.adjustSelector('down');
-				this.yTouchChain = 0;
-			}
-		}
-	}
-
-	closeAndSetGameState(newMode) {
-		this.closeTube(this.setGameState.bind(this, newMode));
-	}
-
-	setGameState(newMode) {
-		//this.menuObj.visible = false;
-		//this.menuLogo.visible = false;
-		//this.menuScore.visible = false;
-		this.gameBoard.visible = false;
-		this.cursorObj.visible = false;
-		this.nextRow.visible = false;
-		
-
-		this.gameState = newMode;
-		switch (newMode) {
-			case STATE_MENU:
-				//this.menuObj.visible = true;
-				//this.menuLogo.visible = true;
-				this.openTube();
-
-				//PuzzleMenu.hideScore();
-
-				break;
-			case STATE_ENDLESS:
-
-
-				this.openTube();
-				let sThis = this;
-				this.PuzzleGame.menu.showScore();
-				setTimeout(function(){
-					sThis.gameBoard.visible = true;
-					sThis.cursorObj.visible = true;
-					sThis.nextRow.visible = true;
-					sThis.resetGame();
-					new TWEEN.Tween(sThis.depthFilter.material).to({
-						opacity:0.5
-					},2000).easing(TWEEN.Easing.Exponential.Out).start();
-				},1000);
-
-
-
-				//PuzzleMenu.showScore();
-				break;
-			case STATE_SCORECARD:
-				//this.menuObj.visible = true;
-				//this.menuLogo.visible = true;
-				//this.menuScore.visible = true;
-				//this.setScoreCardText();
-				this.openTube();
-				//PuzzleMenu.hideScore();
-				break;
-		}
-	}
-
-	setScoreCardText() {
-		let textGeometry1 = new THREE.TextGeometry("Score: " + this.score, {
-			font: this.font,
-			size: 20,
-			height: 2
-		});
-
-		let material = new THREE.MeshBasicMaterial({color: this.blockColors.heart});
-		let score = new THREE.Mesh(textGeometry1, material);
-		textGeometry1.computeBoundingBox();
-		score.position.x = -(textGeometry1.boundingBox.max.x - textGeometry1.boundingBox.min.x) / 2;
-
-		let sThis = this;
-		this.menuScore.traverseVisible(function (obj) {
-			sThis.menuScore.remove(obj);
-		});
-
-		this.menuScore.add(score);
-	}
-
-	makeMenuText(){
-		this.menuObj = new THREE.Group();
-		this.menuOptionsObj = new THREE.Group();
-		this.menuLogo = new THREE.Group();
-		this.menuScore = new THREE.Group();
-
-		let textGeometry1 = new THREE.TextGeometry("Puzzle", {
-			font: this.font,
-			size: 40,
-			height: 2
-		});
-
-		let textGeometry2 = new THREE.TextGeometry("Cylinder", {
-			font: this.font,
-			size: 40,
-			height: 2
-		});
-
-		let material = new THREE.MeshBasicMaterial({color: this.blockColors.diamond});
-
-		this.title1 = new THREE.Mesh(textGeometry1, material);
-		this.title2 = new THREE.Mesh(textGeometry2, material);
-
-		textGeometry1.computeBoundingBox();
-		let textWidth1 = textGeometry1.boundingBox.max.x - textGeometry1.boundingBox.min.x;
-		this.title1.position.x = -textWidth1 / 2;
-
-		textGeometry2.computeBoundingBox();
-		let textWidth2 = textGeometry2.boundingBox.max.x - textGeometry2.boundingBox.min.x;
-		this.title2.position.x = -textWidth2 / 2;
-
-		this.title1.position.y = 30;
-		this.title2.position.y = -30;
-
-		this.menuLogo.add(this.title1);
-		this.menuLogo.add(this.title2);
-
-		this.menuLogo.position.y = 100;
-
-		this.menuObj.add(this.menuLogo);
-		this.menuObj.add(this.menuScore);
-
-		//Playing around with floating canvas... Making a menu won't be easy, sadly....
-		//It will probably have to be just regular dom elements.... which kinda blows.
-		//let number = document.createElement( 'div' );
-		//number.className = 'menuText';
-		//number.textContent = "THREE.JS";
-		//this.menuTexture = new CanvasTexture(number);
-		//let plane = new THREE.PlaneGeometry(100,100);
-		//let numberObj = new THREE.Mesh(plane,material);
-		//this.menuObj.add(numberObj);
-
-		this.menuObj.position.z = 15;
-		this.scene.add(this.menuObj);
-	}
-
-	makeHarder(){
-		if (this.pushDelay > 0) {
-			this.pushDelay = 100 - this.matches / 5;
-
-			if (this.pushDelay < 0) {
-				this.pushDelay = 0;
-			}
-			if (this.pushDelay <= 80) {
-				this.handicap = 3;
-			}
-			if (this.pushDelay <= 70) {
-				this.handicap = 2;
-			}
-			if (this.pushDelay <= 60) {
-				this.handicap = 1;
-			}
-			if (this.pushDelay <= 50) {
-				this.handicap = 0;
-			}
-		}
-	}
-
-	initLoaders(){
-		console.log('show loader');
+	initLoaders(completeFn,completeScope){
 		PuzzleCSSLoader.showLoader();
 		let manager = new THREE.LoadingManager();
-		console.log('New LoadingManager');
 		let sThis = this;
 		manager.onLoad = function () {
-			console.log('Loading complete!');
-			sThis.preloadComplete();
+			//console.log('Loading complete!');
+			sThis.preloadComplete(completeFn,completeScope);
 			sThis.loaded = true;
 			PuzzleCSSLoader.hideLoader();
 		};
 		manager.onProgress = function (url, itemsLoaded, itemsTotal) {
-			console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+			//console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
 			PuzzleCSSLoader.setLoadPercent(Math.floor((itemsLoaded / itemsTotal) * 100))
 		};
+
 		manager.onError = function (url) {
-			console.log('There was an error loading ' + url);
+			console.error('There was an error loading ' + url);
 		};
 
 		this.fileLoader = new THREE.FileLoader(manager);
@@ -395,6 +146,150 @@ class PuzzleTower {
 		}
 	}
 
+	preloadComplete(completeFn,completeScope){
+		this.tube = this.generateTube();
+		this.scene.add(this.tube);
+		this.depthFilter = this.generateCylinderDepthFilter();
+		this.scene.add(this.depthFilter);
+
+		this.gameBoard = new THREE.Object3D();
+		this.nextRow = new THREE.Object3D();
+		this.cursorObj = new THREE.Object3D();
+
+		this.setGameMode(MODE_NONE);
+
+		this.debugMapNumber = 1;
+
+		window.addEventListener('resize', this.onWindowResize.bind(this), false);
+
+		this.initTouch();
+		this.debug.initDatGui();
+
+		this.animate();
+		completeFn.call(completeScope);
+	}
+
+	initTouch(){
+		this.touchTimer = null;
+		this.xTouchChain = 0;
+		this.yTouchChain = 0;
+		this.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
+		this.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
+	}
+
+	onDocumentTouchStart( event ){
+		let sThis = this;
+		event.preventDefault();
+		if ( event.touches.length === 1 ) {
+			if (this.touchTimer == null) {
+				this.touchTimer = setTimeout(function () {
+					sThis.touchTimer = null;
+				}, 200)
+			} else {
+				clearTimeout(this.touchTimer);
+				this.touchTimer = null;
+				if(Math.abs(this.xTouchChain) < 10 &&  Math.abs(this.yTouchChain) < 10) {
+					this.swapSelectedBlocks();
+				}
+			}
+
+			this.lastXTouch = event.touches[ 0 ].pageX;
+			this.lastYTouch = event.touches[ 0 ].pageY;
+			this.xTouchChain = 0;
+			this.yTouchChain = 0;
+		}
+	}
+
+	onDocumentTouchMove(event){
+		event.preventDefault();
+
+		if ( event.touches.length === 1 ) {
+			let mouseX = event.touches[ 0 ].pageX;
+			let mouseY = event.touches[ 0 ].pageY;
+			let xDelta = ( mouseX - this.lastXTouch );
+			let yDelta = ( mouseY - this.lastYTouch );
+			this.lastXTouch = mouseX;
+			this.lastYTouch = mouseY;
+			this.xTouchChain += xDelta;
+			this.yTouchChain += yDelta;
+			if(this.xTouchChain < -30){
+				this.adjustSelector('left');
+				this.xTouchChain = 0;
+			}else if(this.xTouchChain > 30){
+				this.adjustSelector('right');
+				this.xTouchChain = 0;
+			}
+			if(this.yTouchChain < -30){
+				this.adjustSelector('up');
+				this.yTouchChain = 0;
+			}else if(this.yTouchChain > 30){
+				this.adjustSelector('down');
+				this.yTouchChain = 0;
+			}
+		}
+	}
+
+	closeAndSetGameMode(newMode) {
+		this.currentMode = MODE_CLOSED;
+		this.closeTube(this.setGameMode.bind(this, newMode));
+	}
+
+	setGameMode(newMode) {
+		this.gameBoard.visible = false;
+		this.cursorObj.visible = false;
+		this.nextRow.visible = false;
+		this.depthFilter.visible = false;
+
+		this.currentMode = newMode;
+		switch (newMode) {
+			case MODE_NONE:
+				this.openTubeFull();
+				break;
+			case MODE_ENDLESS:
+
+				this.openTube();
+				let sThis = this;
+				this.PuzzleGame.menu.showScore();
+				setTimeout(function(){
+					sThis.gameBoard.visible = true;
+					sThis.cursorObj.visible = true;
+					sThis.nextRow.visible = true;
+					sThis.depthFilter.visible = true;
+					sThis.resetGame();
+					new TWEEN.Tween(sThis.depthFilter.material).to({
+						opacity:0.5
+					},2000).easing(TWEEN.Easing.Exponential.Out).start();
+				},1000);
+
+
+
+				//PuzzleMenu.showScore();
+				break;
+		}
+	}
+
+	makeHarder(){
+		if (this.pushDelay > 0) {
+			this.pushDelay = 100 - this.matches / 5;
+
+			if (this.pushDelay < 0) {
+				this.pushDelay = 0;
+			}
+			if (this.pushDelay <= 80) {
+				this.handicap = 3;
+			}
+			if (this.pushDelay <= 70) {
+				this.handicap = 2;
+			}
+			if (this.pushDelay <= 60) {
+				this.handicap = 1;
+			}
+			if (this.pushDelay <= 50) {
+				this.handicap = 0;
+			}
+		}
+	}
+
 	resetGameVariables(){
 		//TODO:Sort these!
 		this.animationQueue = 0;
@@ -423,10 +318,6 @@ class PuzzleTower {
 		this.chainCount = 0;
 		this.chainTimer = null;
 		this.quickPush = false;
-	}
-
-	startGame(){
-		this.closeAndSetGameState(STATE_ENDLESS);
 	}
 
 	resetGame(){
@@ -497,7 +388,7 @@ class PuzzleTower {
 				}
 			}
 		}
-		setTimeout(this.closeAndSetGameState.bind(this, STATE_SCORECARD), 2500);
+		setTimeout(this.closeAndSetGameMode.bind(this, MODE_NONE), 2500);
 	}
 
 	checkToPushBlocks(){
@@ -589,9 +480,6 @@ class PuzzleTower {
 		let closeDelay = 1000;
 		let closeEase = TWEEN.Easing.Cubic.Out;
 
-		//new TWEEN.Tween(this.title1.position).to({y:30},closeDelay).easing(closeEase).start();
-		//new TWEEN.Tween(this.title2.position).to({y:-30},closeDelay).easing(closeEase).start();
-
 		new TWEEN.Tween(this.tube.children[0].position).to({y: -this.boardPixelHeight / 2}, closeDelay).easing(closeEase).start();
 		new TWEEN.Tween(this.tube.children[0].rotation).to({y: -HALF_PI}, closeDelay).easing(closeEase).start();
 
@@ -605,14 +493,24 @@ class PuzzleTower {
 		let openDelay = 1000;
 		let openEase = TWEEN.Easing.Cubic.Out;
 
-		//new TWEEN.Tween(this.title1.position).to({y:this.boardPixelHeight},openDelay).easing(openEase).start();
-		//new TWEEN.Tween(this.title2.position).to({y:-this.boardPixelHeight},openDelay).easing(openEase).start();
-
 		new TWEEN.Tween(this.tube.children[0].position).to({y: -this.boardPixelHeight + 1}, openDelay).easing(openEase).start();
 		new TWEEN.Tween(this.tube.children[0].rotation).to({y: 0}, openDelay).easing(openEase).start();
 
 		new TWEEN.Tween(this.tube.children[1].position).to({y: this.boardPixelHeight - 1}, openDelay).easing(openEase).start();
 		new TWEEN.Tween(this.tube.children[1].rotation).to({y: 0}, openDelay).easing(openEase).start();
+
+		setTimeout(completeFn, openDelay);
+	}
+
+	openTubeFull(completeFn){
+		let openDelay = 1000;
+		let openEase = TWEEN.Easing.Cubic.Out;
+
+		new TWEEN.Tween(this.tube.children[0].position).to({y: -this.boardPixelHeight * 2}, openDelay).easing(openEase).start();
+		new TWEEN.Tween(this.tube.children[0].rotation).to({y: HALF_PI}, openDelay).easing(openEase).start();
+
+		new TWEEN.Tween(this.tube.children[1].position).to({y: this.boardPixelHeight * 2}, openDelay).easing(openEase).start();
+		new TWEEN.Tween(this.tube.children[1].rotation).to({y: -HALF_PI}, openDelay).easing(openEase).start();
 
 		setTimeout(completeFn, openDelay);
 	}
@@ -646,6 +544,10 @@ class PuzzleTower {
 		return new THREE.Mesh(geometry, material);
 	}
 
+	pause(){
+		console.log('you paused!');
+	}
+
 	keyPress(event){
 		if (!this.hasControl) {
 			return;
@@ -657,22 +559,22 @@ class PuzzleTower {
 				//this.destroyBlock(this.selectorX,this.selectorY);
 				this.quickPush = true;
 				break;
-			case 90: //Z
-
+			case KEY_ESCAPE:
+				this.pause();
 				break;
-			case 32: //Space
+			case KEY_SPACE: //Space
 				this.swapSelectedBlocks();
 				break;
-			case 38: //up
+			case KEY_UP:
 				this.adjustSelector('up');
 				break;
-			case 40: //down
+			case KEY_DOWN: //down
 				this.adjustSelector('down');
 				break;
-			case 37: //left
+			case KEY_LEFT: //left
 				this.adjustSelector('left');
 				break;
-			case 39: //right
+			case KEY_RIGHT: //right
 				this.adjustSelector('right');
 				break;
 		}
@@ -997,21 +899,21 @@ class PuzzleTower {
 	}
 
 	calcXBlockPos(x){
-		if(this.mapMode === MODE_2D) {
+		if(this.mapType === MAP_2D) {
 			return (x-(this.boardWidth/2)) * this.blockWidth
 		}
 		return Math.cos(this.circlePieceSize * x) * this.boardRadius;
 	}
 
 	calcZBlockPos(x) {
-		if(this.mapMode === MODE_2D) {
+		if(this.mapType === MAP_2D) {
 			return 0;
 		}
 		return Math.sin(this.circlePieceSize * x) * this.boardRadius;
 	}
 
 	calcRBlockPos(x){
-		if(this.mapMode === MODE_2D) {
+		if(this.mapType === MAP_2D) {
 			return 0;
 		}
 		return -this.circlePieceSize * x + HALF_PI;

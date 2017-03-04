@@ -10,6 +10,10 @@ class PuzzleMenu{
 		this.MenuWrapDom.className = 'menuWrap';
 		document.body.appendChild(this.MenuWrapDom);
 
+		this.MenuWrapScreenshotDom = document.createElement( 'div' );
+		this.MenuWrapScreenshotDom.className = 'menuWrapScreenshot';
+		this.MenuWrapDom.appendChild(this.MenuWrapScreenshotDom);
+
 		document.addEventListener('touchmove', function(e) {e.preventDefault();console.log('nove')},{passive:false});
 
 		this.MenuTitleDom = document.createElement( 'div' );
@@ -19,9 +23,8 @@ class PuzzleMenu{
 		this.MenuItemWrap = document.createElement( 'div' );
 		this.MenuItemWrap.className = 'menuItemWrap';
 
-
-		this.MenuWrapDom.appendChild(this.MenuTitleDom);
-		this.MenuWrapDom.appendChild(this.MenuItemWrap);
+		this.MenuWrapScreenshotDom.appendChild(this.MenuTitleDom);
+		this.MenuWrapScreenshotDom.appendChild(this.MenuItemWrap);
 
 		this.ScoreDom = document.createElement( 'div' );
 		this.ScoreDom.className = 'score';
@@ -53,12 +56,60 @@ class PuzzleMenu{
 				'Open Source Libraries Used':[],
 				'https://github.com/mrdoob/three.js/':PuzzleUtils.openLink.bind(this,'https://github.com/mrdoob/three.js/'),
 				'https://github.com/tweenjs/tween.js/':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
-			}
-		};
+			},
+			'[Think With Portals]':function(){
+				let height = this.MenuWrapScreenshotDom.scrollHeight;
+				let width = this.MenuWrapScreenshotDom.scrollWidth;
+				this.transitionActive = true;
+				domtoimage.toPng(this.MenuWrapScreenshotDom)
+					.then(function (dataUrl) {
+						this.hideMenu();
+						this.setMenu(this.currentMenu,'Credits');
+						let tileWrap = document.createElement('div');
+						tileWrap.className = 'menuScreenshot';
+						tileWrap.style.width=width+'px';
+						tileWrap.style.height=height+'px';
+						let cellXNum = 5;
+						let cellYNum = 5;
+
+						let style = document.createElement('div');
+						style.innerHTML="<style>.imageCell{background:url("+dataUrl+");perspective:150px;transition: all 0.5s;}</style>";
+						document.body.appendChild(style);
+
+						for(let y=0;y<cellYNum;y++) {
+							for(let x=0;x<cellXNum;x++){
+								let cell = document.createElement('div');
+								cell.style.background = dataUrl;
+								cell.style.width = (width / cellXNum) + 'px';
+								cell.style.height = (height / cellYNum) + 'px';
+								cell.style.position = 'absolute';
+								cell.style.top = (height / cellYNum) * y+'px';
+								cell.style.left = (width / cellXNum) * x+'px';
+								cell.className = 'imageCell';
+								cell.style.backgroundPosition = '-' + (width / cellXNum) * x + 'px -' + (height / cellYNum) * y + 'px';
+								tileWrap.appendChild(cell);
+								setTimeout(function () {
+									//cell.style.opacity = 0;
+									cell.style.transform = 'rotateY(180deg)';
+								}, 50*x+50*y)
+							}
+						}
+						setTimeout(function(){
+							this.showMenu();
+							document.body.removeChild(tileWrap);
+							document.body.removeChild(style);
+							this.transitionActive = false;
+						}.bind(this),50*(cellXNum-1)+50*(cellYNum-1)+500);
+						document.body.appendChild(tileWrap);
+					}.bind(this))
+			}.bind(this)
+		}
+		;
 
 		this.setMenu(this.menuOptions,"");
 
 	}
+
 
 	setMenu(parentObject,labelClicked){
 
@@ -147,6 +198,10 @@ class PuzzleMenu{
 
 
 	setMenuIndex(index){
+		if(this.transitionActive){
+			return;
+
+		}
 		PuzzleUtils.removeCls(this.menuOptionDoms[this.menuIndex],'selected');
 		let adj = index%(this.currentMenuLength);
 		if(adj < 0){
@@ -158,6 +213,11 @@ class PuzzleMenu{
 	}
 
 	keyPress(event){
+
+		if(this.transitionActive){
+			return;
+		}
+
 		switch(event.keyCode){
 			case KEY_UP:
 				this.setMenuIndex(this.menuIndex-1);
@@ -189,17 +249,17 @@ class PuzzleMenu{
 	showMenu(){
 		this.MenuWrapDom.style.display = "inherit";
 		let sThis = this;
-		setTimeout(function(){
+		//setTimeout(function(){
 			sThis.MenuWrapDom.style.opacity = "1";
-		},10);
+		//},10);
 	}
 
 	hideMenu(){
 		this.MenuWrapDom.style.opacity = "0";
 		let sThis = this;
-		setTimeout(function(){
+		//setTimeout(function(){
 			sThis.MenuWrapDom.style.display = "none";
-		},200);
+		//},200);
 	}
 
 	showScore(){

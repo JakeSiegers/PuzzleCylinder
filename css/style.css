@@ -10,7 +10,7 @@
 body{
 	margin:0;
 	overflow: hidden;
-	background: black url(https://source.unsplash.com/mwhklqGVzck/1920x1080) no-repeat center center fixed;
+	background: black url(https://source.unsplash.com/SeWk1Xb3wIc/1280x720) no-repeat center center fixed;
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
@@ -137,7 +137,20 @@ html,body{
 	position: absolute;
 	top: 50%;
 	left: 50%;
-	transform: translateY(-50%) translateX(-50%);;
+	transform: translateY(-50%) translateX(-50%);
+}
+
+.menuWrapScreenshot{
+
+}
+
+.menuScreenshot{
+	z-index:800;
+	width:400px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translateY(-50%) translateX(-50%);
 }
 
 .menuTitle{
