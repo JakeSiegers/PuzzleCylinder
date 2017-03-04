@@ -40,14 +40,17 @@ class PuzzleMenu{
 		this.menuOptions = {
 			'3D Mode': {
 				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame),
-				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower,1,12]
+				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower,1,12],
+				'colors':['#B71C1C','#F44336','#EF9A9A']
 			},
 			'2D Mode':{
 				'Coming Soon...':[],
+				'colors':['#004D40','#009688','#80CBC4']
 			},
 			'Settings':{
 				'Anti Aliasing': ['bool','antiAlias',this.PuzzleGame.settings],
 				'Texture Filtering': ['bool','textureFiltering',this.PuzzleGame.settings],
+				'colors':['#BF360C','#FF5722','#FFAB91']
 			},
 			'Credits':{
 				'Temporary Credits':[],
@@ -56,7 +59,10 @@ class PuzzleMenu{
 				'Open Source Libraries Used':[],
 				'https://github.com/mrdoob/three.js/':PuzzleUtils.openLink.bind(this,'https://github.com/mrdoob/three.js/'),
 				'https://github.com/tweenjs/tween.js/':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
-			}
+				'colors':['#3E2723','#795548','#BCAAA4']
+			},
+			//Colors - 900,500,200
+			'colors':['#1A237E','#3F51B5','#9FA8DA']
 		};
 
 		this.setMenu(this.menuOptions,"");
@@ -93,19 +99,21 @@ class PuzzleMenu{
 
 	splitAndAndAnimate(canvas,cellCls,direction,width,height,endFn){
 
-		console.log(canvas);
-
 		let dataUrl = canvas.toDataURL("image/png");
 		let tileWrap = document.createElement('div');
 		tileWrap.className = 'menuScreenshot';
 		tileWrap.style.width=width+'px';
 		tileWrap.style.height=height+'px';
-		let cellXNum = 5;
-		let cellYNum = 5;
+		let blockWidth = 80;
+		let blockHeight = 80;
+		let cellXNum = Math.ceil(width/blockWidth);
+		let cellYNum = Math.ceil(height/blockHeight);
 
 		let style = document.createElement('div');
-		style.innerHTML="<style>."+cellCls+"{background:url("+dataUrl+");perspective:150px;transition: all 0.2s;backface-visibility: hidden;-webkit-backface-visibility: hidden;}</style>";
+		style.innerHTML="<style>."+cellCls+"{background:url("+dataUrl+");perspective:150px;transition: all 0.3s;}</style>";
 		document.body.appendChild(style);
+
+		let flipDelay = 100;
 
 		for(let y=0;y<cellYNum;y++) {
 			for(let x=0;x<cellXNum;x++){
@@ -121,25 +129,26 @@ class PuzzleMenu{
 				switch(direction){
 					case 'forward':
 						setTimeout(function () {
-							cell.style.transform = 'rotateY(180deg)';
-						}, 50 * x + 50 * y);
+							cell.style.transform = 'rotateY(90deg)';
+
+						}, flipDelay * x + flipDelay * y);
 						break;
 					case 'forward2':
-						cell.style.transform = 'rotateY(180deg)';
+						cell.style.transform = 'rotateY(90deg)';
 						setTimeout(function () {
 							cell.style.transform = 'rotateY(0deg)';
-						}, 50 * x + 50 * y);
+						}, flipDelay * x + flipDelay * y);
 						break;
 					case 'back':
 						setTimeout(function () {
-							cell.style.transform = 'rotateY(-180deg)';
-						}, 50 * (cellXNum-x) + 50 * (cellYNum-y));
+							cell.style.transform = 'rotateY(-90deg)';
+						}, flipDelay * (cellXNum-x) + flipDelay * (cellYNum-y));
 						break;
 					case 'back2':
-						cell.style.transform = 'rotateY(-180deg)';
+						cell.style.transform = 'rotateY(-90deg)';
 						setTimeout(function () {
 							cell.style.transform = 'rotateY(0deg)';
-						}, 50 * (cellXNum-x) + 50 * (cellYNum-y));
+						}, flipDelay * (cellXNum-x) + flipDelay * (cellYNum-y));
 						break;
 				}
 			}
@@ -149,7 +158,7 @@ class PuzzleMenu{
 			document.body.removeChild(tileWrap);
 			document.body.removeChild(style);
 			endFn.call(this)
-		}.bind(this),50*(cellXNum-1)+50*(cellYNum-1)+200);
+		}.bind(this),flipDelay*(cellXNum-1)+flipDelay*(cellYNum-1)+300);
 		document.body.appendChild(tileWrap);
 	}
 
@@ -180,6 +189,14 @@ class PuzzleMenu{
 			item.className = 'menuItem';
 
 			item.addEventListener('mouseover',this.setMenuIndex.bind(this,index));
+
+			if(label === 'colors'){
+				let colorCss = document.createElement('style');
+				let colors = this.currentMenu[label];
+				colorCss.innerHTML = ".menuTitle{background:"+colors[0]+";} .menuItemWrap{background:"+colors[1]+";} .menuItem.selected{background:"+colors[2]+";color:"+colors[0]+";}";
+				this.MenuItemWrap.appendChild(colorCss);
+				continue;
+			}
 
 			let menuAction = this.currentMenu[label];
 			if (typeof menuAction === "function") {
