@@ -37,6 +37,8 @@ class PuzzleMenu{
 		//this.firstTap = false;
 		//console.log('init menu');
 
+		let sThis = this;
+
 		this.menuOptions = {
 			'3D Mode': {
 				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame),
@@ -58,13 +60,13 @@ class PuzzleMenu{
 				'https://github.com/tweenjs/tween.js/':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
 			},
 			'[Think With Portals]':function(){
-				let height = this.MenuWrapScreenshotDom.scrollHeight;
-				let width = this.MenuWrapScreenshotDom.scrollWidth;
+				let height = sThis.MenuWrapScreenshotDom.scrollHeight;
+				let width = sThis.MenuWrapScreenshotDom.scrollWidth;
 				this.transitionActive = true;
-				domtoimage.toPng(this.MenuWrapScreenshotDom)
+				domtoimage.toPng(sThis.MenuWrapScreenshotDom)
 					.then(function (dataUrl) {
-						this.hideMenu();
-						this.setMenu(this.currentMenu,'Credits');
+						sThis.hideMenu();
+						sThis.setMenu(sThis.currentMenu,'Credits');
 						let tileWrap = document.createElement('div');
 						tileWrap.className = 'menuScreenshot';
 						tileWrap.style.width=width+'px';
@@ -73,7 +75,7 @@ class PuzzleMenu{
 						let cellYNum = 5;
 
 						let style = document.createElement('div');
-						style.innerHTML="<style>.imageCell{background:url("+dataUrl+");perspective:150px;transition: all 0.5s;}</style>";
+						style.innerHTML="<style>.imageCell{background:url("+dataUrl+");perspective:150px;transition: all 0.5s;backface-visibility: hidden;}</style>";
 						document.body.appendChild(style);
 
 						for(let y=0;y<cellYNum;y++) {
@@ -95,16 +97,15 @@ class PuzzleMenu{
 							}
 						}
 						setTimeout(function(){
-							this.showMenu();
+							sThis.showMenu();
 							document.body.removeChild(tileWrap);
 							document.body.removeChild(style);
-							this.transitionActive = false;
-						}.bind(this),50*(cellXNum-1)+50*(cellYNum-1)+500);
+							sThis.transitionActive = false;
+						},50*(cellXNum-1)+50*(cellYNum-1)+500);
 						document.body.appendChild(tileWrap);
-					}.bind(this))
-			}.bind(this)
-		}
-		;
+					})
+			}
+		};
 
 		this.setMenu(this.menuOptions,"");
 
