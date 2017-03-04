@@ -100,8 +100,8 @@ class PuzzleMenu{
 		tileWrap.className = 'menuScreenshot';
 		tileWrap.style.width=width+'px';
 		tileWrap.style.height=height+'px';
-		let cellXNum = 7;
-		let cellYNum = 7;
+		let cellXNum = 5;
+		let cellYNum = 5;
 
 		let style = document.createElement('div');
 		style.innerHTML="<style>."+cellCls+"{background:url("+dataUrl+");perspective:150px;transition: all 0.2s;backface-visibility: hidden;-webkit-backface-visibility: hidden;}</style>";

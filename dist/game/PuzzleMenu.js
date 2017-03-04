@@ -111,8 +111,8 @@ var PuzzleMenu = function () {
 			tileWrap.className = 'menuScreenshot';
 			tileWrap.style.width = width + 'px';
 			tileWrap.style.height = height + 'px';
-			var cellXNum = 7;
-			var cellYNum = 7;
+			var cellXNum = 5;
+			var cellYNum = 5;
 
 			var style = document.createElement('div');
 			style.innerHTML = "<style>." + cellCls + "{background:url(" + dataUrl + ");perspective:150px;transition: all 0.2s;backface-visibility: hidden;-webkit-backface-visibility: hidden;}</style>";
