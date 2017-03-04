@@ -62,11 +62,17 @@ class PuzzleMenu{
 			'[Think With Portals]':function(){
 				let height = sThis.MenuWrapScreenshotDom.scrollHeight;
 				let width = sThis.MenuWrapScreenshotDom.scrollWidth;
-				this.transitionActive = true;
-				domtoimage.toPng(sThis.MenuWrapScreenshotDom)
-					.then(function (dataUrl) {
-						sThis.hideMenu();
-						sThis.setMenu(sThis.currentMenu,'Credits');
+				sThis.transitionActive = true;
+				//domtoimage.toPng(sThis.MenuWrapScreenshotDom)
+				//	.then(function (dataUrl) {
+
+				html2canvas(sThis.MenuWrapScreenshotDom, {
+					onrendered: function(canvas) {
+						//document.body.appendChild(canvas);
+
+						//console.log();
+						let dataUrl = canvas.toDataURL("image/png");
+
 						let tileWrap = document.createElement('div');
 						tileWrap.className = 'menuScreenshot';
 						tileWrap.style.width=width+'px';
@@ -81,7 +87,6 @@ class PuzzleMenu{
 						for(let y=0;y<cellYNum;y++) {
 							for(let x=0;x<cellXNum;x++){
 								let cell = document.createElement('div');
-								cell.style.background = dataUrl;
 								cell.style.width = (width / cellXNum) + 'px';
 								cell.style.height = (height / cellYNum) + 'px';
 								cell.style.position = 'absolute';
@@ -91,11 +96,17 @@ class PuzzleMenu{
 								cell.style.backgroundPosition = '-' + (width / cellXNum) * x + 'px -' + (height / cellYNum) * y + 'px';
 								tileWrap.appendChild(cell);
 								setTimeout(function () {
-									//cell.style.opacity = 0;
+
 									cell.style.transform = 'rotateY(180deg)';
 								}, 50*x+50*y)
 							}
 						}
+
+						setTimeout(function(){
+							sThis.hideMenu();
+							sThis.setMenu(sThis.currentMenu,'Credits');
+						},50);
+
 						setTimeout(function(){
 							sThis.showMenu();
 							document.body.removeChild(tileWrap);
@@ -103,7 +114,10 @@ class PuzzleMenu{
 							sThis.transitionActive = false;
 						},50*(cellXNum-1)+50*(cellYNum-1)+500);
 						document.body.appendChild(tileWrap);
-					})
+
+						}
+					});
+					//});
 			}
 		};
 
@@ -199,7 +213,7 @@ class PuzzleMenu{
 
 
 	setMenuIndex(index){
-		if(this.transitionActive){
+		if(this.transitionActive === true){
 			return;
 
 		}
@@ -215,7 +229,7 @@ class PuzzleMenu{
 
 	keyPress(event){
 
-		if(this.transitionActive){
+		if(this.transitionActive === true){
 			return;
 		}
 

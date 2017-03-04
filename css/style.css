@@ -131,7 +131,6 @@ html,body{
 	z-index:900;
 	display:none;
 	opacity: 0;
-	transition: all .2s ease;
 
 	width:400px;
 	position: absolute;

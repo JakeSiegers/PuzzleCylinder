@@ -71,51 +71,65 @@ var PuzzleMenu = function () {
 			'[Think With Portals]': function ThinkWithPortals() {
 				var height = sThis.MenuWrapScreenshotDom.scrollHeight;
 				var width = sThis.MenuWrapScreenshotDom.scrollWidth;
-				this.transitionActive = true;
-				domtoimage.toPng(sThis.MenuWrapScreenshotDom).then(function (dataUrl) {
-					sThis.hideMenu();
-					sThis.setMenu(sThis.currentMenu, 'Credits');
-					var tileWrap = document.createElement('div');
-					tileWrap.className = 'menuScreenshot';
-					tileWrap.style.width = width + 'px';
-					tileWrap.style.height = height + 'px';
-					var cellXNum = 5;
-					var cellYNum = 5;
+				sThis.transitionActive = true;
+				//domtoimage.toPng(sThis.MenuWrapScreenshotDom)
+				//	.then(function (dataUrl) {
 
-					var style = document.createElement('div');
-					style.innerHTML = "<style>.imageCell{background:url(" + dataUrl + ");perspective:150px;transition: all 0.5s;backface-visibility: hidden;}</style>";
-					document.body.appendChild(style);
+				html2canvas(sThis.MenuWrapScreenshotDom, {
+					onrendered: function onrendered(canvas) {
+						//document.body.appendChild(canvas);
 
-					for (var y = 0; y < cellYNum; y++) {
-						var _loop = function _loop(x) {
-							var cell = document.createElement('div');
-							cell.style.background = dataUrl;
-							cell.style.width = width / cellXNum + 'px';
-							cell.style.height = height / cellYNum + 'px';
-							cell.style.position = 'absolute';
-							cell.style.top = height / cellYNum * y + 'px';
-							cell.style.left = width / cellXNum * x + 'px';
-							cell.className = 'imageCell';
-							cell.style.backgroundPosition = '-' + width / cellXNum * x + 'px -' + height / cellYNum * y + 'px';
-							tileWrap.appendChild(cell);
-							setTimeout(function () {
-								//cell.style.opacity = 0;
-								cell.style.transform = 'rotateY(180deg)';
-							}, 50 * x + 50 * y);
-						};
+						//console.log();
+						var dataUrl = canvas.toDataURL("image/png");
 
-						for (var x = 0; x < cellXNum; x++) {
-							_loop(x);
+						var tileWrap = document.createElement('div');
+						tileWrap.className = 'menuScreenshot';
+						tileWrap.style.width = width + 'px';
+						tileWrap.style.height = height + 'px';
+						var cellXNum = 5;
+						var cellYNum = 5;
+
+						var style = document.createElement('div');
+						style.innerHTML = "<style>.imageCell{background:url(" + dataUrl + ");perspective:150px;transition: all 0.5s;backface-visibility: hidden;}</style>";
+						document.body.appendChild(style);
+
+						for (var y = 0; y < cellYNum; y++) {
+							var _loop = function _loop(x) {
+								var cell = document.createElement('div');
+								cell.style.width = width / cellXNum + 'px';
+								cell.style.height = height / cellYNum + 'px';
+								cell.style.position = 'absolute';
+								cell.style.top = height / cellYNum * y + 'px';
+								cell.style.left = width / cellXNum * x + 'px';
+								cell.className = 'imageCell';
+								cell.style.backgroundPosition = '-' + width / cellXNum * x + 'px -' + height / cellYNum * y + 'px';
+								tileWrap.appendChild(cell);
+								setTimeout(function () {
+
+									cell.style.transform = 'rotateY(180deg)';
+								}, 50 * x + 50 * y);
+							};
+
+							for (var x = 0; x < cellXNum; x++) {
+								_loop(x);
+							}
 						}
+
+						setTimeout(function () {
+							sThis.hideMenu();
+							sThis.setMenu(sThis.currentMenu, 'Credits');
+						}, 50);
+
+						setTimeout(function () {
+							sThis.showMenu();
+							document.body.removeChild(tileWrap);
+							document.body.removeChild(style);
+							sThis.transitionActive = false;
+						}, 50 * (cellXNum - 1) + 50 * (cellYNum - 1) + 500);
+						document.body.appendChild(tileWrap);
 					}
-					setTimeout(function () {
-						sThis.showMenu();
-						document.body.removeChild(tileWrap);
-						document.body.removeChild(style);
-						sThis.transitionActive = false;
-					}, 50 * (cellXNum - 1) + 50 * (cellYNum - 1) + 500);
-					document.body.appendChild(tileWrap);
 				});
+				//});
 			}
 		};
 
@@ -217,7 +231,7 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'setMenuIndex',
 		value: function setMenuIndex(index) {
-			if (this.transitionActive) {
+			if (this.transitionActive === true) {
 				return;
 			}
 			PuzzleUtils.removeCls(this.menuOptionDoms[this.menuIndex], 'selected');
@@ -233,7 +247,7 @@ var PuzzleMenu = function () {
 		key: 'keyPress',
 		value: function keyPress(event) {
 
-			if (this.transitionActive) {
+			if (this.transitionActive === true) {
 				return;
 			}
 
