@@ -39,7 +39,7 @@ var PuzzleGame = function () {
 		this.tower = new PuzzleTower(this);
 		this.menu = new PuzzleMenu(this);
 		this.tower.initLoaders(function () {
-			this.menu.showMenu();
+			this.menu.showMenuWithTransition();
 			this.setFocus(FOCUS_MENU);
 			document.addEventListener('keydown', this.keyPress.bind(this));
 			document.addEventListener('keyup', this.keyUp.bind(this));
@@ -49,9 +49,7 @@ var PuzzleGame = function () {
 	_createClass(PuzzleGame, [{
 		key: 'startGame',
 		value: function startGame(options) {
-
-			console.log(this);
-			this.menu.hideMenu();
+			this.menu.hideMenuWithTransition();
 			this.setFocus(FOCUS_TOWER);
 			this.tower.setGameMode(MODE_ENDLESS);
 		}

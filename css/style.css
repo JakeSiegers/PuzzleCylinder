@@ -1,3 +1,4 @@
+/*
 @font-face {
 	font-family: 'Righteous';
 	src: url('../fonts/righteous-regular-webfont.woff2') format('woff2'),
@@ -6,16 +7,14 @@
 	font-weight: normal;
 	font-style: normal;
 }
+*/
+
 
 body{
 	margin:0;
 	overflow: hidden;
-	background: black url(https://source.unsplash.com/SeWk1Xb3wIc/1280x720) no-repeat center center fixed;
-	-webkit-background-size: cover;
-	-moz-background-size: cover;
-	-o-background-size: cover;
-	background-size: cover;
-	font-family: Righteous, serif;
+	background: #263238;
+	font-family: Arial, sans-serif;
 
 	-webkit-touch-callout: none; /* iOS Safari */
 	-webkit-user-select: none; /* Safari */
@@ -153,18 +152,10 @@ html,body{
 }
 
 .menuTitle{
-	/*position: relative;*/
 	text-align: center;
-	font-family: Righteous, serif;
-	background:#1A237E;
+	font-family: Arial, sans-serif;
 	font-size:35px;
 	color:white;
-	/*
-	top:50%;
-	left:50%;
-	width:500px;
-	margin-left:-250px;
-	*/
 }
 
 .menuTitle span{
@@ -175,7 +166,6 @@ html,body{
 }
 
 .menuItemWrap{
-	background:#3F51B5;
 	height:320px;
 }
 
@@ -187,13 +177,8 @@ html,body{
 	padding:5px 0 5px 0;
 }
 
-.menuItem.selected{
-	color: #1A237E;
-	background:#9FA8DA;
-}
-
 .score{
-	font-family: Righteous, serif;
+	font-family: Arial, sans-serif;
 	width:100%;
 	height:100%;
 	position: absolute;
