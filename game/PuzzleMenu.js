@@ -38,6 +38,7 @@ class PuzzleMenu{
 				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower,1,12]
 			},
 			'2D Mode':{
+				'*** NOT WORKING YET ***':[],
 				'Start 2D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
 				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower,1,12]
 			},
