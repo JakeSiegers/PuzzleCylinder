@@ -30,14 +30,21 @@ class PuzzleMenu{
 		this.ScoreDom.className = 'score';
 		document.body.appendChild(this.ScoreDom);
 
+		//TODO: Perhaps allow for a dom object in the menu? Pass an ID or something?
 
 		this.menuOptions = {
 			'3D Mode': {
-				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame),
+				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_3D),
 				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower,1,12]
 			},
 			'2D Mode':{
-				'Coming Soon...':[]
+				'Start 2D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
+				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower,1,12]
+			},
+			'How to Play':{
+				'Arrow Keys - Move': [],
+				'Space Bar - Swap': [],
+				'X - Speed Up': []
 			},
 			'Settings':{
 				'Anti Aliasing': ['bool','antiAlias',this.PuzzleGame.settings],
@@ -48,8 +55,9 @@ class PuzzleMenu{
 				'Designed And Programmed By:':[],
 				' --> Jake Siegers <-- ':PuzzleUtils.openLink.bind(this,'http://jakesiegers.com/'),
 				'Open Source Libraries Used':[],
-				'https://github.com/mrdoob/three.js/':PuzzleUtils.openLink.bind(this,'https://github.com/mrdoob/three.js/'),
-				'https://github.com/tweenjs/tween.js/':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
+				'three.js':PuzzleUtils.openLink.bind(this,'https://threejs.org/'),
+				'tween.js':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
+				'Babel':PuzzleUtils.openLink.bind(this,'https://babeljs.io/')
 			}
 		};
 
@@ -57,8 +65,9 @@ class PuzzleMenu{
 		this.menuColors = {
 			'':['#1A237E','#3F51B5','#9FA8DA'],
 			'3D Mode':['#B71C1C','#F44336','#EF9A9A'],
-			'2D Mode':['#004D40','#009688','#80CBC4'],
-			'Settings':['#BF360C','#FF5722','#FFAB91'],
+			'2D Mode':['#BF360C','#FF5722','#FFAB91'],
+			'How to Play':['#311B92','#673AB7','#D1C4E9'],
+			'Settings':['#004D40','#009688','#80CBC4'],
 			'Credits':['#3E2723','#795548','#BCAAA4']
 		};
 
@@ -143,7 +152,7 @@ class PuzzleMenu{
 		style.innerHTML="<style>."+cellCls+"{background:url("+dataUrl+");perspective:150px;transition: all 0.3s;}</style>";
 		document.body.appendChild(style);
 
-		let flipDelay = 50;
+		let flipDelay = 30;
 
 		for(let y=0;y<cellYNum;y++) {
 			for(let x=0;x<cellXNum;x++){

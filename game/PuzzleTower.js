@@ -11,8 +11,6 @@ class PuzzleTower {
 		this.mapType = MAP_3D;
 		this.currentMode = MODE_LOADING;
 
-		this.debug = new PuzzleDebug(this);
-
 		this.renderer = new THREE.WebGLRenderer({antialias: this.PuzzleGame.settings.antiAlias, alpha: true});
 		this.renderer.setClearColor(0x000000, 0);
 		this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -36,6 +34,19 @@ class PuzzleTower {
 		this.pushTimeoutObj = null;
 
 		//this.initLoaders();
+	}
+
+	changeMapType(mapType){
+		this.mapType = mapType;
+		this.resetGameVariables();
+
+		this.scene.remove(this.tube);
+		this.tube = this.generateTube();
+		this.scene.add(this.tube);
+
+		this.scene.remove(this.depthFilter);
+		this.depthFilter = this.generateCylinderDepthFilter();
+		this.scene.add(this.depthFilter);
 	}
 
 	initLoaders(completeFn,completeScope){
@@ -163,7 +174,6 @@ class PuzzleTower {
 		window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
 		this.initTouch();
-		this.debug.initDatGui();
 
 		this.animate();
 		completeFn.call(completeScope);
@@ -181,7 +191,7 @@ class PuzzleTower {
 		let sThis = this;
 		event.preventDefault();
 		if ( event.touches.length === 1 ) {
-			if (this.touchTimer == null) {
+			if (this.touchTimer === null) {
 				this.touchTimer = setTimeout(function () {
 					sThis.touchTimer = null;
 				}, 200)
@@ -291,18 +301,30 @@ class PuzzleTower {
 	}
 
 	resetGameVariables(){
+
+		switch(this.mapType){
+			case MAP_2D:
+			this.boardHeight = 13;
+			this.boardWidth = 6;
+				break;
+			case MAP_3D:
+				this.boardHeight = 13;
+				this.boardWidth = 30;
+				break;
+		}
+
 		//TODO:Sort these!
 		this.animationQueue = 0;
 		this.score = 0;
 		this.gameGrid = [];
-		this.boardHeight = 13;
-		this.boardWidth = 30;
+
 		this.circlePieceSize = (TWO_PI / this.boardWidth);
 		this.stackHeights = [];
 		this.blockWidth = 35;
 		this.blockHeight = 35;
 		this.blockDepth = 10;
 		this.boardPixelHeight = (this.boardHeight) * this.blockHeight;
+		this.boardPixelWidth = (this.boardWidth) * this.blockWidth; //Also known as circumference in 3d mode!
 		this.halfBoardPixelHeight = this.boardPixelHeight / 2;
 		this.boardRadius = ((this.blockWidth - 1) * this.boardWidth) / (2 * PI);
 		this.hasControl = false;
@@ -314,7 +336,6 @@ class PuzzleTower {
 		this.matches = 0;
 		this.rowsCreated = 0;
 		this.piTimer = 0;
-		this.debugSelection = false;
 		this.chainCount = 0;
 		this.chainTimer = null;
 		this.quickPush = false;
@@ -349,7 +370,12 @@ class PuzzleTower {
 		this.selectorX = 0;//Math.floor(this.boardWidth/2);
 
 		let startingTowerAngle = this.circlePieceSize * this.selectorX - HALF_PI - (this.circlePieceSize / 2);
-		this.gameBoard.rotation.y = startingTowerAngle - PI;
+		if(this.mapType === MAP_2D){
+			startingTowerAngle = 0;
+			this.gameBoard.rotation.y = startingTowerAngle;
+		}else{
+			this.gameBoard.rotation.y = startingTowerAngle - PI;
+		}
 		this.nextRow.rotation.y = startingTowerAngle;
 
 		let startingTowerPosition = this.updateTowerPos();
@@ -370,15 +396,18 @@ class PuzzleTower {
 			sThis.checkForMatches();
 			//sThis.animationQueue = 1;
 		});
+
+		this.debug = new PuzzleDebug(this);
+		this.debug.initDatGui();
 	}
 
 	loseAnimation(){
 		for (let x = 0; x < this.boardWidth; x++) {
 			for (let y = 0; y < this.boardHeight; y++) {
-				if (this.gameGrid[x][y] != null) {
+				if (this.gameGrid[x][y] !== null) {
 					this.gameGrid[x][y].material.map = this.blankTexture;
 					let delay = 500;
-					if (this.gameGrid[x][this.boardHeight - 1] != null) {
+					if (this.gameGrid[x][this.boardHeight - 1] !== null) {
 						delay = 2000;
 						continue;
 					}
@@ -428,7 +457,7 @@ class PuzzleTower {
 
 			for (let x = 0; x < this.boardWidth; x++) {
 				for (let y = this.boardHeight - 1; y >= 0; y--) {
-					if (this.gameGrid[x][y] != null) {
+					if (this.gameGrid[x][y] !== null) {
 						this.gameGrid[x][y].position.y = this.calcYBlockPos(y + 1);
 						this.gameGrid[x][y + 1] = this.gameGrid[x][y];
 						//this.gameGrid[x][y] = null;
@@ -472,7 +501,11 @@ class PuzzleTower {
 		mesh2.position.x = this.blockWidth / 2;
 		obj.add(mesh2);
 
-		obj.position.z = this.boardRadius + this.blockDepth;
+		if(this.mapType === MAP_3D) {
+			obj.position.z = this.boardRadius + this.blockDepth;
+		}else{
+			obj.position.z = this.blockDepth;
+		}
 		return obj;
 	}
 
@@ -517,19 +550,33 @@ class PuzzleTower {
 
 	generateTube(){
 		let obj = new THREE.Object3D();
-		let r = this.boardRadius + this.blockDepth / 2 + 5;
 		let material = new THREE.MeshBasicMaterial({color: 0x222222, side: THREE.DoubleSide, map: this.tubeTexture});
-		let geometry = new THREE.CylinderGeometry(r, r, this.boardPixelHeight, this.boardWidth, 1, false);
-		let tube = new THREE.Mesh(geometry, material);
-		tube.position.y = -(this.boardPixelHeight*2);
-		tube.rotation.y = -HALF_PI;
 
-		let tube2 = new THREE.Mesh(geometry, material);
-		tube2.position.y = (this.boardPixelHeight*2);
-		tube2.rotation.y = HALF_PI;
+		let tube = null;
+		let tube2 = null;
+
+		if(this.mapType === MAP_3D){
+			let r = this.boardRadius + this.blockDepth / 2 + 5;
+			let geometry = new THREE.CylinderGeometry(r, r, this.boardPixelHeight, this.boardWidth, 1, false);
+			tube = new THREE.Mesh(geometry, material);
+			tube.position.y = -(this.boardPixelHeight*2);
+			tube.rotation.y = -HALF_PI;
+
+			tube2 = new THREE.Mesh(geometry, material);
+			tube2.position.y = (this.boardPixelHeight*2);
+			tube2.rotation.y = HALF_PI;
+		}else{
+			let geometry = new THREE.BoxGeometry(this.boardPixelWidth,this.boardPixelHeight,this.blockDepth+10);
+			tube = new THREE.Mesh(geometry, material);
+			tube.position.y = -(this.boardPixelHeight*2);
+
+			tube2 = new THREE.Mesh(geometry, material);
+			tube2.position.y = (this.boardPixelHeight*2);
+		}
 
 		obj.add(tube);
-		obj.add(tube2);
+		obj.add(tube2)
+
 		return obj;
 	}
 
@@ -540,7 +587,12 @@ class PuzzleTower {
 			transparent: true,
 			opacity: 0
 		});
-		let geometry = new THREE.PlaneGeometry((this.boardRadius + this.blockDepth) * 2, this.boardPixelHeight);
+
+		let width = (this.boardRadius + this.blockDepth) * 2;
+		if(this.mapType === MAP_2D){
+			width = this.boardPixelWidth;
+		}
+		let geometry = new THREE.PlaneGeometry(width, this.boardPixelHeight);
 		return new THREE.Mesh(geometry, material);
 	}
 
@@ -600,26 +652,26 @@ class PuzzleTower {
 		let blocksToBeDestroyed = [];
 		for (let y = 0; y < this.boardHeight; y++) {
 			for (let x = 0; x < this.boardWidth; x++) {
-				if (this.gameGrid[x][y] == null || this.gameGrid[x][y].userData.locked) {
+				if (this.gameGrid[x][y] === null || this.gameGrid[x][y].userData.locked) {
 					continue;
 				}
 
 				let typeToMatch = this.gameGrid[x][y].userData.blockType;
 				let matchChainX = [x];
 				let xToTest = x + 1;
-				if (xToTest == this.boardWidth) {
+				if (xToTest === this.boardWidth) {
 					xToTest = 0;
 				}
 
-				while (xToTest != x && this.gameGrid[xToTest][y] != null && !this.gameGrid[xToTest][y].userData.locked && !this.gameGrid[xToTest][y].userData.alreadyMatchedX) {
+				while (xToTest !== x && this.gameGrid[xToTest][y] !== null && !this.gameGrid[xToTest][y].userData.locked && !this.gameGrid[xToTest][y].userData.alreadyMatchedX) {
 					let nextType = this.gameGrid[xToTest][y].userData.blockType;
-					if (nextType != typeToMatch) {
+					if (nextType !== typeToMatch) {
 						//no more matches!
 						break;
 					}
 					matchChainX.push(xToTest);
 					xToTest++;
-					if (xToTest == this.boardWidth) {
+					if (xToTest === this.boardWidth) {
 						xToTest = 0;
 					}
 				}
@@ -636,19 +688,19 @@ class PuzzleTower {
 
 				let matchChainY = [y];
 				let yToTest = y + 1;
-				if (yToTest == this.boardHeight) {
+				if (yToTest === this.boardHeight) {
 					continue; // No Y rollover!
 				}
 
-				while (yToTest != y && this.gameGrid[x][yToTest] != null && !this.gameGrid[x][yToTest].userData.locked && !this.gameGrid[x][yToTest].userData.alreadyMatchedY) {
+				while (yToTest !== y && this.gameGrid[x][yToTest] !== null && !this.gameGrid[x][yToTest].userData.locked && !this.gameGrid[x][yToTest].userData.alreadyMatchedY) {
 					let nextType = this.gameGrid[x][yToTest].userData.blockType;
-					if (nextType != typeToMatch) {
+					if (nextType !== typeToMatch) {
 						//no more matches!
 						break;
 					}
 					matchChainY.push(yToTest);
 					yToTest++;
-					if (yToTest == this.boardHeight) {
+					if (yToTest === this.boardHeight) {
 						break; // No Y rollover!
 					}
 				}
@@ -698,14 +750,14 @@ class PuzzleTower {
 
 	swapBlocks(x, y, x2){
 
-		if (x2 == -1) {
+		if (x2 === -1) {
 			x2 = this.boardWidth - 1;
 		}
 
 		let block1 = this.gameGrid[x][y];
 		let block2 = this.gameGrid[x2][y];
 
-		if ((block1 != null && block1.userData.locked ) || (block2 != null && block2.userData.locked)) {
+		if ((block1 !== null && block1.userData.locked ) || (block2 !== null && block2.userData.locked)) {
 			return;
 		}
 
@@ -735,8 +787,8 @@ class PuzzleTower {
 		this.gameGrid[x][y] = block2;
 		this.gameGrid[x2][y] = block1;
 
-		if (block1 != null && block2 == null) {
-			if (y - 1 >= 0 && this.gameGrid[x2][y - 1] == null) {
+		if (block1 !== null && block2 === null) {
+			if (y - 1 >= 0 && this.gameGrid[x2][y - 1] === null) {
 				this.lockBlocksStartingAtPoint(x2, y);
 				this.animationQueue++;
 				setTimeout(this.dropBlocksStartingAtPoint.bind(this, x2, y), this.dropDelay);
@@ -746,8 +798,8 @@ class PuzzleTower {
 			setTimeout(this.dropBlocksStartingAtPoint.bind(this, x, y + 1), this.dropDelay);
 		}
 
-		else if (block2 != null && block1 == null) {
-			if (y - 1 >= 0 && this.gameGrid[x][y - 1] == null) {
+		else if (block2 !== null && block1 === null) {
+			if (y - 1 >= 0 && this.gameGrid[x][y - 1] === null) {
 				this.lockBlocksStartingAtPoint(x, y);
 				this.animationQueue++;
 				setTimeout(this.dropBlocksStartingAtPoint.bind(this, x, y), this.dropDelay);
@@ -763,7 +815,7 @@ class PuzzleTower {
 	}
 
 	destroyBlock(x, y){
-		if (this.gameGrid[x][y] == null || this.gameGrid[x][y].userData.locked) {
+		if (this.gameGrid[x][y] === null || this.gameGrid[x][y].userData.locked) {
 			return;
 		}
 		this.animationQueue++;
@@ -849,15 +901,23 @@ class PuzzleTower {
 				this.selectorY--;
 				break;
 			case 'left':
-				this.selectorX++;
-				if (this.selectorX >= this.boardWidth) {
-					this.gameBoard.rotation.y = this.nextRow.rotation.y = this.circlePieceSize * -1 - HALF_PI - (this.circlePieceSize / 2)
+				if(this.mapType === MAP_3D){
+					this.selectorX++;
+					if (this.selectorX >= this.boardWidth) {
+						this.gameBoard.rotation.y = this.nextRow.rotation.y = this.circlePieceSize * -1 - HALF_PI - (this.circlePieceSize / 2)
+					}
+				}else{
+					this.selectorX--;
 				}
 				break;
 			case 'right':
-				this.selectorX--;
-				if (this.selectorX < 0) {
-					this.gameBoard.rotation.y = this.nextRow.rotation.y = this.circlePieceSize * this.boardWidth - HALF_PI - (this.circlePieceSize / 2);
+				if(this.mapType === MAP_3D) {
+					this.selectorX--;
+					if (this.selectorX < 0) {
+						this.gameBoard.rotation.y = this.nextRow.rotation.y = this.circlePieceSize * this.boardWidth - HALF_PI - (this.circlePieceSize / 2);
+					}
+				}else{
+					this.selectorX++;
 				}
 				break;
 		}
@@ -868,12 +928,29 @@ class PuzzleTower {
 			this.selectorY = 0
 		}
 		if (this.selectorX >= this.boardWidth) {
-			this.selectorX = 0;
+			if(this.mapType === MAP_3D) {
+				this.selectorX = 0;
+			}else{
+				this.selectorX = this.boardWidth - 1;
+			}
+
 		}
 		if (this.selectorX < 0) {
-			this.selectorX = this.boardWidth - 1;
+			if(this.mapType === MAP_3D) {
+				this.selectorX = this.boardWidth - 1;
+			}else{
+				this.selectorX = 0;
+			}
 		}
-		this.focusCameraOnSelection();
+
+		if(this.mapType === MAP_3D) {
+			this.focusCameraOnSelection();
+		}
+
+		if(this.mapType === MAP_2D){
+			this.gameBoard.rotation.y = 0;
+			this.nextRow.rotation.y = 0;
+		}
 	}
 
 	focusCameraOnSelection(){
@@ -900,7 +977,7 @@ class PuzzleTower {
 
 	calcXBlockPos(x){
 		if(this.mapType === MAP_2D) {
-			return (x-(this.boardWidth/2)) * this.blockWidth
+			return ((x-(this.boardWidth/2)) * this.blockWidth)+this.blockWidth/2
 		}
 		return Math.cos(this.circlePieceSize * x) * this.boardRadius;
 	}
@@ -956,7 +1033,11 @@ class PuzzleTower {
 		}
 		this.scene.add(this.nextRow);
 		this.updateNextRowPos();
-		this.nextRow.rotation.y = this.circlePieceSize * this.selectorX - HALF_PI - (this.circlePieceSize / 2);
+		if(this.mapType === MAP_3D) {
+			this.nextRow.rotation.y = this.circlePieceSize * this.selectorX - HALF_PI - (this.circlePieceSize / 2);
+		}else{
+			this.nextRow.rotation.y = 0;
+		}
 		this.rowsCreated++;
 	}
 
@@ -978,7 +1059,7 @@ class PuzzleTower {
 
 			for (let i = -2; i <= 2; i++) {
 
-				if (i == 0) {
+				if (i === 0) {
 					continue;
 				}
 
@@ -987,7 +1068,7 @@ class PuzzleTower {
 				if (nextXBlock !== null) {
 					let xType = nextXBlock.userData.blockType;
 					let xPos = colorPool.indexOf(xType);
-					if (xType == lastXType && xPos !== -1 && colorPool.length > 1) {
+					if (xType === lastXType && xPos !== -1 && colorPool.length > 1) {
 						colorPool.splice(xPos, 1);
 					}
 					lastXType = xType;
@@ -1001,7 +1082,7 @@ class PuzzleTower {
 				if (nextYBlock !== null) {
 					let yType = nextYBlock.userData.blockType;
 					let yPos = colorPool.indexOf(yType);
-					if (yType == lastYType && yPos !== -1 && colorPool.length > 1) {
+					if (yType === lastYType && yPos !== -1 && colorPool.length > 1) {
 						colorPool.splice(yPos, 1);
 					}
 					lastYType = yType;
@@ -1074,15 +1155,6 @@ class PuzzleTower {
 		return mesh;
 	}
 
-	getBlockAt(x, y){
-		x = (x + this.boardWidth) % this.boardWidth;
-		y = (y + this.boardHeight) % this.boardHeight;
-		if (x in this.gameGrid === false || y in this.gameGrid[x] === false || this.gameGrid[x][y] === null) {
-			return false;
-		}
-		return this.gameGrid[x][y];
-	}
-
 	generateMap(colorPoolIn){
 		let grid = [];
 		for (let gx = 0; gx < this.boardWidth; gx++) {
@@ -1106,7 +1178,7 @@ class PuzzleTower {
 				let lastYType = '';
 
 				for (let i = -2; i <= 2; i++) {
-					if (i == 0) {
+					if (i === 0) {
 						continue;
 					}
 
@@ -1115,7 +1187,7 @@ class PuzzleTower {
 					if (nextXBlock !== null) {
 						let xType = nextXBlock;
 						let xPos = colorPool.indexOf(xType);
-						if (xType == lastXType && xPos !== -1 && colorPool.length > 1) {
+						if (xType === lastXType && xPos !== -1 && colorPool.length > 1) {
 							colorPool.splice(xPos, 1);
 						}
 						lastXType = xType;
@@ -1125,7 +1197,7 @@ class PuzzleTower {
 					if (nextYBlock !== null) {
 						let yType = nextYBlock;
 						let yPos = colorPool.indexOf(yType);
-						if (yType == lastYType && yPos !== -1 && colorPool.length > 1) {
+						if (yType === lastYType && yPos !== -1 && colorPool.length > 1) {
 							colorPool.splice(yPos, 1);
 						}
 						lastYType = yType;
@@ -1172,7 +1244,7 @@ class PuzzleTower {
 				 continue;
 				 }
 				 */
-				if (blockType == null) {
+				if (blockType === null) {
 					column.push(null);
 				} else {
 					let mesh = this.generateBlockMesh(blockType, x, y);
@@ -1200,7 +1272,11 @@ class PuzzleTower {
 
 	updateCursorPos(){
 		this.cursorObj.position.y = this.calcYBlockPos(this.selectorY) - this.halfBoardPixelHeight + this.upOffset;
-		this.debug.debugSelectionUpdate();
+		if(this.mapType === MAP_2D) {
+			this.cursorObj.position.x = this.calcXBlockPos(this.selectorX)-this.blockWidth/2;
+		}else{
+			this.cursorObj.position.x = 0;
+		}
 	}
 
 	updateNextRowPos(){

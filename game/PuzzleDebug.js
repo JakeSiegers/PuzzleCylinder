@@ -1,8 +1,10 @@
 class PuzzleDebug{
 	constructor(PuzzleTower){
 		this.PuzzleTower = PuzzleTower;
+		this.debugSelection = true;
 	}
 
+	/*
 	debugLoadMap(){
 		this.PuzzleTower.loadMap('map'+this.PuzzleTower.debugMapNumber);
 	};
@@ -14,9 +16,10 @@ class PuzzleDebug{
 			this.PuzzleTower.destroyBlock(x,y);
 		}
 	};
-
+	*/
+	/*
 	debugSelectionUpdate(){
-		if(this.PuzzleTower.debugSelection) {
+		if(this.debugSelection) {
 			for(let x=0;x<this.PuzzleTower.boardWidth;x++) {
 				for(let y=0;y<this.PuzzleTower.boardHeight;y++) {
 					if (this.PuzzleTower.gameGrid[x][y] !== null){
@@ -40,17 +43,18 @@ class PuzzleDebug{
 			}
 		}
 	};
+	*/
 
 	initDatGui(){
 
 		//let gui = new dat.GUI();
 
-		/*
-		 let f1 = gui.addFolder('SELECTION');
-		 f1.add(this.PuzzleTower,"selectorX",0,this.PuzzleTower.boardWidth-1).step(1).onChange(this.PuzzleTower.focusCameraOnSelection.bind(this.PuzzleTower)).listen();
-		 f1.add(this.PuzzleTower,"selectorY",0,this.PuzzleTower.boardHeight-1).step(1).onChange(this.PuzzleTower.focusCameraOnSelection.bind(this.PuzzleTower)).listen();
-		 f1.add(this.PuzzleTower,"debugSelection").listen();
-		 f1.open();
+		 //let f1 = gui.addFolder('SELECTION');
+		 //f1.add(this.PuzzleTower,"selectorX",0,this.PuzzleTower.boardWidth-1).step(1).onChange(this.PuzzleTower.focusCameraOnSelection.bind(this.PuzzleTower)).listen();
+		 //f1.add(this.PuzzleTower,"selectorY",0,this.PuzzleTower.boardHeight-1).step(1).onChange(this.PuzzleTower.focusCameraOnSelection.bind(this.PuzzleTower)).listen();
+		 //f1.open();
+
+		 /*
 
 		 let f2 = gui.addFolder('BLOCKS');
 		 f2.add(this.PuzzleTower,"dropDelay",100,1000).step(10).listen();

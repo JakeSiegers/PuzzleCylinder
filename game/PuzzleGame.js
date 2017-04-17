@@ -39,7 +39,8 @@ class PuzzleGame{
 		},this);
 	}
 
-	startGame(options){
+	startGame(mapType){
+		this.tower.changeMapType(mapType);
 		this.menu.hideMenuWithTransition();
 		this.setFocus(FOCUS_TOWER);
 		this.tower.setGameMode(MODE_ENDLESS);
