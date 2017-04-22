@@ -8,7 +8,6 @@ class PuzzleTower {
 		this.PuzzleGame = PuzzleGame;
 
 		this.loaded = false;
-		this.mapType = MAP_3D;
 		this.currentMode = MODE_LOADING;
 
 		this.renderer = new THREE.WebGLRenderer({antialias: this.PuzzleGame.settings.antiAlias, alpha: true});
@@ -27,7 +26,9 @@ class PuzzleTower {
 		this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 100, 850);
 		this.camera.position.z = 500;
 
-		this.resetGameVariables();
+		this.changeMapType(MAP_3D);
+
+		this.difficulty = 1;
 		this.startingHeight = 4;
 
 		//Timer Objects
@@ -44,9 +45,19 @@ class PuzzleTower {
 		this.tube = this.generateTube();
 		this.scene.add(this.tube);
 
+		if(this.loaded){
+			this.tubeTexture.repeat.set(this.boardWidth, this.boardHeight);
+		}
+
 		this.scene.remove(this.depthFilter);
 		this.depthFilter = this.generateCylinderDepthFilter();
 		this.scene.add(this.depthFilter);
+
+		if(mapType === MAP_3D){
+			this.camera.position.z = 500;
+		}else{
+			this.camera.position.z = 350;
+		}
 	}
 
 	initLoaders(completeFn,completeScope){
@@ -54,13 +65,11 @@ class PuzzleTower {
 		let manager = new THREE.LoadingManager();
 		let sThis = this;
 		manager.onLoad = function () {
-			//console.log('Loading complete!');
+			PuzzleCSSLoader.hideLoader();
 			sThis.preloadComplete(completeFn,completeScope);
 			sThis.loaded = true;
-			PuzzleCSSLoader.hideLoader();
 		};
 		manager.onProgress = function (url, itemsLoaded, itemsTotal) {
-			//console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
 			PuzzleCSSLoader.setLoadPercent(Math.floor((itemsLoaded / itemsTotal) * 100))
 		};
 
@@ -280,7 +289,8 @@ class PuzzleTower {
 
 	makeHarder(){
 		if (this.pushDelay > 0) {
-			this.pushDelay = 100 - this.matches / 5;
+			console.log(this.difficulty);
+			this.pushDelay = 100 - (this.matches / (6-this.difficulty));
 
 			if (this.pushDelay < 0) {
 				this.pushDelay = 0;
@@ -367,8 +377,10 @@ class PuzzleTower {
 		this.scene.add(this.cursorObj);
 
 		this.selectorY = Math.floor(this.boardHeight / 2);
-		this.selectorX = 0;//Math.floor(this.boardWidth/2);
+		this.selectorX = Math.floor(this.boardWidth/2);
 
+		this.updateCursorPos();
+		
 		let startingTowerAngle = this.circlePieceSize * this.selectorX - HALF_PI - (this.circlePieceSize / 2);
 		if(this.mapType === MAP_2D){
 			startingTowerAngle = 0;
@@ -394,7 +406,6 @@ class PuzzleTower {
 			sThis.hasControl = true;
 			sThis.gameActive = true;
 			sThis.checkForMatches();
-			//sThis.animationQueue = 1;
 		});
 
 		this.debug = new PuzzleDebug(this);
@@ -514,23 +525,31 @@ class PuzzleTower {
 		let closeEase = TWEEN.Easing.Cubic.Out;
 
 		new TWEEN.Tween(this.tube.children[0].position).to({y: -this.boardPixelHeight / 2}, closeDelay).easing(closeEase).start();
-		new TWEEN.Tween(this.tube.children[0].rotation).to({y: -HALF_PI}, closeDelay).easing(closeEase).start();
+		if(this.mapType === MAP_3D) {
+			new TWEEN.Tween(this.tube.children[0].rotation).to({y: -HALF_PI}, closeDelay).easing(closeEase).start();
+		}
 
 		new TWEEN.Tween(this.tube.children[1].position).to({y: this.boardPixelHeight / 2}, closeDelay).easing(closeEase).start();
-		new TWEEN.Tween(this.tube.children[1].rotation).to({y: HALF_PI}, closeDelay).easing(closeEase).start();
+		if(this.mapType === MAP_3D) {
+			new TWEEN.Tween(this.tube.children[1].rotation).to({y: HALF_PI}, closeDelay).easing(closeEase).start();
+		}
 
 		setTimeout(completeFn, closeDelay);
 	}
 
-	openTube(completeFn){
+	openTube(completeFn) {
 		let openDelay = 1000;
 		let openEase = TWEEN.Easing.Cubic.Out;
 
 		new TWEEN.Tween(this.tube.children[0].position).to({y: -this.boardPixelHeight + 1}, openDelay).easing(openEase).start();
-		new TWEEN.Tween(this.tube.children[0].rotation).to({y: 0}, openDelay).easing(openEase).start();
+		if (this.mapType === MAP_3D) {
+			new TWEEN.Tween(this.tube.children[0].rotation).to({y: 0}, openDelay).easing(openEase).start();
+		}
 
 		new TWEEN.Tween(this.tube.children[1].position).to({y: this.boardPixelHeight - 1}, openDelay).easing(openEase).start();
-		new TWEEN.Tween(this.tube.children[1].rotation).to({y: 0}, openDelay).easing(openEase).start();
+		if(this.mapType === MAP_3D) {
+			new TWEEN.Tween(this.tube.children[1].rotation).to({y: 0}, openDelay).easing(openEase).start();
+		}
 
 		setTimeout(completeFn, openDelay);
 	}
@@ -540,10 +559,14 @@ class PuzzleTower {
 		let openEase = TWEEN.Easing.Cubic.Out;
 
 		new TWEEN.Tween(this.tube.children[0].position).to({y: -this.boardPixelHeight * 2}, openDelay).easing(openEase).start();
-		new TWEEN.Tween(this.tube.children[0].rotation).to({y: HALF_PI}, openDelay).easing(openEase).start();
+		if(this.mapType === MAP_3D) {
+			new TWEEN.Tween(this.tube.children[0].rotation).to({y: HALF_PI}, openDelay).easing(openEase).start();
+		}
 
 		new TWEEN.Tween(this.tube.children[1].position).to({y: this.boardPixelHeight * 2}, openDelay).easing(openEase).start();
-		new TWEEN.Tween(this.tube.children[1].rotation).to({y: -HALF_PI}, openDelay).easing(openEase).start();
+		if(this.mapType === MAP_3D) {
+			new TWEEN.Tween(this.tube.children[1].rotation).to({y: -HALF_PI}, openDelay).easing(openEase).start();
+		}
 
 		setTimeout(completeFn, openDelay);
 	}
@@ -672,7 +695,11 @@ class PuzzleTower {
 					matchChainX.push(xToTest);
 					xToTest++;
 					if (xToTest === this.boardWidth) {
-						xToTest = 0;
+						if(this.mapType === MAP_3D) {
+							xToTest = 0;
+						}else{
+							break; //Only X rollover on 3D
+						}
 					}
 				}
 
@@ -927,27 +954,27 @@ class PuzzleTower {
 		if (this.selectorY < 0) {
 			this.selectorY = 0
 		}
-		if (this.selectorX >= this.boardWidth) {
-			if(this.mapType === MAP_3D) {
+
+		if(this.mapType === MAP_3D){
+			if (this.selectorX >= this.boardWidth) {
 				this.selectorX = 0;
-			}else{
+			}
+
+			if (this.selectorX < 0) {
 				this.selectorX = this.boardWidth - 1;
 			}
 
-		}
-		if (this.selectorX < 0) {
-			if(this.mapType === MAP_3D) {
-				this.selectorX = this.boardWidth - 1;
-			}else{
-				this.selectorX = 0;
-			}
-		}
-
-		if(this.mapType === MAP_3D) {
 			this.focusCameraOnSelection();
-		}
+		}else{
+			if (this.selectorX >= this.boardWidth) {
+				this.selectorX = this.boardWidth - 1;
+			}
 
-		if(this.mapType === MAP_2D){
+			if (this.selectorX < 1) {
+				this.selectorX = 1;
+			}
+
+			this.updateCursorPos();
 			this.gameBoard.rotation.y = 0;
 			this.nextRow.rotation.y = 0;
 		}
@@ -1272,6 +1299,11 @@ class PuzzleTower {
 
 	updateCursorPos(){
 		this.cursorObj.position.y = this.calcYBlockPos(this.selectorY) - this.halfBoardPixelHeight + this.upOffset;
+
+		if(this.cursorObj.position.y > this.halfBoardPixelHeight-(this.blockHeight/2)){
+			this.cursorObj.position.y = this.halfBoardPixelHeight-(this.blockHeight/2)
+		}
+
 		if(this.mapType === MAP_2D) {
 			this.cursorObj.position.x = this.calcXBlockPos(this.selectorX)-this.blockWidth/2;
 		}else{

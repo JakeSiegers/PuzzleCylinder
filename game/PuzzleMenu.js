@@ -32,15 +32,19 @@ class PuzzleMenu{
 
 		//TODO: Perhaps allow for a dom object in the menu? Pass an ID or something?
 
+		//TODO: Change number change events to a function call, so I can control the number changing... This menu is doing a bit too much.
+		//TODO: Or perhaps do that for the "Custom" Selection?... Yeah. That outta work. (For words to ints, like easy, medium, hard)
+
 		this.menuOptions = {
 			'3D Mode': {
 				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_3D),
-				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower,1,12]
+				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower,1,1,12],
+				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,0.5,1,5]
 			},
 			'2D Mode':{
-				'*** NOT WORKING YET ***':[],
 				'Start 2D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
-				'Start Height': ['int', 'startingHeight', this.PuzzleGame.tower,1,12]
+				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower,1,1,12],
+				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,0.5,1,5]
 			},
 			'How to Play':{
 				'Arrow Keys - Move': [],
@@ -58,7 +62,8 @@ class PuzzleMenu{
 				'Open Source Libraries Used':[],
 				'three.js':PuzzleUtils.openLink.bind(this,'https://threejs.org/'),
 				'tween.js':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
-				'Babel':PuzzleUtils.openLink.bind(this,'https://babeljs.io/')
+				'Babel':PuzzleUtils.openLink.bind(this,'https://babeljs.io/'),
+				'html2canvas':PuzzleUtils.openLink.bind(this,'http://html2canvas.hertzen.com/'),
 			}
 		};
 
@@ -255,34 +260,35 @@ class PuzzleMenu{
 							item.innerHTML = item.label+': '+(boolScope[boolName]?'ON':'OFF');
 						});
 						break;
-					case 'int':
-						let intName = menuAction[1];
-						let intScope = menuAction[2];
-						let intMin = menuAction[3];
-						let intMax = menuAction[4];
-						item.intValue = document.createElement( 'span' );
-						item.intValue.innerHTML = intScope[intName];
-						item.intValue.style.display = 'inline-block';
-						item.intValue.style.minWidth = '30px';
+					case 'numeric':
+						let numName = menuAction[1];
+						let numScope = menuAction[2];
+						let numStep = menuAction[3];
+						let numMin = menuAction[4];
+						let numMax = menuAction[5];
+						item.numValue = document.createElement( 'span' );
+						item.numValue.innerHTML = numScope[numName];
+						item.numValue.style.display = 'inline-block';
+						item.numValue.style.minWidth = '30px';
 						item.upBtn = document.createElement( 'span' );
 						item.upBtn.innerHTML = ' -> ';
 						item.upBtn.addEventListener('click',function() {
-							if(intScope[intName] < intMax) {
-								intScope[intName]++;
-								item.intValue.innerHTML = intScope[intName];
+							if(numScope[numName] < numMax) {
+								numScope[numName]+=numStep;
+								item.numValue.innerHTML = numScope[numName];
 							}
 						});
 						item.downBtn = document.createElement( 'span' );
 						item.downBtn.innerHTML = ' <- ';
 						item.downBtn.addEventListener('click',function() {
-							if(intScope[intName] > intMin) {
-								intScope[intName]--;
-								item.intValue.innerHTML = intScope[intName];
+							if(numScope[numName] > numMin) {
+								numScope[numName]-=numStep;
+								item.numValue.innerHTML = numScope[numName];
 							}
 						});
 						item.innerHTML = item.label;
 						item.appendChild(item.downBtn);
-						item.appendChild(item.intValue);
+						item.appendChild(item.numValue);
 						item.appendChild(item.upBtn);
 						break;
 				}
