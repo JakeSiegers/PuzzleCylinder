@@ -166,6 +166,10 @@ class PuzzleTower {
 		}
 	}
 
+	/**
+	 * @param completeFn
+	 * @param completeScope
+	 */
 	preloadComplete(completeFn,completeScope){
 		this.tube = this.generateTube();
 		this.scene.add(this.tube);
@@ -219,6 +223,9 @@ class PuzzleTower {
 		}
 	}
 
+	/**
+	 * @param event
+	 */
 	onDocumentTouchMove(event){
 		event.preventDefault();
 
@@ -289,22 +296,25 @@ class PuzzleTower {
 
 	makeHarder(){
 		if (this.pushDelay > 0) {
-			console.log(this.difficulty);
-			this.pushDelay = 100 - (this.matches / (6-this.difficulty));
+			if(this.mapType === MAP_3D) {
+				this.pushDelay = 100 - (this.matches / (6 - this.difficulty));
+			}else{
+				this.pushDelay = 50 - (this.matches / (6 - this.difficulty));
+			}
 
 			if (this.pushDelay < 0) {
 				this.pushDelay = 0;
 			}
-			if (this.pushDelay <= 80) {
+			if (this.score >= 100) {
 				this.handicap = 3;
 			}
-			if (this.pushDelay <= 70) {
+			if (this.score >= 300) {
 				this.handicap = 2;
 			}
-			if (this.pushDelay <= 60) {
+			if (this.score >= 600) {
 				this.handicap = 1;
 			}
-			if (this.pushDelay <= 50) {
+			if (this.score >= 1000) {
 				this.handicap = 0;
 			}
 		}

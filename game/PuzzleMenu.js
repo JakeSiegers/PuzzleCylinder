@@ -39,12 +39,12 @@ class PuzzleMenu{
 			'3D Mode': {
 				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_3D),
 				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower,1,1,12],
-				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,0.5,1,5]
+				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,1,1,5]
 			},
 			'2D Mode':{
 				'Start 2D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
 				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower,1,1,12],
-				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,0.5,1,5]
+				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,1,1,5]
 			},
 			'How to Play':{
 				'Arrow Keys - Move': [],

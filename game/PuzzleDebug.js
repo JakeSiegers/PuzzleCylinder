@@ -47,7 +47,7 @@ class PuzzleDebug {
 
 	initDatGui() {
 
-		//let gui = new dat.GUI();
+		let gui = new dat.GUI();
 
 		//let f1 = gui.addFolder('SELECTION');
 		//f1.add(this.PuzzleTower, "selectorX", 0, this.PuzzleTower.boardWidth - 1).step(1).onChange(this.PuzzleTower.focusCameraOnSelection.bind(this.PuzzleTower)).listen();
@@ -70,7 +70,7 @@ class PuzzleDebug {
 		 //f3.open();
 		 */
 
-		/*
+
 		 let f4 = gui.addFolder('GAMEPLAY');
 		 f4.add(this.PuzzleTower,"handicap",0,4).step(1).listen();
 		 f4.add(this.PuzzleTower,"pushDelay",0,200).step(1).listen();
@@ -78,9 +78,9 @@ class PuzzleDebug {
 		 f4.add(this.PuzzleTower,"score").listen();
 		 f4.add(this.PuzzleTower,"chainCount").listen();
 		 f4.add(this.PuzzleTower,"rowsCreated").listen();
-		 f4.add(this.PuzzleTower,"startGame");
+		 //f4.add(this.PuzzleTower,"startGame");
 		 f4.open();
-		 */
+
 
 		//let versionDate = new Date(lastUpdateTime*1000);
 		//let f5 = gui.addFolder("Build Date: "+versionDate.toLocaleString());
