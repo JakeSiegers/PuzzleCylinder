@@ -324,12 +324,14 @@ class PuzzleTower {
 
 		switch(this.mapType){
 			case MAP_2D:
-			this.boardHeight = 13;
-			this.boardWidth = 6;
+				this.boardHeight = 13;
+				this.boardWidth = 6;
+				this.pushDelay = 50;
 				break;
 			case MAP_3D:
 				this.boardHeight = 13;
 				this.boardWidth = 30;
+				this.pushDelay = 100;
 				break;
 		}
 
@@ -350,7 +352,6 @@ class PuzzleTower {
 		this.hasControl = false;
 		this.gameActive = false;
 		this.upOffset = 0;
-		this.pushDelay = 100;
 		this.dropDelay = 150;
 		this.handicap = 4;
 		this.matches = 0;
