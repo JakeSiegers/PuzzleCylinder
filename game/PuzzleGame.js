@@ -31,6 +31,7 @@ class PuzzleGame{
 		
 		this.tower = new PuzzleTower(this);
 		this.menu = new PuzzleMenu(this);
+		this.scoreBoard = new PuzzleScore(this);
 		this.tower.initLoaders(function(){
 			this.menu.showMenuWithTransition();
 			this.setFocus(FOCUS_MENU);

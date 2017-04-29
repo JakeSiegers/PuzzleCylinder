@@ -735,7 +735,11 @@ var PuzzleTower = function () {
 					var matchChainX = [x];
 					var xToTest = x + 1;
 					if (xToTest === this.boardWidth) {
-						xToTest = 0;
+						if (this.mapType === MAP_3D) {
+							xToTest = 0;
+						} else {
+							xToTest = x;
+						}
 					}
 
 					while (xToTest !== x && this.gameGrid[xToTest][y] !== null && !this.gameGrid[xToTest][y].userData.locked && !this.gameGrid[xToTest][y].userData.alreadyMatchedX) {
