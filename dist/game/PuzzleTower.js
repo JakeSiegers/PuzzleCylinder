@@ -14,15 +14,15 @@ var PuzzleTower = function () {
 
 		this.PuzzleGame = PuzzleGame;
 
-		this.scene = new THREE.Group();
-		this.PuzzleGame.scene.add(this.scene);
+		this.towerGroup = new THREE.Group();
+		this.PuzzleGame.scene.add(this.towerGroup);
 
 		this.loaded = false;
 		this.currentMode = MODE_LOADING;
 
 		this.changeMapType(MAP_3D);
 
-		this.difficulty = 1;
+		this.difficulty = 2;
 		this.startingHeight = 4;
 
 		//Timer Objects
@@ -35,17 +35,17 @@ var PuzzleTower = function () {
 			this.mapType = mapType;
 			this.resetGameVariables();
 
-			this.scene.remove(this.tube);
+			this.towerGroup.remove(this.tube);
 			this.tube = this.generateTube();
-			this.scene.add(this.tube);
+			this.towerGroup.add(this.tube);
 
 			if (this.loaded) {
 				this.tubeTexture.repeat.set(this.boardWidth, this.boardHeight);
 			}
 
-			this.scene.remove(this.depthFilter);
+			this.towerGroup.remove(this.depthFilter);
 			this.depthFilter = this.generateCylinderDepthFilter();
-			this.scene.add(this.depthFilter);
+			this.towerGroup.add(this.depthFilter);
 		}
 	}, {
 		key: 'initLoaders',
@@ -166,9 +166,9 @@ var PuzzleTower = function () {
 		key: 'preloadComplete',
 		value: function preloadComplete(completeFn, completeScope) {
 			this.tube = this.generateTube();
-			this.scene.add(this.tube);
+			this.towerGroup.add(this.tube);
 			this.depthFilter = this.generateCylinderDepthFilter();
-			this.scene.add(this.depthFilter);
+			this.towerGroup.add(this.depthFilter);
 
 			this.gameBoard = new THREE.Object3D();
 			this.nextRow = new THREE.Object3D();
@@ -273,7 +273,6 @@ var PuzzleTower = function () {
 
 					this.openTube();
 					var sThis = this;
-					this.PuzzleGame.menu.showScore();
 					setTimeout(function () {
 						sThis.gameBoard.visible = true;
 						sThis.cursorObj.visible = true;
@@ -284,8 +283,6 @@ var PuzzleTower = function () {
 							opacity: 0.5
 						}, 2000).easing(TWEEN.Easing.Exponential.Out).start();
 					}, 1000);
-
-					//PuzzleMenu.showScore();
 					break;
 			}
 		}
@@ -302,18 +299,6 @@ var PuzzleTower = function () {
 				if (this.pushDelay < 0) {
 					this.pushDelay = 0;
 				}
-				if (this.score >= 100) {
-					this.handicap = 3;
-				}
-				if (this.score >= 300) {
-					this.handicap = 2;
-				}
-				if (this.score >= 600) {
-					this.handicap = 1;
-				}
-				if (this.score >= 1000) {
-					this.handicap = 0;
-				}
 			}
 		}
 	}, {
@@ -327,13 +312,19 @@ var PuzzleTower = function () {
 					this.pushDelay = 50;
 					this.blockWidth = 45;
 					this.blockHeight = 45;
+					this.blockDepth = 1;
+					this.boardRadius = null;
+					this.boardPixelWidth = this.boardWidth * this.blockWidth; //Also known as circumference in 3d mode!
 					break;
 				case MAP_3D:
 					this.boardHeight = 13;
 					this.boardWidth = 30;
 					this.pushDelay = 100;
-					this.blockWidth = 35;
-					this.blockHeight = 35;
+					this.blockWidth = 30;
+					this.blockHeight = 30;
+					this.blockDepth = 10;
+					this.boardRadius = (this.blockWidth - 1) * this.boardWidth / (2 * PI);
+					this.boardPixelWidth = (this.boardRadius + this.blockDepth) * 2;
 					break;
 			}
 
@@ -344,19 +335,22 @@ var PuzzleTower = function () {
 
 			this.circlePieceSize = TWO_PI / this.boardWidth;
 			this.stackHeights = [];
-			this.blockDepth = 10;
+
 			this.boardPixelHeight = this.boardHeight * this.blockHeight;
-			this.boardPixelWidth = this.boardWidth * this.blockWidth; //Also known as circumference in 3d mode!
+
 			this.halfBoardPixelHeight = this.boardPixelHeight / 2;
-			this.boardRadius = (this.blockWidth - 1) * this.boardWidth / (2 * PI);
+
 			this.hasControl = false;
 			this.gameActive = false;
 			this.upOffset = 0;
 			this.dropDelay = 150;
-			this.handicap = 4;
+
+			this.handicap = 5 - this.difficulty;
+
 			this.matches = 0;
 			this.rowsCreated = 0;
 			this.chainCount = 0;
+			this.highestChain = 0;
 			this.chainTimer = null;
 			this.quickPush = false;
 		}
@@ -369,10 +363,10 @@ var PuzzleTower = function () {
 			this.resetGameVariables();
 
 			if (this.hasOwnProperty('gameBoard')) {
-				this.scene.remove(this.gameBoard);
+				this.towerGroup.remove(this.gameBoard);
 			}
 			this.gameBoard = this.cylinder();
-			this.scene.add(this.gameBoard);
+			this.towerGroup.add(this.gameBoard);
 
 			this.generateNextRow();
 
@@ -382,10 +376,10 @@ var PuzzleTower = function () {
 			this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this), 2000);
 
 			if (this.hasOwnProperty('cursorObj')) {
-				this.scene.remove(this.cursorObj);
+				this.towerGroup.remove(this.cursorObj);
 			}
 			this.cursorObj = this.generateCursor();
-			this.scene.add(this.cursorObj);
+			this.towerGroup.add(this.cursorObj);
 
 			this.selectorY = Math.floor(this.boardHeight / 2);
 			this.selectorX = Math.floor(this.boardWidth / 2);
@@ -630,10 +624,7 @@ var PuzzleTower = function () {
 				opacity: 0
 			});
 
-			var width = (this.boardRadius + this.blockDepth) * 2;
-			if (this.mapType === MAP_2D) {
-				width = this.boardPixelWidth;
-			}
+			var width = this.boardPixelWidth;
 			var geometry = new THREE.PlaneGeometry(width, this.boardPixelHeight);
 			return new THREE.Mesh(geometry, material);
 		}
@@ -778,6 +769,9 @@ var PuzzleTower = function () {
 
 			if (blocksToBeDestroyed.length > 0) {
 				this.chainCount++;
+				if (this.chainCount > this.highestChain) {
+					this.highestChain = this.chainCount;
+				}
 
 				if (this.chainTimer !== null) {
 					clearTimeout(this.chainTimer);
@@ -791,7 +785,6 @@ var PuzzleTower = function () {
 
 			for (var d = 0; d < blocksToBeDestroyed.length; d++) {
 				this.score += comboCount * this.chainCount;
-				this.PuzzleGame.menu.ScoreDom.innerHTML = "" + this.score;
 				this.makeHarder();
 				this.destroyBlock(blocksToBeDestroyed[d].x, blocksToBeDestroyed[d].y);
 			}
@@ -1089,7 +1082,7 @@ var PuzzleTower = function () {
 		key: 'generateNextRow',
 		value: function generateNextRow() {
 			if (this.hasOwnProperty('nextRow')) {
-				this.scene.remove(this.nextRow);
+				this.towerGroup.remove(this.nextRow);
 			}
 
 			var colorPool = [];
@@ -1103,7 +1096,7 @@ var PuzzleTower = function () {
 			for (var i in meshes) {
 				this.nextRow.add(meshes[i]);
 			}
-			this.scene.add(this.nextRow);
+			this.towerGroup.add(this.nextRow);
 			this.updateNextRowPos();
 			if (this.mapType === MAP_3D) {
 				this.nextRow.rotation.y = this.circlePieceSize * this.selectorX - HALF_PI - this.circlePieceSize / 2;
@@ -1360,7 +1353,6 @@ var PuzzleTower = function () {
 	}, {
 		key: 'gameAnimations',
 		value: function gameAnimations() {
-
 			//TODO: People on higher hz monitors will see different animation speeds because of how things are coded here.
 			//TODO: The following animations should be using the TWEEN library on a loop, with events to stop and start the animations
 			//TODO: It would also be a performance improvement to remove these for loops from the animation loop.

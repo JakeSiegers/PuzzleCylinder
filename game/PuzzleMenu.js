@@ -363,21 +363,5 @@ class PuzzleMenu{
 		this.MenuWrapDom.style.opacity = "0";
 		this.MenuWrapDom.style.display = "none";
 	}
-
-	showScore(){
-		this.ScoreDom.style.display = "inherit";
-		let sThis = this;
-		setTimeout(function(){
-			sThis.ScoreDom.style.opacity = "1";
-		},10);
-	}
-
-	hideScore(){
-		this.ScoreDom.style.opacity = "0";
-		let sThis = this;
-		setTimeout(function(){
-			sThis.ScoreDom.style.display = "none";
-		},200);
-	}
 }
 

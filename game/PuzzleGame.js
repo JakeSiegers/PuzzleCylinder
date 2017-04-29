@@ -21,6 +21,14 @@ const KEY_RIGHT = 39;
 const KEY_SPACE = 32;
 const KEY_ESCAPE = 27;
 
+const DIFFICULTIES = {
+	1:'Easy',
+	2:'Normal',
+	3:'Hard',
+	4:'Very Hard',
+	5:'Super Hard'
+};
+
 class PuzzleGame{
 
 	constructor(){
@@ -63,18 +71,20 @@ class PuzzleGame{
 	animate(){
 		requestAnimationFrame(this.animate.bind(this));
 		this.stats.begin();
-		this.render();
-		this.stats.end();
-	}
 
-	render(){
 		TWEEN.update();
 		this.tower.gameAnimations();
+		this.scoreBoard.animate();
+		
 		this.renderer.render(this.scene, this.camera);
+
 		this.piTimer += 0.05;
+
 		if (this.piTimer > TWO_PI) {
 			this.piTimer = 0;
 		}
+
+		this.stats.end();
 	}
 
 	onWindowResize() {
@@ -90,6 +100,20 @@ class PuzzleGame{
 		this.menu.hideMenuWithTransition();
 		this.setFocus(FOCUS_TOWER);
 		this.tower.setGameMode(MODE_ENDLESS);
+
+		if(mapType === MAP_3D) {
+			this.tower.towerGroup.position.x = -50;
+			this.tower.towerGroup.rotation.y = Math.PI/30;
+			this.scoreBoard.scoreGroup.position.x = (this.tower.boardPixelWidth/2) + (this.scoreBoard.canvas.width/2) -50;
+			this.scoreBoard.scoreGroup.position.y = (this.tower.boardPixelHeight/2) - (this.scoreBoard.canvas.height/2);
+		}else{
+			this.tower.towerGroup.position.x = -50;
+			this.scoreBoard.scoreGroup.position.x = (this.tower.boardPixelWidth/2) + (this.scoreBoard.canvas.width/2) -50;
+			this.scoreBoard.scoreGroup.position.y = (this.tower.boardPixelHeight/2) - (this.scoreBoard.canvas.height/2);
+		}
+
+		this.scoreBoard.showScoreBoard();
+
 	}
 
 	setFocus(newFocus){
