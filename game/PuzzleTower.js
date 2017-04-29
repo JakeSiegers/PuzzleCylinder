@@ -7,24 +7,11 @@ class PuzzleTower {
 	constructor(PuzzleGame) {
 		this.PuzzleGame = PuzzleGame;
 
+		this.scene = new THREE.Group();
+		this.PuzzleGame.scene.add(this.scene);
+
 		this.loaded = false;
 		this.currentMode = MODE_LOADING;
-
-		this.renderer = new THREE.WebGLRenderer({antialias: this.PuzzleGame.settings.antiAlias, alpha: true});
-		this.renderer.setClearColor(0x000000, 0);
-		this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-		this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-		this.renderer.setPixelRatio(window.devicePixelRatio);
-		this.renderer.setSize(this.windowWidth, this.windowHeight);
-		document.body.appendChild(this.renderer.domElement);
-
-		this.stats = new Stats();
-		document.body.appendChild(this.stats.dom);
-
-		this.scene = new THREE.Scene();
-
-		this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 100, 850);
-		this.camera.position.z = 500;
 
 		this.changeMapType(MAP_3D);
 
@@ -33,8 +20,6 @@ class PuzzleTower {
 
 		//Timer Objects
 		this.pushTimeoutObj = null;
-
-		//this.initLoaders();
 	}
 
 	changeMapType(mapType){
@@ -52,12 +37,6 @@ class PuzzleTower {
 		this.scene.remove(this.depthFilter);
 		this.depthFilter = this.generateCylinderDepthFilter();
 		this.scene.add(this.depthFilter);
-
-		if(mapType === MAP_3D){
-			this.camera.position.z = 500;
-		}else{
-			this.camera.position.z = 350;
-		}
 	}
 
 	initLoaders(completeFn,completeScope){
@@ -162,7 +141,7 @@ class PuzzleTower {
 		texture.magFilter = THREE.NearestFilter;
 		texture.minFilter = THREE.NearestFilter;
 		if (maxAnisotropy) {
-			texture.anisotropy = this.renderer.getMaxAnisotropy();
+			texture.anisotropy = this.PuzzleGame.renderer.getMaxAnisotropy();
 		}
 	}
 
@@ -184,11 +163,8 @@ class PuzzleTower {
 
 		this.debugMapNumber = 1;
 
-		window.addEventListener('resize', this.onWindowResize.bind(this), false);
-
 		this.initTouch();
 
-		this.animate();
 		completeFn.call(completeScope);
 	}
 
@@ -196,8 +172,8 @@ class PuzzleTower {
 		this.touchTimer = null;
 		this.xTouchChain = 0;
 		this.yTouchChain = 0;
-		this.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
-		this.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
+		this.PuzzleGame.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
+		this.PuzzleGame.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
 	}
 
 	onDocumentTouchStart( event ){
@@ -327,11 +303,15 @@ class PuzzleTower {
 				this.boardHeight = 13;
 				this.boardWidth = 6;
 				this.pushDelay = 50;
+				this.blockWidth = 45;
+				this.blockHeight = 45;
 				break;
 			case MAP_3D:
 				this.boardHeight = 13;
 				this.boardWidth = 30;
 				this.pushDelay = 100;
+				this.blockWidth = 35;
+				this.blockHeight = 35;
 				break;
 		}
 
@@ -342,8 +322,6 @@ class PuzzleTower {
 
 		this.circlePieceSize = (TWO_PI / this.boardWidth);
 		this.stackHeights = [];
-		this.blockWidth = 35;
-		this.blockHeight = 35;
 		this.blockDepth = 10;
 		this.boardPixelHeight = (this.boardHeight) * this.blockHeight;
 		this.boardPixelWidth = (this.boardWidth) * this.blockWidth; //Also known as circumference in 3d mode!
@@ -356,7 +334,6 @@ class PuzzleTower {
 		this.handicap = 4;
 		this.matches = 0;
 		this.rowsCreated = 0;
-		this.piTimer = 0;
 		this.chainCount = 0;
 		this.chainTimer = null;
 		this.quickPush = false;
@@ -609,7 +586,7 @@ class PuzzleTower {
 		}
 
 		obj.add(tube);
-		obj.add(tube2)
+		obj.add(tube2);
 
 		return obj;
 	}
@@ -630,7 +607,7 @@ class PuzzleTower {
 		return new THREE.Mesh(geometry, material);
 	}
 
-	pause(){
+	static pauseGame(){
 		console.log('you paused!');
 	}
 
@@ -646,7 +623,7 @@ class PuzzleTower {
 				this.quickPush = true;
 				break;
 			case KEY_ESCAPE:
-				this.pause();
+				PuzzleTower.pauseGame();
 				break;
 			case KEY_SPACE: //Space
 				this.swapSelectedBlocks();
@@ -1299,14 +1276,6 @@ class PuzzleTower {
 		return blocks;
 	}
 
-	onWindowResize() {
-		let width = window.innerWidth;
-		let height = window.innerHeight;
-		this.camera.aspect = width / height;
-		this.camera.updateProjectionMatrix();
-		this.renderer.setSize(width, height);
-	}
-
 	updateTowerPos(){
 		this.gameBoard.position.y = -this.halfBoardPixelHeight + this.upOffset;
 		return this.gameBoard.position.y;
@@ -1330,13 +1299,6 @@ class PuzzleTower {
 		this.nextRow.position.y = this.calcYBlockPos(-1) - this.halfBoardPixelHeight - (this.blockHeight / 2) + this.upOffset;
 	}
 
-	animate(){
-		requestAnimationFrame(this.animate.bind(this));
-		this.stats.begin();
-		this.render();
-		this.stats.end();
-	}
-
 	gameAnimations(){
 		//TODO: People on higher hz monitors will see different animation speeds because of how things are coded here.
 		//TODO: The following animations should be using the TWEEN library on a loop, with events to stop and start the animations
@@ -1344,7 +1306,7 @@ class PuzzleTower {
 
 		//let timer = performance.now();
 
-		//this.menuObj.rotation.y = Math.sin(this.piTimer) * (HALF_PI / 10);
+		//this.menuObj.rotation.y = Math.sin(this.PuzzleGame.piTimer) * (HALF_PI / 10);
 
 		if (!this.gameActive) {
 			return;
@@ -1359,12 +1321,12 @@ class PuzzleTower {
 			for (let y = 0; y < this.boardHeight; y++) {
 				let block = this.gameGrid[x][y];
 				if (block !== null && block.userData.exploding) {
-					block.scale.x = block.scale.y = (0.1 * Math.sin(this.piTimer * 16) + 0.8);
+					block.scale.x = block.scale.y = (0.1 * Math.sin(this.PuzzleGame.piTimer * 16) + 0.8);
 				}
 
 				if (block !== null) {
 					if (almostDead[x]) {
-						block.rotation.z = Math.cos(this.piTimer * 3) * PI / 32
+						block.rotation.z = Math.cos(this.PuzzleGame.piTimer * 3) * PI / 32
 					} else {
 						block.rotation.z = 0;
 					}
@@ -1374,24 +1336,14 @@ class PuzzleTower {
 
 		for (let i = 0; i < this.nextRow.children.length; i++) {
 			if (almostDead[i]) {
-				this.nextRow.children[i].rotation.z = Math.cos(this.piTimer * 3) * PI / 32
+				this.nextRow.children[i].rotation.z = Math.cos(this.PuzzleGame.piTimer * 3) * PI / 32
 			} else {
 				this.nextRow.children[i].rotation.z = 0;
 			}
 		}
 
 		for (let c = 0; c < this.cursorObj.children.length; c++) {
-			this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = (0.05 * Math.sin(this.piTimer) + 1);
-		}
-	}
-
-	render(){
-		TWEEN.update();
-		this.gameAnimations();
-		this.renderer.render(this.scene, this.camera);
-		this.piTimer += 0.05;
-		if (this.piTimer > TWO_PI) {
-			this.piTimer = 0;
+			this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = (0.05 * Math.sin(this.PuzzleGame.piTimer) + 1);
 		}
 	}
 }

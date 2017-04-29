@@ -14,24 +14,11 @@ var PuzzleTower = function () {
 
 		this.PuzzleGame = PuzzleGame;
 
+		this.scene = new THREE.Group();
+		this.PuzzleGame.scene.add(this.scene);
+
 		this.loaded = false;
 		this.currentMode = MODE_LOADING;
-
-		this.renderer = new THREE.WebGLRenderer({ antialias: this.PuzzleGame.settings.antiAlias, alpha: true });
-		this.renderer.setClearColor(0x000000, 0);
-		this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-		this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-		this.renderer.setPixelRatio(window.devicePixelRatio);
-		this.renderer.setSize(this.windowWidth, this.windowHeight);
-		document.body.appendChild(this.renderer.domElement);
-
-		this.stats = new Stats();
-		document.body.appendChild(this.stats.dom);
-
-		this.scene = new THREE.Scene();
-
-		this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 100, 850);
-		this.camera.position.z = 500;
 
 		this.changeMapType(MAP_3D);
 
@@ -40,8 +27,6 @@ var PuzzleTower = function () {
 
 		//Timer Objects
 		this.pushTimeoutObj = null;
-
-		//this.initLoaders();
 	}
 
 	_createClass(PuzzleTower, [{
@@ -61,12 +46,6 @@ var PuzzleTower = function () {
 			this.scene.remove(this.depthFilter);
 			this.depthFilter = this.generateCylinderDepthFilter();
 			this.scene.add(this.depthFilter);
-
-			if (mapType === MAP_3D) {
-				this.camera.position.z = 500;
-			} else {
-				this.camera.position.z = 350;
-			}
 		}
 	}, {
 		key: 'initLoaders',
@@ -174,7 +153,7 @@ var PuzzleTower = function () {
 			texture.magFilter = THREE.NearestFilter;
 			texture.minFilter = THREE.NearestFilter;
 			if (maxAnisotropy) {
-				texture.anisotropy = this.renderer.getMaxAnisotropy();
+				texture.anisotropy = this.PuzzleGame.renderer.getMaxAnisotropy();
 			}
 		}
 
@@ -199,11 +178,8 @@ var PuzzleTower = function () {
 
 			this.debugMapNumber = 1;
 
-			window.addEventListener('resize', this.onWindowResize.bind(this), false);
-
 			this.initTouch();
 
-			this.animate();
 			completeFn.call(completeScope);
 		}
 	}, {
@@ -212,8 +188,8 @@ var PuzzleTower = function () {
 			this.touchTimer = null;
 			this.xTouchChain = 0;
 			this.yTouchChain = 0;
-			this.renderer.domElement.addEventListener('touchstart', this.onDocumentTouchStart.bind(this), false);
-			this.renderer.domElement.addEventListener('touchmove', this.onDocumentTouchMove.bind(this), false);
+			this.PuzzleGame.renderer.domElement.addEventListener('touchstart', this.onDocumentTouchStart.bind(this), false);
+			this.PuzzleGame.renderer.domElement.addEventListener('touchmove', this.onDocumentTouchMove.bind(this), false);
 		}
 	}, {
 		key: 'onDocumentTouchStart',
@@ -349,11 +325,15 @@ var PuzzleTower = function () {
 					this.boardHeight = 13;
 					this.boardWidth = 6;
 					this.pushDelay = 50;
+					this.blockWidth = 45;
+					this.blockHeight = 45;
 					break;
 				case MAP_3D:
 					this.boardHeight = 13;
 					this.boardWidth = 30;
 					this.pushDelay = 100;
+					this.blockWidth = 35;
+					this.blockHeight = 35;
 					break;
 			}
 
@@ -364,8 +344,6 @@ var PuzzleTower = function () {
 
 			this.circlePieceSize = TWO_PI / this.boardWidth;
 			this.stackHeights = [];
-			this.blockWidth = 35;
-			this.blockHeight = 35;
 			this.blockDepth = 10;
 			this.boardPixelHeight = this.boardHeight * this.blockHeight;
 			this.boardPixelWidth = this.boardWidth * this.blockWidth; //Also known as circumference in 3d mode!
@@ -378,7 +356,6 @@ var PuzzleTower = function () {
 			this.handicap = 4;
 			this.matches = 0;
 			this.rowsCreated = 0;
-			this.piTimer = 0;
 			this.chainCount = 0;
 			this.chainTimer = null;
 			this.quickPush = false;
@@ -661,11 +638,6 @@ var PuzzleTower = function () {
 			return new THREE.Mesh(geometry, material);
 		}
 	}, {
-		key: 'pause',
-		value: function pause() {
-			console.log('you paused!');
-		}
-	}, {
 		key: 'keyPress',
 		value: function keyPress(event) {
 			if (!this.hasControl) {
@@ -680,7 +652,7 @@ var PuzzleTower = function () {
 					this.quickPush = true;
 					break;
 				case KEY_ESCAPE:
-					this.pause();
+					PuzzleTower.pauseGame();
 					break;
 				case KEY_SPACE:
 					//Space
@@ -1360,15 +1332,6 @@ var PuzzleTower = function () {
 			return blocks;
 		}
 	}, {
-		key: 'onWindowResize',
-		value: function onWindowResize() {
-			var width = window.innerWidth;
-			var height = window.innerHeight;
-			this.camera.aspect = width / height;
-			this.camera.updateProjectionMatrix();
-			this.renderer.setSize(width, height);
-		}
-	}, {
 		key: 'updateTowerPos',
 		value: function updateTowerPos() {
 			this.gameBoard.position.y = -this.halfBoardPixelHeight + this.upOffset;
@@ -1395,23 +1358,16 @@ var PuzzleTower = function () {
 			this.nextRow.position.y = this.calcYBlockPos(-1) - this.halfBoardPixelHeight - this.blockHeight / 2 + this.upOffset;
 		}
 	}, {
-		key: 'animate',
-		value: function animate() {
-			requestAnimationFrame(this.animate.bind(this));
-			this.stats.begin();
-			this.render();
-			this.stats.end();
-		}
-	}, {
 		key: 'gameAnimations',
 		value: function gameAnimations() {
+
 			//TODO: People on higher hz monitors will see different animation speeds because of how things are coded here.
 			//TODO: The following animations should be using the TWEEN library on a loop, with events to stop and start the animations
 			//TODO: It would also be a performance improvement to remove these for loops from the animation loop.
 
 			//let timer = performance.now();
 
-			//this.menuObj.rotation.y = Math.sin(this.piTimer) * (HALF_PI / 10);
+			//this.menuObj.rotation.y = Math.sin(this.PuzzleGame.piTimer) * (HALF_PI / 10);
 
 			if (!this.gameActive) {
 				return;
@@ -1426,12 +1382,12 @@ var PuzzleTower = function () {
 				for (var y = 0; y < this.boardHeight; y++) {
 					var block = this.gameGrid[x][y];
 					if (block !== null && block.userData.exploding) {
-						block.scale.x = block.scale.y = 0.1 * Math.sin(this.piTimer * 16) + 0.8;
+						block.scale.x = block.scale.y = 0.1 * Math.sin(this.PuzzleGame.piTimer * 16) + 0.8;
 					}
 
 					if (block !== null) {
 						if (almostDead[x]) {
-							block.rotation.z = Math.cos(this.piTimer * 3) * PI / 32;
+							block.rotation.z = Math.cos(this.PuzzleGame.piTimer * 3) * PI / 32;
 						} else {
 							block.rotation.z = 0;
 						}
@@ -1441,26 +1397,20 @@ var PuzzleTower = function () {
 
 			for (var i = 0; i < this.nextRow.children.length; i++) {
 				if (almostDead[i]) {
-					this.nextRow.children[i].rotation.z = Math.cos(this.piTimer * 3) * PI / 32;
+					this.nextRow.children[i].rotation.z = Math.cos(this.PuzzleGame.piTimer * 3) * PI / 32;
 				} else {
 					this.nextRow.children[i].rotation.z = 0;
 				}
 			}
 
 			for (var c = 0; c < this.cursorObj.children.length; c++) {
-				this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = 0.05 * Math.sin(this.piTimer) + 1;
+				this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = 0.05 * Math.sin(this.PuzzleGame.piTimer) + 1;
 			}
 		}
-	}, {
-		key: 'render',
-		value: function render() {
-			TWEEN.update();
-			this.gameAnimations();
-			this.renderer.render(this.scene, this.camera);
-			this.piTimer += 0.05;
-			if (this.piTimer > TWO_PI) {
-				this.piTimer = 0;
-			}
+	}], [{
+		key: 'pauseGame',
+		value: function pauseGame() {
+			console.log('you paused!');
 		}
 	}]);
 

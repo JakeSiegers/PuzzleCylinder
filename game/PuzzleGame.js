@@ -28,7 +28,23 @@ class PuzzleGame{
 			antiAlias:true,
 			textureFiltering:true
 		};
-		
+
+		this.renderer = new THREE.WebGLRenderer({antialias: this.settings.antiAlias, alpha: true});
+		this.renderer.setClearColor(0x000000, 0);
+		this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+		this.windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+		this.renderer.setPixelRatio(window.devicePixelRatio);
+		this.renderer.setSize(this.windowWidth, this.windowHeight);
+		document.body.appendChild(this.renderer.domElement);
+
+		this.stats = new Stats();
+		document.body.appendChild(this.stats.dom);
+
+		this.scene = new THREE.Scene();
+
+		this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 100, 850);
+		this.camera.position.z = 500;
+
 		this.tower = new PuzzleTower(this);
 		this.menu = new PuzzleMenu(this);
 		this.scoreBoard = new PuzzleScore(this);
@@ -38,6 +54,35 @@ class PuzzleGame{
 			document.addEventListener('keydown', this.keyPress.bind(this));
 			document.addEventListener('keyup', this.keyUp.bind(this));
 		},this);
+
+		this.piTimer = 0;
+		this.animate();
+		window.addEventListener('resize', this.onWindowResize.bind(this), false);
+	}
+
+	animate(){
+		requestAnimationFrame(this.animate.bind(this));
+		this.stats.begin();
+		this.render();
+		this.stats.end();
+	}
+
+	render(){
+		TWEEN.update();
+		this.tower.gameAnimations();
+		this.renderer.render(this.scene, this.camera);
+		this.piTimer += 0.05;
+		if (this.piTimer > TWO_PI) {
+			this.piTimer = 0;
+		}
+	}
+
+	onWindowResize() {
+		let width = window.innerWidth;
+		let height = window.innerHeight;
+		this.camera.aspect = width / height;
+		this.camera.updateProjectionMatrix();
+		this.renderer.setSize(width, height);
 	}
 
 	startGame(mapType){
