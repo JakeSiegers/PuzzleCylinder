@@ -74,7 +74,7 @@ var PuzzleGame = function () {
 		this.animate();
 		setInterval(function () {
 			this.scoreBoard.animate();
-		}.bind(this), 1000);
+		}.bind(this), 500);
 		window.addEventListener('resize', this.onWindowResize.bind(this), false);
 	}
 
