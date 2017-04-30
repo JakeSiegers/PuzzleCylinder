@@ -23,6 +23,7 @@ class PuzzleScore{
 
 		this.scoreGroup.visibile = false;
 		this.scoreGroup.rotation.y = -HALF_PI;
+		this.texture.needsUpdate = true;
 	}
 
 	animate(){
@@ -44,9 +45,6 @@ class PuzzleScore{
 		this.ctx.fillText(DIFFICULTIES[this.PuzzleGame.tower.difficulty], 5,200);
 		this.ctx.fillText("Speed Level", 5,220);
 		this.ctx.fillText(Math.floor(100-this.PuzzleGame.tower.pushDelay)+"", 5,240);
-
-
-		//this.texture.needsUpdate = true;
 	}
 
 	showScoreBoard(){
