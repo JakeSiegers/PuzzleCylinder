@@ -54,20 +54,18 @@ var PuzzleScore = function () {
 						this.ctx.fillText("Speed Level", 5, 220);
 						this.ctx.fillText(Math.floor(100 - this.PuzzleGame.tower.pushDelay) + "", 5, 240);
 
-						this.texture.needsUpdate = true;
+						//this.texture.needsUpdate = true;
 				}
 		}, {
 				key: 'showScoreBoard',
 				value: function showScoreBoard() {
-						//this.scoreGroup.visibile = true;
+						this.scoreGroup.visibile = true;
 
-						//this.scoreGroup.rotation.x = 0;
+						this.scoreGroup.rotation.x = 0;
 
-
-						//new TWEEN.Tween(this.scoreGroup.rotation).to({
-						//	y:0
-						//},1000).easing(TWEEN.Easing.Quintic.Out).start();
-
+						new TWEEN.Tween(this.scoreGroup.rotation).to({
+								y: 0
+						}, 1000).easing(TWEEN.Easing.Quintic.Out).start();
 				}
 		}]);
 
