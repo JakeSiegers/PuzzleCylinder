@@ -65,6 +65,9 @@ class PuzzleGame{
 
 		this.piTimer = 0;
 		this.animate();
+		setInterval(function(){
+			this.scoreBoard.animate();
+		}.bind(this),1000);
 		window.addEventListener('resize', this.onWindowResize.bind(this), false);
 	}
 
@@ -74,7 +77,6 @@ class PuzzleGame{
 
 		TWEEN.update();
 		this.tower.gameAnimations();
-		this.scoreBoard.animate();
 		
 		this.renderer.render(this.scene, this.camera);
 
