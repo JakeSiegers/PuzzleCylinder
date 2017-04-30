@@ -59,14 +59,15 @@ var PuzzleScore = function () {
 		}, {
 				key: 'showScoreBoard',
 				value: function showScoreBoard() {
-						this.scoreGroup.visibile = true;
+						//this.scoreGroup.visibile = true;
 
 						//this.scoreGroup.rotation.x = 0;
 
 
-						new TWEEN.Tween(this.scoreGroup.rotation).to({
-								y: 0
-						}, 1000).easing(TWEEN.Easing.Quintic.Out).start();
+						//new TWEEN.Tween(this.scoreGroup.rotation).to({
+						//	y:0
+						//},1000).easing(TWEEN.Easing.Quintic.Out).start();
+
 				}
 		}]);
 
