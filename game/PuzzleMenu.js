@@ -91,6 +91,7 @@ class PuzzleMenu{
 				this.animateToNewMenu(canvas,'imageCell','forward2',width,height,function(){
 					this.showMenu();
 					this.transitionActive = false;
+					this.setMenuIndex(0);
 				});
 			}.bind(this)
 		});
@@ -131,6 +132,7 @@ class PuzzleMenu{
 						this.animateToNewMenu(canvas,'imageCell2',direction+'2',width2,height2,function(){
 							this.showMenu();
 							this.transitionActive = false;
+							this.setMenuIndex(0);
 						});
 					}.bind(this)
 				});
@@ -299,10 +301,7 @@ class PuzzleMenu{
 			this.MenuItemWrap.appendChild(item);
 			index++;
 		}
-
-		this.setMenuIndex(0);
 	}
-
 
 	setMenuIndex(index){
 		if(this.transitionActive === true){

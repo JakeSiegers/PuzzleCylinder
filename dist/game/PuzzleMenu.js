@@ -103,6 +103,7 @@ var PuzzleMenu = function () {
 					this.animateToNewMenu(canvas, 'imageCell', 'forward2', width, height, function () {
 						this.showMenu();
 						this.transitionActive = false;
+						this.setMenuIndex(0);
 					});
 				}.bind(this)
 			});
@@ -145,6 +146,7 @@ var PuzzleMenu = function () {
 							this.animateToNewMenu(canvas, 'imageCell2', direction + '2', width2, height2, function () {
 								this.showMenu();
 								this.transitionActive = false;
+								this.setMenuIndex(0);
 							});
 						}.bind(this)
 					});
@@ -322,8 +324,6 @@ var PuzzleMenu = function () {
 			for (var label in this.currentMenu) {
 				_loop2(label);
 			}
-
-			this.setMenuIndex(0);
 		}
 	}, {
 		key: 'setMenuIndex',
@@ -389,24 +389,6 @@ var PuzzleMenu = function () {
 		value: function hideMenu() {
 			this.MenuWrapDom.style.opacity = "0";
 			this.MenuWrapDom.style.display = "none";
-		}
-	}, {
-		key: 'showScore',
-		value: function showScore() {
-			this.ScoreDom.style.display = "inherit";
-			var sThis = this;
-			setTimeout(function () {
-				sThis.ScoreDom.style.opacity = "1";
-			}, 10);
-		}
-	}, {
-		key: 'hideScore',
-		value: function hideScore() {
-			this.ScoreDom.style.opacity = "0";
-			var sThis = this;
-			setTimeout(function () {
-				sThis.ScoreDom.style.display = "none";
-			}, 200);
 		}
 	}]);
 
