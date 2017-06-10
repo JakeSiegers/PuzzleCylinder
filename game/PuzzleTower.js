@@ -13,8 +13,6 @@ class PuzzleTower {
 		this.loaded = false;
 		this.currentMode = MODE_LOADING;
 
-		this.changeMapType(MAP_3D);
-
 		this.difficulty = 2;
 		this.startingHeight = 4;
 
