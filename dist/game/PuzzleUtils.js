@@ -35,6 +35,18 @@ var PuzzleUtils = function () {
 		value: function openLink(link) {
 			window.open(link, '_blank');
 		}
+
+		//Sharpen out textures - prevent scale blurring
+
+	}, {
+		key: "sharpenTexture",
+		value: function sharpenTexture(renderer, texture, maxAnisotropy) {
+			texture.magFilter = THREE.NearestFilter;
+			texture.minFilter = THREE.NearestFilter;
+			if (maxAnisotropy) {
+				texture.anisotropy = renderer.getMaxAnisotropy();
+			}
+		}
 	}, {
 		key: "windowHeight",
 		get: function get() {

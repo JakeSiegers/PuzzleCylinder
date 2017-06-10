@@ -13,6 +13,9 @@ class PuzzleScore{
 
 
 		this.texture = new THREE.Texture(this.canvas);
+
+		PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.texture, true);
+
 		let material = new THREE.MeshBasicMaterial({ map: this.texture });
 		let geometry = new THREE.PlaneGeometry(128, 256);
 		let mesh = new THREE.Mesh( geometry, material );

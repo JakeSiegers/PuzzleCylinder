@@ -52,7 +52,8 @@ var PuzzleMenu = function () {
 				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5]
 			},
 			'2D Mode': {
-				'Start 2D': this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_2D),
+				'Start 2D 1P': this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_2D),
+				'Start 2D VS AI': this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_2D),
 				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower, 1, 1, 12],
 				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5]
 			},

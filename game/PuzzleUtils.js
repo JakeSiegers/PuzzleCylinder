@@ -29,4 +29,13 @@ class PuzzleUtils{
 	static openLink(link){
 		window.open(link, '_blank');
 	}
+
+	//Sharpen out textures - prevent scale blurring
+	static sharpenTexture(renderer, texture, maxAnisotropy){
+		texture.magFilter = THREE.NearestFilter;
+		texture.minFilter = THREE.NearestFilter;
+		if (maxAnisotropy) {
+			texture.anisotropy = renderer.getMaxAnisotropy();
+		}
+	}
 }

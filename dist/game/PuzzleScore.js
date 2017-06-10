@@ -20,6 +20,9 @@ var PuzzleScore = function () {
 				this.ctx = this.canvas.getContext('2d');
 
 				this.texture = new THREE.Texture(this.canvas);
+
+				PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer, this.texture, true);
+
 				var material = new THREE.MeshBasicMaterial({ map: this.texture });
 				var geometry = new THREE.PlaneGeometry(128, 256);
 				var mesh = new THREE.Mesh(geometry, material);

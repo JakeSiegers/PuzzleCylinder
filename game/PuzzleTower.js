@@ -77,7 +77,7 @@ class PuzzleTower {
 		});
 
 		this.cursorTexture = textureLoader.load('img/cursor.png');
-		this.sharpenTexture(this.cursorTexture);
+		PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.cursorTexture);
 
 		this.blockTextures = {
 			circle: textureLoader.load('img/block_circle.png'),
@@ -103,7 +103,7 @@ class PuzzleTower {
 		this.nextRowBlockMaterials = {};
 		for (let i in this.blockTextures) {
 			if(this.PuzzleGame.settings.textureFiltering) {
-				this.sharpenTexture(this.blockTextures[i], true);
+				PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.blockTextures[i], true);
 			}
 
 			let faceMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTextures[i]});
@@ -128,20 +128,10 @@ class PuzzleTower {
 		}
 
 		if(this.PuzzleGame.settings.textureFiltering) {
-			this.sharpenTexture(this.blockSideTexture, true);
-			this.sharpenTexture(this.blockTopTexture, true);
-			this.sharpenTexture(this.blankTexture, true);
-			this.sharpenTexture(this.tubeTexture, true);
-		}
-
-	}
-
-	//Sharpen out textures - prevent scale blurring
-	sharpenTexture(texture, maxAnisotropy){
-		texture.magFilter = THREE.NearestFilter;
-		texture.minFilter = THREE.NearestFilter;
-		if (maxAnisotropy) {
-			texture.anisotropy = this.PuzzleGame.renderer.getMaxAnisotropy();
+			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.blockSideTexture, true);
+			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.blockTopTexture, true);
+			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.blankTexture, true);
+			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.tubeTexture, true);
 		}
 	}
 
