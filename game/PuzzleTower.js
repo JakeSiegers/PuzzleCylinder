@@ -20,7 +20,7 @@ class PuzzleTower {
 		this.pushTimeoutObj = null;
 
 		window.onblur = function(){
-			if(!this.PuzzleGame.paused){
+			if(this.hasControl && !this.PuzzleGame.paused){
 				this.pauseGame();
 			}
 		}.bind(this);
