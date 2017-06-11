@@ -10,7 +10,6 @@ class PuzzleTower {
 		this.towerGroup = new THREE.Group();
 		this.PuzzleGame.scene.add(this.towerGroup);
 
-		this.loaded = false;
 		this.currentMode = MODE_LOADING;
 
 		this.difficulty = 2;
@@ -24,130 +23,9 @@ class PuzzleTower {
 				this.pauseGame();
 			}
 		}.bind(this);
-	}
 
-	checkTimerQueue(){
-		console.log(PuzzleTimer.timers[CAT_GAME]);
-	}
 
-	changeMapType(mapType){
-		this.mapType = mapType;
-		this.resetGameVariables();
-
-		this.towerGroup.remove(this.tube);
-		this.tube = this.generateTube();
-		this.towerGroup.add(this.tube);
-
-		if(this.loaded){
-			this.tubeTexture.repeat.set(this.boardWidth, this.boardHeight);
-		}
-
-		this.towerGroup.remove(this.depthFilter);
-		this.depthFilter = this.generateCylinderDepthFilter();
-		this.towerGroup.add(this.depthFilter);
-	}
-
-	initLoaders(completeFn,completeScope){
-		PuzzleCSSLoader.showLoader();
-		let manager = new THREE.LoadingManager();
-		let sThis = this;
-		manager.onLoad = function () {
-			PuzzleCSSLoader.hideLoader();
-			sThis.preloadComplete(completeFn,completeScope);
-			sThis.loaded = true;
-		};
-		manager.onProgress = function (url, itemsLoaded, itemsTotal) {
-			PuzzleCSSLoader.setLoadPercent(Math.floor((itemsLoaded / itemsTotal) * 100))
-		};
-
-		manager.onError = function (url) {
-			console.error('There was an error loading ' + url);
-		};
-
-		this.fileLoader = new THREE.FileLoader(manager);
-		let textureLoader = new THREE.TextureLoader(manager);
-		let fontLoader = new THREE.FontLoader(manager);
-
-		this.blankTexture = textureLoader.load('img/block.png');
-		this.blockSideTexture = textureLoader.load('img/blockSide.png');
-		this.blockTopTexture = textureLoader.load('img/blockTop.png');
-
-		//this.explodeTexture = textureLoader.load('img/block_explode.png');
-		//this.lockTexture = textureLoader.load('img/block_locked.png');
-		this.tubeTexture = textureLoader.load('img/block.png');
-		this.tubeTexture.wrapS = THREE.RepeatWrapping;
-		this.tubeTexture.wrapT = THREE.RepeatWrapping;
-		this.tubeTexture.repeat.set(this.boardWidth, this.boardHeight);
-
-		//Font loader is weird.... It doesn't return the loaded value.
-		fontLoader.load('fonts/Righteous_Regular.json', function (response) {
-			sThis.font = response;
-		});
-
-		this.cursorTexture = textureLoader.load('img/cursor.png');
-		PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.cursorTexture);
-
-		this.blockTextures = {
-			circle: textureLoader.load('img/block_circle.png'),
-			diamond: textureLoader.load('img/block_diamond.png'),
-			heart: textureLoader.load('img/block_heart.png'),
-			star: textureLoader.load('img/block_star.png'),
-			triangle: textureLoader.load('img/block_triangle.png'),
-			triangle2: textureLoader.load('img/block_triangle2.png'),
-			penta: textureLoader.load('img/block_penta.png')
-		};
-
-		this.blockColors = {
-			circle: 0x4CAF50,
-			diamond: 0x9C27B0,
-			heart: 0xF44336,
-			star: 0xFFEB3B,
-			triangle: 0x00BCD4,
-			triangle2: 0x3F51B5,
-			penta: 0x607D8B
-		};
-
-		this.blockMaterials = {};
-		this.nextRowBlockMaterials = {};
-		for (let i in this.blockTextures) {
-			if(this.PuzzleGame.settings.textureFiltering) {
-				PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.blockTextures[i], true);
-			}
-
-			let faceMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTextures[i]});
-			let sideMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockSideTexture});
-			let topMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTopTexture});
-			this.blockMaterials[i] = faceMaterial;
-			/*new THREE.MultiMaterial([
-			 sideMaterial,   //right
-			 sideMaterial,   //left
-			 topMaterial,   //top
-			 topMaterial,   //bottom
-			 faceMaterial,   //back
-			 faceMaterial    //front
-			 ]);*/
-
-			let adjustedColor = new THREE.Color(this.blockColors[i]);
-			adjustedColor.add(new THREE.Color(0x505050));
-			this.nextRowBlockMaterials[i] = new THREE.MeshBasicMaterial({
-				color: adjustedColor,
-				map: this.blockTextures[i]
-			});
-		}
-
-		if(this.PuzzleGame.settings.textureFiltering) {
-			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.blockSideTexture, true);
-			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.blockTopTexture, true);
-			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.blankTexture, true);
-			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,this.tubeTexture, true);
-		}
-	}
-
-	/**
-	 * @param completeFn
-	 * @param completeScope
-	 */
-	preloadComplete(completeFn,completeScope){
+		this.clearLineHeight = -5;
 		this.tube = this.generateTube();
 		this.towerGroup.add(this.tube);
 		this.depthFilter = this.generateCylinderDepthFilter();
@@ -162,8 +40,27 @@ class PuzzleTower {
 		this.debugMapNumber = 1;
 
 		this.initTouch();
+	}
 
-		completeFn.call(completeScope);
+	//checkTimerQueue(){
+	//	console.log(PuzzleTimer.timers[CAT_GAME]);
+	//}
+
+	changeMapType(mapType){
+		this.mapType = mapType;
+		this.resetGameVariables();
+
+		this.towerGroup.remove(this.tube);
+		this.tube = this.generateTube();
+		this.towerGroup.add(this.tube);
+
+		if(this.PuzzleGame.loaded){
+			this.PuzzleGame.tubeTexture.repeat.set(this.boardWidth, this.boardHeight);
+		}
+
+		this.towerGroup.remove(this.depthFilter);
+		this.depthFilter = this.generateCylinderDepthFilter();
+		this.towerGroup.add(this.depthFilter);
 	}
 
 	initTouch(){
@@ -415,7 +312,7 @@ class PuzzleTower {
 		for (let x = 0; x < this.boardWidth; x++) {
 			for (let y = 0; y < this.boardHeight; y++) {
 				if (this.gameGrid[x][y] !== null) {
-					this.gameGrid[x][y].material.map = this.blankTexture;
+					this.gameGrid[x][y].material.map = this.PuzzleGame.blankTexture;
 					let delay = 500;
 					if (this.gameGrid[x][this.boardHeight - 1] !== null) {
 						delay = 2000;
@@ -508,7 +405,7 @@ class PuzzleTower {
 		let material = new THREE.MeshBasicMaterial({
 			color: 0xffffff,
 			side: THREE.DoubleSide,
-			map: this.cursorTexture,
+			map: this.PuzzleGame.cursorTexture,
 			transparent: true
 		});
 		let mesh = new THREE.Mesh(geometry, material);
@@ -587,7 +484,7 @@ class PuzzleTower {
 		let tube2 = null;
 
 		if(this.mapType === MAP_3D){
-			material = new THREE.MeshBasicMaterial({color: 0xB71C1C, side: THREE.DoubleSide, map: this.tubeTexture});
+			material = new THREE.MeshBasicMaterial({color: 0xB71C1C, side: THREE.DoubleSide, map: this.PuzzleGame.tubeTexture});
 			let r = this.boardRadius + this.blockDepth / 2 + 5;
 			let geometry = new THREE.CylinderGeometry(r, r, this.boardPixelHeight, this.boardWidth, 1, false);
 			tube = new THREE.Mesh(geometry, material);
@@ -598,7 +495,7 @@ class PuzzleTower {
 			tube2.position.y = (this.boardPixelHeight*2);
 			tube2.rotation.y = HALF_PI;
 		}else{
-			material = new THREE.MeshBasicMaterial({color: 0xBF360C, side: THREE.DoubleSide, map: this.tubeTexture});
+			material = new THREE.MeshBasicMaterial({color: 0xBF360C, side: THREE.DoubleSide, map: this.PuzzleGame.tubeTexture});
 			let geometry = new THREE.BoxGeometry(this.boardPixelWidth,this.boardPixelHeight,this.blockDepth+10);
 			tube = new THREE.Mesh(geometry, material);
 			tube.position.y = -(this.boardPixelHeight*2);
@@ -1086,9 +983,10 @@ class PuzzleTower {
 		return -this.circlePieceSize * x + HALF_PI;
 	}
 
+	/*
 	loadMap(mapFile){
 		let sThis = this;
-		this.fileLoader.load('maps/' + mapFile + '.txt', function (map) {
+		this.PuzzleGame.fileLoader.load('maps/' + mapFile + '.txt', function (map) {
 			map = map.replace(/\r\n/g, "\r");
 			let rows = map.split("\r");
 			let botRow = rows.length - 1;
@@ -1104,6 +1002,7 @@ class PuzzleTower {
 			sThis.resetGame(mapArray);
 		});
 	}
+	*/
 
 	generateNextRow(){
 		if (this.hasOwnProperty('nextRow')) {
@@ -1111,7 +1010,7 @@ class PuzzleTower {
 		}
 
 		let colorPool = [];
-		let allColors = Object.keys(this.blockColors);
+		let allColors = Object.keys(this.PuzzleGame.blockColors);
 		for (let c = 0; c < allColors.length - this.handicap; c++) {
 			colorPool.push(allColors[c]);
 		}
@@ -1187,7 +1086,7 @@ class PuzzleTower {
 			//let faceMaterial = new THREE.MeshBasicMaterial({color: adjustedColor,map:this.blockTextures[blockType]});
 			//let sideMaterial = new THREE.MeshBasicMaterial({color: adjustedColor,map:this.blockSideTexture});
 			//let topMaterial = new THREE.MeshBasicMaterial({color: adjustedColor,map:this.blockTopTexture});
-			let material = this.nextRowBlockMaterials[blockType];
+			let material = this.PuzzleGame.nextRowBlockMaterials[blockType];
 			/*new THREE.MultiMaterial([
 			 sideMaterial,   //right
 			 sideMaterial,   //left
@@ -1226,7 +1125,7 @@ class PuzzleTower {
 		 ]);
 		 */
 
-		let mesh = new THREE.Mesh(geometry, this.blockMaterials[blockType]);
+		let mesh = new THREE.Mesh(geometry, this.PuzzleGame.blockMaterials[blockType]);
 		//mesh.userData.color = mesh.material.color.getHex();
 
 		mesh.userData.blockType = blockType;
@@ -1299,10 +1198,10 @@ class PuzzleTower {
 		return grid;
 	}
 
-	cylinder(mapArray){
+	cylinder(/*mapArray*/){
 		let blocks = new THREE.Object3D();
 		let colorPool = [];
-		let allColors = Object.keys(this.blockColors);
+		let allColors = Object.keys(this.PuzzleGame.blockColors);
 		for (let i = 0; i < allColors.length - this.handicap; i++) {
 			colorPool.push(allColors[i]);
 		}
@@ -1371,9 +1270,10 @@ class PuzzleTower {
 	}
 
 	gameAnimations(){
-		//TODO: People on higher hz monitors will see different animation speeds because of how things are coded here.
-		//TODO: The following animations should be using the TWEEN library on a loop, with events to stop and start the animations
-		//TODO: It would also be a performance improvement to remove these for loops from the animation loop.
+		//====================================================
+		//====These animations are now LOCKED at 30 FPS!!!====
+		//====================================================
+		//TODO = CHANGE THESE TO USE THE TWEEN LIBRARY /W LOOPING ANIMATIONS - this would allow the client to choose the fps, while keeping the same visual timing, instead of just locking it at 30.
 
 		//let timer = performance.now();
 
