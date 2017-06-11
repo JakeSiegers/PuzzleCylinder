@@ -27,6 +27,8 @@ var KEY_RIGHT = 39;
 var KEY_SPACE = 32;
 var KEY_ESCAPE = 27;
 
+var CAT_GAME = 'game';
+
 var DIFFICULTIES = {
 	1: 'Easy',
 	2: 'Normal',
@@ -70,6 +72,8 @@ var PuzzleGame = function () {
 			document.addEventListener('keyup', this.keyUp.bind(this));
 		}, this);
 
+		this.paused = false;
+
 		this.piTimer = 0;
 		this.animate();
 		setInterval(function () {
@@ -81,7 +85,6 @@ var PuzzleGame = function () {
 	_createClass(PuzzleGame, [{
 		key: 'animate',
 		value: function animate() {
-			requestAnimationFrame(this.animate.bind(this));
 			this.stats.begin();
 
 			TWEEN.update();
@@ -96,6 +99,7 @@ var PuzzleGame = function () {
 			}
 
 			this.stats.end();
+			requestAnimationFrame(this.animate.bind(this));
 		}
 	}, {
 		key: 'onWindowResize',

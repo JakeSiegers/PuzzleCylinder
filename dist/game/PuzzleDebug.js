@@ -92,6 +92,9 @@ var PuzzleDebug = function () {
 
 			//let versionDate = new Date(lastUpdateTime*1000);
 			//let f5 = gui.addFolder("Build Date: "+versionDate.toLocaleString());
+			//f5.add(this.PuzzleTower,"checkTimerQueue");
+			//f5.add(this.PuzzleTower.PuzzleGame,"paused").listen();
+			//f5.open();
 
 			//gui.close();
 		}

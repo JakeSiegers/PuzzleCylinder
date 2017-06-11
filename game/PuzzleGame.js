@@ -21,6 +21,8 @@ const KEY_RIGHT = 39;
 const KEY_SPACE = 32;
 const KEY_ESCAPE = 27;
 
+const CAT_GAME = 'game';
+
 const DIFFICULTIES = {
 	1:'Easy',
 	2:'Normal',
@@ -63,6 +65,8 @@ class PuzzleGame{
 			document.addEventListener('keyup', this.keyUp.bind(this));
 		},this);
 
+		this.paused = false;
+
 		this.piTimer = 0;
 		this.animate();
 		setInterval(function(){
@@ -72,12 +76,11 @@ class PuzzleGame{
 	}
 
 	animate(){
-		requestAnimationFrame(this.animate.bind(this));
 		this.stats.begin();
 
 		TWEEN.update();
 		this.tower.gameAnimations();
-		
+
 		this.renderer.render(this.scene, this.camera);
 
 		this.piTimer += 0.05;
@@ -87,6 +90,7 @@ class PuzzleGame{
 		}
 
 		this.stats.end();
+		requestAnimationFrame(this.animate.bind(this));
 	}
 
 	onWindowResize() {

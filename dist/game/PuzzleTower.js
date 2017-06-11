@@ -25,9 +25,20 @@ var PuzzleTower = function () {
 
 		//Timer Objects
 		this.pushTimeoutObj = null;
+
+		window.onblur = function () {
+			if (!this.PuzzleGame.paused) {
+				this.pauseGame();
+			}
+		}.bind(this);
 	}
 
 	_createClass(PuzzleTower, [{
+		key: 'checkTimerQueue',
+		value: function checkTimerQueue() {
+			console.log(PuzzleTimer.timers[CAT_GAME]);
+		}
+	}, {
 		key: 'changeMapType',
 		value: function changeMapType(mapType) {
 			this.mapType = mapType;
@@ -182,6 +193,12 @@ var PuzzleTower = function () {
 		value: function onDocumentTouchStart(event) {
 			var sThis = this;
 			event.preventDefault();
+
+			if (this.PuzzleGame.paused) {
+				this.pauseGame();
+				return;
+			}
+
 			if (event.touches.length === 1) {
 				if (this.touchTimer === null) {
 					this.touchTimer = setTimeout(function () {
@@ -259,7 +276,20 @@ var PuzzleTower = function () {
 
 					this.openTube();
 					var sThis = this;
-					setTimeout(function () {
+
+					/*setTimeout(function(){
+     	sThis.gameBoard.visible = true;
+     	sThis.cursorObj.visible = true;
+     	sThis.nextRow.visible = true;
+     	sThis.depthFilter.visible = true;
+     	sThis.resetGame();
+     	new TWEEN.Tween(sThis.depthFilter.material).to({
+     		opacity:0.5
+     	},2000).easing(TWEEN.Easing.Exponential.Out).start();
+     },1000);
+     */
+
+					new PuzzleTimer(function () {
 						sThis.gameBoard.visible = true;
 						sThis.cursorObj.visible = true;
 						sThis.nextRow.visible = true;
@@ -268,7 +298,8 @@ var PuzzleTower = function () {
 						new TWEEN.Tween(sThis.depthFilter.material).to({
 							opacity: 0.5
 						}, 2000).easing(TWEEN.Easing.Exponential.Out).start();
-					}, 1000);
+					}, 1000, CAT_GAME, this);
+
 					break;
 			}
 		}
@@ -357,9 +388,9 @@ var PuzzleTower = function () {
 			this.generateNextRow();
 
 			if (this.pushTimeoutObj !== null) {
-				clearTimeout(this.pushTimeoutObj);
+				this.pushTimeoutObj.clear();
 			}
-			this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this), 2000);
+			this.pushTimeoutObj = new PuzzleTimer(this.checkToPushBlocks, 2000, CAT_GAME, this); //setTimeout(this.checkToPushBlocks.bind(this), 2000);
 
 			if (this.hasOwnProperty('cursorObj')) {
 				this.towerGroup.remove(this.cursorObj);
@@ -420,7 +451,14 @@ var PuzzleTower = function () {
 					}
 				}
 			}
-			setTimeout(this.closeAndSetGameMode.bind(this, MODE_NONE), 2500);
+			//setTimeout(this.closeAndSetGameMode.bind(this, MODE_NONE), 2500);
+			new PuzzleTimer(this.closeAndSetGameMode.bind(this, MODE_NONE), 2500, CAT_GAME, this);
+
+			new PuzzleTimer(function () {
+				console.log('TODO:Prep game reset here');
+				//this.PuzzleGame.menu.showMenuWithTransition();
+				//this.PuzzleGame.setFocus(FOCUS_MENU);
+			}, 3000, CAT_GAME, this);
 		}
 	}, {
 		key: 'checkToPushBlocks',
@@ -435,12 +473,12 @@ var PuzzleTower = function () {
 			}
 
 			if (this.animationQueue !== 0) {
-				this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this), pushDelay);
+				this.pushTimeoutObj = new PuzzleTimer(this.checkToPushBlocks, pushDelay, CAT_GAME, this); //setTimeout(this.checkToPushBlocks.bind(this), pushDelay);
 				return;
 			}
 
 			if (this.pushTowerUp()) {
-				this.pushTimeoutObj = setTimeout(this.checkToPushBlocks.bind(this), pushDelay);
+				this.pushTimeoutObj = new PuzzleTimer(this.checkToPushBlocks, pushDelay, CAT_GAME, this); //setTimeout(this.checkToPushBlocks.bind(this), pushDelay);
 			}
 		}
 	}, {
@@ -529,7 +567,8 @@ var PuzzleTower = function () {
 				new TWEEN.Tween(this.tube.children[1].rotation).to({ y: HALF_PI }, closeDelay).easing(closeEase).start();
 			}
 
-			setTimeout(completeFn, closeDelay);
+			//setTimeout(completeFn, closeDelay);
+			new PuzzleTimer(completeFn, closeDelay, CAT_GAME, this);
 		}
 	}, {
 		key: 'openTube',
@@ -547,7 +586,8 @@ var PuzzleTower = function () {
 				new TWEEN.Tween(this.tube.children[1].rotation).to({ y: 0 }, openDelay).easing(openEase).start();
 			}
 
-			setTimeout(completeFn, openDelay);
+			//setTimeout(completeFn, openDelay);
+			new PuzzleTimer(completeFn, openDelay, CAT_GAME, this);
 		}
 	}, {
 		key: 'openTubeFull',
@@ -565,18 +605,19 @@ var PuzzleTower = function () {
 				new TWEEN.Tween(this.tube.children[1].rotation).to({ y: -HALF_PI }, openDelay).easing(openEase).start();
 			}
 
-			setTimeout(completeFn, openDelay);
+			//setTimeout(completeFn, openDelay);
+			new PuzzleTimer(completeFn, openDelay, CAT_GAME, this);
 		}
 	}, {
 		key: 'generateTube',
 		value: function generateTube() {
 			var obj = new THREE.Object3D();
-			var material = new THREE.MeshBasicMaterial({ color: 0x222222, side: THREE.DoubleSide, map: this.tubeTexture });
-
+			var material = null;
 			var tube = null;
 			var tube2 = null;
 
 			if (this.mapType === MAP_3D) {
+				material = new THREE.MeshBasicMaterial({ color: 0xB71C1C, side: THREE.DoubleSide, map: this.tubeTexture });
 				var r = this.boardRadius + this.blockDepth / 2 + 5;
 				var geometry = new THREE.CylinderGeometry(r, r, this.boardPixelHeight, this.boardWidth, 1, false);
 				tube = new THREE.Mesh(geometry, material);
@@ -587,6 +628,7 @@ var PuzzleTower = function () {
 				tube2.position.y = this.boardPixelHeight * 2;
 				tube2.rotation.y = HALF_PI;
 			} else {
+				material = new THREE.MeshBasicMaterial({ color: 0xBF360C, side: THREE.DoubleSide, map: this.tubeTexture });
 				var _geometry = new THREE.BoxGeometry(this.boardPixelWidth, this.boardPixelHeight, this.blockDepth + 10);
 				tube = new THREE.Mesh(_geometry, material);
 				tube.position.y = -(this.boardPixelHeight * 2);
@@ -615,9 +657,60 @@ var PuzzleTower = function () {
 			return new THREE.Mesh(geometry, material);
 		}
 	}, {
+		key: 'pauseGame',
+		value: function pauseGame() {
+			if (this.PuzzleGame.paused) {
+				this.hidePause();
+				PuzzleTimer.resumeAllInCategory(CAT_GAME);
+			} else {
+				this.showPause();
+				PuzzleTimer.pauseAllInCategory(CAT_GAME);
+			}
+			this.PuzzleGame.paused = !this.PuzzleGame.paused;
+		}
+	}, {
+		key: 'showPause',
+		value: function showPause() {
+			var pauseCanvas = document.createElement('canvas');
+			var pauseCtx = pauseCanvas.getContext('2d');
+
+			pauseCanvas.width = 256;
+			pauseCanvas.height = 128;
+
+			pauseCtx.font = '40pt Roboto';
+			pauseCtx.fillStyle = '#ffffff';
+			pauseCtx.fillRect(0, 0, pauseCanvas.width, pauseCanvas.height);
+			pauseCtx.fillStyle = '#607D8B';
+			pauseCtx.textAlign = "center";
+			//pauseCtx.textA = "Center";
+			pauseCtx.fillText("PAUSED", pauseCanvas.width / 2, pauseCanvas.height / 2);
+			pauseCtx.font = '12pt Roboto';
+			pauseCtx.fillText("(press esc / tap to continue)", pauseCanvas.width / 2, pauseCanvas.height / 2 + 30);
+
+			var pauseTexture = new THREE.Texture(pauseCanvas);
+
+			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer, pauseTexture, true);
+
+			var material = new THREE.MeshBasicMaterial({ map: pauseTexture });
+			var geometry = new THREE.PlaneGeometry(256, 128);
+			this.pauseMesh = new THREE.Mesh(geometry, material);
+			if (this.mapType === MAP_3D) {
+				this.pauseMesh.position.z = this.boardRadius + this.blockDepth + 10;
+			} else {
+				this.pauseMesh.position.z = this.blockDepth + 10;
+			}
+			pauseTexture.needsUpdate = true;
+			this.PuzzleGame.scene.add(this.pauseMesh);
+		}
+	}, {
+		key: 'hidePause',
+		value: function hidePause() {
+			this.PuzzleGame.scene.remove(this.pauseMesh);
+		}
+	}, {
 		key: 'keyPress',
 		value: function keyPress(event) {
-			if (!this.hasControl) {
+			if (!this.hasControl || this.PuzzleGame.paused && event.keyCode !== KEY_ESCAPE) {
 				return;
 			}
 
@@ -629,7 +722,7 @@ var PuzzleTower = function () {
 					this.quickPush = true;
 					break;
 				case KEY_ESCAPE:
-					PuzzleTower.pauseGame();
+					this.pauseGame();
 					break;
 				case KEY_SPACE:
 					//Space
@@ -760,9 +853,9 @@ var PuzzleTower = function () {
 				}
 
 				if (this.chainTimer !== null) {
-					clearTimeout(this.chainTimer);
+					this.chainTimer.clear();
 				}
-				this.chainTimer = setTimeout(this.resetChain.bind(this), this.dropDelay + 600);
+				this.chainTimer = new PuzzleTimer(this.resetChain, this.dropDelay + 600, CAT_GAME, this); //setTimeout(this.resetChain.bind(this), this.dropDelay + 600);
 
 				if (this.chainCount > 1) {
 					console.log('CHAIN ' + this.chainCount);
@@ -826,20 +919,24 @@ var PuzzleTower = function () {
 				if (y - 1 >= 0 && this.gameGrid[x2][y - 1] === null) {
 					this.lockBlocksStartingAtPoint(x2, y);
 					this.animationQueue++;
-					setTimeout(this.dropBlocksStartingAtPoint.bind(this, x2, y), this.dropDelay);
+					//setTimeout(this.dropBlocksStartingAtPoint.bind(this, x2, y), this.dropDelay);
+					new PuzzleTimer(this.dropBlocksStartingAtPoint.bind(this, x2, y), this.dropDelay, CAT_GAME, this);
 				}
 				this.lockBlocksStartingAtPoint(x, y + 1);
 				this.animationQueue++;
-				setTimeout(this.dropBlocksStartingAtPoint.bind(this, x, y + 1), this.dropDelay);
+				//setTimeout(this.dropBlocksStartingAtPoint.bind(this, x, y + 1), this.dropDelay);
+				new PuzzleTimer(this.dropBlocksStartingAtPoint.bind(this, x, y + 1), this.dropDelay, CAT_GAME, this);
 			} else if (block2 !== null && block1 === null) {
 				if (y - 1 >= 0 && this.gameGrid[x][y - 1] === null) {
 					this.lockBlocksStartingAtPoint(x, y);
 					this.animationQueue++;
-					setTimeout(this.dropBlocksStartingAtPoint.bind(this, x, y), this.dropDelay);
+					//setTimeout(this.dropBlocksStartingAtPoint.bind(this, x, y), this.dropDelay);
+					new PuzzleTimer(this.dropBlocksStartingAtPoint.bind(this, x, y), this.dropDelay, CAT_GAME, this);
 				}
 				this.lockBlocksStartingAtPoint(x2, y + 1);
 				this.animationQueue++;
-				setTimeout(this.dropBlocksStartingAtPoint.bind(this, x2, y + 1), this.dropDelay);
+				//setTimeout(this.dropBlocksStartingAtPoint.bind(this, x2, y + 1), this.dropDelay);
+				new PuzzleTimer(this.dropBlocksStartingAtPoint.bind(this, x2, y + 1), this.dropDelay, CAT_GAME, this);
 			}
 
 			this.checkForMatches();
@@ -865,7 +962,8 @@ var PuzzleTower = function () {
     },800).easing( TWEEN.Easing.Elastic.Out).start();
     */
 
-			setTimeout(this.deleteBlock.bind(this, x, y), 750);
+			//setTimeout(this.deleteBlock.bind(this, x, y), 750);
+			new PuzzleTimer(this.deleteBlock.bind(this, x, y), 750, CAT_GAME, this);
 		}
 	}, {
 		key: 'lockBlocksStartingAtPoint',
@@ -890,7 +988,8 @@ var PuzzleTower = function () {
 
 			this.lockBlocksStartingAtPoint(x, y + 1);
 			this.animationQueue++;
-			setTimeout(this.dropBlocksStartingAtPoint.bind(this, x, y + 1), this.dropDelay);
+			//setTimeout(this.dropBlocksStartingAtPoint.bind(this, x, y + 1), this.dropDelay);
+			new PuzzleTimer(this.dropBlocksStartingAtPoint.bind(this, x, y + 1), this.dropDelay, CAT_GAME, this);
 		}
 	}, {
 		key: 'dropBlocksStartingAtPoint',
@@ -1347,7 +1446,7 @@ var PuzzleTower = function () {
 
 			//this.menuObj.rotation.y = Math.sin(this.PuzzleGame.piTimer) * (HALF_PI / 10);
 
-			if (!this.gameActive) {
+			if (!this.gameActive || this.PuzzleGame.paused) {
 				return;
 			}
 
@@ -1384,11 +1483,6 @@ var PuzzleTower = function () {
 			for (var c = 0; c < this.cursorObj.children.length; c++) {
 				this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = 0.05 * Math.sin(this.PuzzleGame.piTimer) + 1;
 			}
-		}
-	}], [{
-		key: 'pauseGame',
-		value: function pauseGame() {
-			console.log('you paused!');
 		}
 	}]);
 

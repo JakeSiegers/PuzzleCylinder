@@ -35,6 +35,8 @@ class PuzzleMenu{
 		//TODO: Change number change events to a function call, so I can control the number changing... This menu is doing a bit too much.
 		//TODO: Or perhaps do that for the "Custom" Selection?... Yeah. That outta work. (For words to ints, like easy, medium, hard)
 
+		let p = null;
+
 		this.menuOptions = {
 			'3D Mode': {
 				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_3D),
@@ -42,8 +44,8 @@ class PuzzleMenu{
 				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,1,1,5]
 			},
 			'2D Mode':{
-				'Start 2D 1P':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
-				'Start 2D VS AI':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
+				'Start 2D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
+				//'Start 2D VS AI':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
 				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower,1,1,12],
 				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,1,1,5]
 			},
@@ -56,16 +58,36 @@ class PuzzleMenu{
 				'Anti Aliasing': ['bool','antiAlias',this.PuzzleGame.settings],
 				'Texture Filtering': ['bool','textureFiltering',this.PuzzleGame.settings]
 			},
-			'Credits':{
-				'Temporary Credits':[],
-				'Designed And Programmed By:':[],
-				' --> Jake Siegers <-- ':PuzzleUtils.openLink.bind(this,'http://jakesiegers.com/'),
-				'Open Source Libraries Used':[],
-				'three.js':PuzzleUtils.openLink.bind(this,'https://threejs.org/'),
-				'tween.js':PuzzleUtils.openLink.bind(this,'https://github.com/tweenjs/tween.js/'),
-				'Babel':PuzzleUtils.openLink.bind(this,'https://babeljs.io/'),
-				'html2canvas':PuzzleUtils.openLink.bind(this,'http://html2canvas.hertzen.com/'),
-			}
+			'Credits': {
+				'Temporary Credits': [],
+				'Designed And Programmed By:': [],
+				' --> Jake Siegers <-- ': PuzzleUtils.openLink.bind(this, 'http://jakesiegers.com/'),
+				'Open Source Libraries Used': [],
+				'three.js': PuzzleUtils.openLink.bind(this, 'https://threejs.org/'),
+				'tween.js': PuzzleUtils.openLink.bind(this, 'https://github.com/tweenjs/tween.js/'),
+				'Babel': PuzzleUtils.openLink.bind(this, 'https://babeljs.io/'),
+				'html2canvas': PuzzleUtils.openLink.bind(this, 'http://html2canvas.hertzen.com/'),
+			}/*,
+			'TIMER DEBUG': {
+				'Timer Test Init': function () {
+					p = new PuzzleTimer(function () {
+						console.log('done!');
+					}, 1000, 'game', this);
+				},
+				'Timer Test Pause': function () {
+					p.pause();
+				},
+				'Timer Test Resume': function () {
+					p.resume();
+				},
+				'Timer Pause All Game': function () {
+					PuzzleTimer.pauseAllInCategory('game');
+				},
+				'Timer Resume All Game': function () {
+					PuzzleTimer.resumeAllInCategory('game');
+				}
+			}*/
+
 		};
 
 		//Colors - 900,500,200

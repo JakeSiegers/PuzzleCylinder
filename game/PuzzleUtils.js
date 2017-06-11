@@ -1,4 +1,5 @@
 class PuzzleUtils{
+
 	static addCls(el,clsToAdd){
 		if(el.className.trim() == ''){
 			el.className += clsToAdd;
