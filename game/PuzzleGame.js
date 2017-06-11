@@ -69,30 +69,43 @@ class PuzzleGame{
 	}
 
 	loadComplete(){
+		this.generateBackground();
+
 		this.tower = new PuzzleTower(this);
 		this.menu = new PuzzleMenu(this);
 		this.scoreBoard = new PuzzleScore(this);
+
+
+
 		this.menu.showMenuWithTransition();
 		this.setFocus(FOCUS_MENU);
 		document.addEventListener('keydown', this.keyPress.bind(this));
 		document.addEventListener('keyup', this.keyUp.bind(this));
 
+
+		this.animate();
+		setInterval(function(){
+			this.scoreBoard.animate();
+		}.bind(this),500);
+	}
+
+	generateBackground(){
 		let bgTexture = this.blankTexture.clone();
 		bgTexture.wrapS = THREE.RepeatWrapping;
 		bgTexture.wrapT = THREE.RepeatWrapping;
 
 		let size = 0;
 		if(this.windowWidth>this.windowHeight){
-			size = Math.ceil(this.windowWidth/128)*2;
+			size = Math.ceil(this.windowWidth/128)*3;
 		}else{
-			size = Math.ceil(this.windowHeight/128)*2;
+			size = Math.ceil(this.windowHeight/128)*3;
 		}
 
 		bgTexture.repeat.set(size,size);
 		bgTexture.needsUpdate = true;
 
 		let material = new THREE.MeshBasicMaterial({
-			color: 0xff0000,
+			color: 0x000000,
 			//side: THREE.DoubleSide,
 			transparent: true,
 			opacity: 0.5,
@@ -103,11 +116,6 @@ class PuzzleGame{
 		this.background = new THREE.Mesh(geometry, material);
 		this.background.position.z = -300;
 		this.scene.add(this.background);
-
-		this.animate();
-		setInterval(function(){
-			this.scoreBoard.animate();
-		}.bind(this),500);
 	}
 
 	initLoaders(completeFn,completeScope){
@@ -236,7 +244,6 @@ class PuzzleGame{
 
 			this.tower.gameAnimations();
 		}
-
 		requestAnimationFrame(this.animate.bind(this));
 		this.stats.end();
 	}

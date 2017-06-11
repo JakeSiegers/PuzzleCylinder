@@ -6,6 +6,8 @@ class PuzzleMenu{
 	constructor(PuzzleGame){
 		this.PuzzleGame = PuzzleGame;
 
+		this.backgroundTween = null;
+
 		this.MenuWrapDom = document.createElement( 'div' );
 		this.MenuWrapDom.className = 'menuWrap';
 		document.body.appendChild(this.MenuWrapDom);
@@ -38,14 +40,14 @@ class PuzzleMenu{
 		let p = null;
 
 		this.menuOptions = {
-			'3D Mode': {
-				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_3D),
-				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower,1,1,12],
-				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,1,1,5]
-			},
 			'2D Mode':{
 				'Start 2D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
 				//'Start 2D VS AI':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
+				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower,1,1,12],
+				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,1,1,5]
+			},
+			'3D Mode': {
+				'Start 3D':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_3D),
 				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower,1,1,12],
 				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower,1,1,5]
 			},
@@ -59,7 +61,7 @@ class PuzzleMenu{
 				'Texture Filtering': ['bool','textureFiltering',this.PuzzleGame.settings]
 			},
 			'Credits': {
-				'Temporary Credits': [],
+				//'Temporary Credits': [],
 				'Designed And Programmed By:': [],
 				' --> Jake Siegers <-- ': PuzzleUtils.openLink.bind(this, 'http://jakesiegers.com/'),
 				'Open Source Libraries Used': [],
@@ -93,9 +95,9 @@ class PuzzleMenu{
 		//Colors - 900,500,200
 		this.menuColors = {
 			'':['#1A237E','#3F51B5','#9FA8DA'],
-			'3D Mode':['#B71C1C','#F44336','#EF9A9A'],
-			'2D Mode':['#BF360C','#FF5722','#FFAB91'],
-			'How to Play':['#311B92','#673AB7','#D1C4E9'],
+			'2D Mode':['#B71C1C','#F44336','#EF9A9A'],
+			'3D Mode':['#311B92','#673AB7','#D1C4E9'],
+			'How to Play':['#BF360C','#FF5722','#FFAB91'],
 			'Settings':['#004D40','#009688','#80CBC4'],
 			'Credits':['#3E2723','#795548','#BCAAA4']
 		};
@@ -261,6 +263,19 @@ class PuzzleMenu{
 			let colors = this.menuColors[labelClicked];
 			colorCss.innerHTML = ".menuTitle{background:"+colors[0]+";} .menuItemWrap{background:"+colors[1]+";} .menuItem.selected{background:"+colors[2]+";color:"+colors[0]+";}";
 			this.MenuItemWrap.appendChild(colorCss);
+
+			let lastX = 0;
+			if(this.backgroundTween !== null){
+				this.backgroundTween.stop();
+			}
+			this.backgroundTween = new TWEEN.Tween(1).to(1,1000).onUpdate(function(x){
+				x*=10;
+				if(Math.floor(x)>lastX){
+					lastX = Math.floor(x);
+				}
+				this.PuzzleGame.background.material.color.lerp(new THREE.Color(colors[0]),0.1);
+			}.bind(this)).start();
+
 		}
 
 		for(let label in this.currentMenu){

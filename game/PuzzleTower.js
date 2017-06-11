@@ -484,7 +484,7 @@ class PuzzleTower {
 		let tube2 = null;
 
 		if(this.mapType === MAP_3D){
-			material = new THREE.MeshBasicMaterial({color: 0xB71C1C, side: THREE.DoubleSide, map: this.PuzzleGame.tubeTexture});
+			material = new THREE.MeshBasicMaterial({color: 0x311B92, side: THREE.DoubleSide, map: this.PuzzleGame.tubeTexture});
 			let r = this.boardRadius + this.blockDepth / 2 + 5;
 			let geometry = new THREE.CylinderGeometry(r, r, this.boardPixelHeight, this.boardWidth, 1, false);
 			tube = new THREE.Mesh(geometry, material);
@@ -495,7 +495,7 @@ class PuzzleTower {
 			tube2.position.y = (this.boardPixelHeight*2);
 			tube2.rotation.y = HALF_PI;
 		}else{
-			material = new THREE.MeshBasicMaterial({color: 0xBF360C, side: THREE.DoubleSide, map: this.PuzzleGame.tubeTexture});
+			material = new THREE.MeshBasicMaterial({color: 0xB71C1C, side: THREE.DoubleSide, map: this.PuzzleGame.tubeTexture});
 			let geometry = new THREE.BoxGeometry(this.boardPixelWidth,this.boardPixelHeight,this.blockDepth+10);
 			tube = new THREE.Mesh(geometry, material);
 			tube.position.y = -(this.boardPixelHeight*2);
@@ -1314,7 +1314,7 @@ class PuzzleTower {
 		}
 
 		for (let c = 0; c < this.cursorObj.children.length; c++) {
-			this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = (0.05 * Math.sin(this.PuzzleGame.piTimer) + 1);
+			this.cursorObj.children[c].scale.x = this.cursorObj.children[c].scale.y = (0.05 * Math.sin(this.PuzzleGame.piTimer*4) + 1);
 		}
 	}
 }

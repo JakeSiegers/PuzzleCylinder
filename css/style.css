@@ -15,7 +15,13 @@ body{
 	overflow: hidden;
 	background: #263238;
 	font-family: Arial, sans-serif;
-
+	/*
+	background: black url(https://source.unsplash.com/w1_4YH5IhDg/1280x720) no-repeat center center fixed;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	*/
 	-webkit-touch-callout: none; /* iOS Safari */
 	-webkit-user-select: none; /* Safari */
 	-khtml-user-select: none; /* Konqueror HTML */
