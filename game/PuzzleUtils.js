@@ -36,7 +36,7 @@ class PuzzleUtils{
 		texture.magFilter = THREE.NearestFilter;
 		texture.minFilter = THREE.NearestFilter;
 		if (maxAnisotropy) {
-			texture.anisotropy = renderer.getMaxAnisotropy();
+			texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 		}
 	}
 }
