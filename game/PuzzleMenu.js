@@ -20,7 +20,7 @@ class PuzzleMenu{
 
 		this.MenuTitleDom = document.createElement( 'div' );
 		this.MenuTitleDom.className = 'menuTitle';
-		this.MenuTitleDom.innerHTML = 'Block Galaxy<span>(Working title) Build Date - '+ new Date(lastUpdateTime*1000).toLocaleString()+'</span>';
+		this.MenuTitleDom.innerHTML = 'Block Galaxy DEV!<span>(Working title) Build Date - '+ new Date(lastUpdateTime*1000).toLocaleString()+'</span>';
 
 		this.MenuItemWrap = document.createElement( 'div' );
 		this.MenuItemWrap.className = 'menuItemWrap';
