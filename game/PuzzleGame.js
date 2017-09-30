@@ -64,6 +64,8 @@ class PuzzleGame{
 		this.camera.position.z = 500;
 
 		window.addEventListener('resize', this.onWindowResize.bind(this), false);
+		window.addEventListener( 'mousemove', this.mouseMove.bind(this), false );
+		window.addEventListener( 'mouseup', this.mouseUp.bind(this), false );
 
 		this.initLoaders(this.loadComplete,this);
 	}
@@ -309,6 +311,24 @@ class PuzzleGame{
 				break;
 			case FOCUS_TOWER:
 				this.tower.keyUp(event);
+				break;
+		}
+	}
+
+	mouseMove(event){
+		event.preventDefault();
+		switch(this.currentFocus){
+			case FOCUS_MENU:
+				this.menu.mouseMove(event);
+				break;
+		}
+	}
+
+	mouseUp(event){
+		event.preventDefault();
+		switch(this.currentFocus){
+			case FOCUS_MENU:
+				this.menu.mouseUp(event);
 				break;
 		}
 	}

@@ -116,8 +116,8 @@ var PuzzleMenu = function () {
 		//this.setMenu(this.menuOptions,"");
 
 
-		this.PuzzleGame.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this), false);
-		this.PuzzleGame.renderer.domElement.addEventListener('mouseup', this.clickedMenu.bind(this), false);
+		//this.PuzzleGame.renderer.domElement.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
+		//this.PuzzleGame.renderer.domElement.addEventListener( 'mouseup', this.clickedMenu.bind(this), false );
 		this.raycaster = new THREE.Raycaster();
 		this.mouse = new THREE.Vector2();
 		this.onClickPosition = new THREE.Vector2();
@@ -221,8 +221,8 @@ var PuzzleMenu = function () {
 			this.texture.needsUpdate = true;
 		}
 	}, {
-		key: 'clickedMenu',
-		value: function clickedMenu() {
+		key: 'mouseUp',
+		value: function mouseUp() {
 			if (this.currentSelection !== -1 && !this.inAnimation) {
 
 				var label = Object.keys(this.currentMenuOptions)[this.currentSelection];
@@ -262,8 +262,8 @@ var PuzzleMenu = function () {
 			}
 		}
 	}, {
-		key: 'onMouseMove',
-		value: function onMouseMove(evt) {
+		key: 'mouseMove',
+		value: function mouseMove(evt) {
 			evt.preventDefault();
 			if (this.inAnimation) {
 				return;

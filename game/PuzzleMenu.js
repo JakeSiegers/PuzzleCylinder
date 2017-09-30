@@ -106,8 +106,8 @@ class PuzzleMenu{
 		//this.setMenu(this.menuOptions,"");
 
 
-		this.PuzzleGame.renderer.domElement.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
-		this.PuzzleGame.renderer.domElement.addEventListener( 'mouseup', this.clickedMenu.bind(this), false );
+		//this.PuzzleGame.renderer.domElement.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
+		//this.PuzzleGame.renderer.domElement.addEventListener( 'mouseup', this.clickedMenu.bind(this), false );
 		this.raycaster = new THREE.Raycaster();
 		this.mouse = new THREE.Vector2();
 		this.onClickPosition = new THREE.Vector2();
@@ -226,7 +226,7 @@ class PuzzleMenu{
 		this.texture.needsUpdate = true;
 	}
 
-	clickedMenu(){
+	mouseUp(){
 		if(this.currentSelection !== -1 && !this.inAnimation){
 
 			let label = Object.keys(this.currentMenuOptions)[this.currentSelection];
@@ -278,7 +278,7 @@ class PuzzleMenu{
 		}
 	}
 
-	onMouseMove( evt ) {
+	mouseMove( evt ) {
 		evt.preventDefault();
 		if(this.inAnimation){
 			return;
