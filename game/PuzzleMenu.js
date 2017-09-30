@@ -169,8 +169,8 @@ class PuzzleMenu{
 		this.canvas.width = 256;
 		this.canvas.height = 256;
 		this.menuSpinGroup.add(mesh);
+		this.menuSpinGroup.scale.x = this.menuSpinGroup.scale.y = this.menuSpinGroup.scale.z = 0;
 		this.menuGroup.add(this.menuSpinGroup);
-		this.menuGroup.scale.x = this.menuGroup.scale.y = this.menuGroup.scale.z = 0;
 	}
 
 	setMenuOptions(){
@@ -614,7 +614,7 @@ class PuzzleMenu{
 			.to({y:0,x:0,z:0},2000)
 			.easing(TWEEN.Easing.Quadratic.Out)
 			.start();
-		new TWEEN.Tween(this.menuGroup.scale)
+		new TWEEN.Tween(this.menuSpinGroup.scale)
 			.to({x:1,y:1,z:1},2000)
 			.easing(TWEEN.Easing.Quadratic.Out)
 			.start()
@@ -633,13 +633,14 @@ class PuzzleMenu{
 			.to({y:PI,x:0,z:-TWO_PI},2000)
 			.easing(TWEEN.Easing.Quadratic.Out)
 			.start();
-		new TWEEN.Tween(this.menuGroup.scale)
-			.to({x:0,y:0,z:0},2000)
+		new TWEEN.Tween(this.menuGroup.position)
+			.to({x:0,y:0,z:1000},2000)
 			.easing(TWEEN.Easing.Quadratic.Out)
 			.start()
 			.onComplete(function(){
 				this.inAnimation = false;
 			}.bind(this));
+
 
 	}
 }

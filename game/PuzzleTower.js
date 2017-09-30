@@ -151,7 +151,7 @@ class PuzzleTower {
 			case MODE_ENDLESS:
 
 				this.openTube();
-				let sThis = this;
+				//let sThis = this;
 
 				/*setTimeout(function(){
 					sThis.gameBoard.visible = true;
@@ -166,12 +166,12 @@ class PuzzleTower {
 				*/
 
 				new PuzzleTimer(function(){
-					sThis.gameBoard.visible = true;
-					sThis.cursorObj.visible = true;
-					sThis.nextRow.visible = true;
-					sThis.depthFilter.visible = true;
-					sThis.resetGame();
-					new TWEEN.Tween(sThis.depthFilter.material).to({
+					this.gameBoard.visible = true;
+					this.cursorObj.visible = true;
+					this.nextRow.visible = true;
+					this.depthFilter.visible = true;
+					this.resetGame();
+					new TWEEN.Tween(this.depthFilter.material).to({
 						opacity:0.5
 					},2000).easing(TWEEN.Easing.Exponential.Out).start();
 				},1000,CAT_GAME,this);
@@ -249,7 +249,7 @@ class PuzzleTower {
 
 	resetGame(){
 
-		TWEEN.removeAll();
+		//TWEEN.removeAll();
 
 		this.resetGameVariables();
 
@@ -526,9 +526,11 @@ class PuzzleTower {
 	pauseGame(){
 		if(this.PuzzleGame.paused){
 			this.hidePause();
+			this.openTube();
 			PuzzleTimer.resumeAllInCategory(CAT_GAME);
 		}else{
 			this.showPause();
+			this.closeTube();
 			PuzzleTimer.pauseAllInCategory(CAT_GAME);
 		}
 		this.PuzzleGame.paused = !this.PuzzleGame.paused;
