@@ -114,7 +114,7 @@ class PuzzleMenu{
 		this.menuX = 0;
 		this.menuY = 0;
 		this.currentSelection = -1;
-		this.inAnimation = true;
+
 
 		this.currentMenuOptions = this.menuOptions;
 
@@ -124,17 +124,7 @@ class PuzzleMenu{
 
 		this.menuSpinGroup.rotation.y = PI;
 		this.menuSpinGroup.rotation.z = -TWO_PI;
-		new TWEEN.Tween(this.menuSpinGroup.rotation)
-			.to({y:0,x:0,z:0},2000)
-			.easing(TWEEN.Easing.Quadratic.Out)
-			.start();
-		new TWEEN.Tween(this.menuGroup.scale)
-			.to({x:1,y:1,z:1},2000)
-			.easing(TWEEN.Easing.Quadratic.Out)
-			.start()
-			.onComplete(function(){
-				this.inAnimation = false;
-			}.bind(this));
+		this.showMenu();
 		this.menuGroup.rotation.x = -PI/16;
 		this.menuShimmyTweenX = new TWEEN.Tween(this.menuGroup.rotation)
 			.to({x:PI/16},5000)
@@ -582,7 +572,7 @@ class PuzzleMenu{
 	*/
 
 	keyPress(event){
-
+		/*
 		if(this.transitionActive === true){
 			return;
 		}
@@ -609,6 +599,7 @@ class PuzzleMenu{
 				break;
 
 		}
+		*/
 	}
 
 	keyUp(event){
@@ -618,11 +609,24 @@ class PuzzleMenu{
 	showMenu(){
 		//this.MenuWrapDom.style.display = "inherit";
 		//this.MenuWrapDom.style.opacity = "1";
+		this.inAnimation = true;
+		new TWEEN.Tween(this.menuSpinGroup.rotation)
+			.to({y:0,x:0,z:0},2000)
+			.easing(TWEEN.Easing.Quadratic.Out)
+			.start();
+		new TWEEN.Tween(this.menuGroup.scale)
+			.to({x:1,y:1,z:1},2000)
+			.easing(TWEEN.Easing.Quadratic.Out)
+			.start()
+			.onComplete(function(){
+				this.inAnimation = false;
+			}.bind(this));
+
 	}
 
 	hideMenu(){
-		this.MenuWrapDom.style.opacity = "0";
-		this.MenuWrapDom.style.display = "none";
+		//this.MenuWrapDom.style.opacity = "0";
+		//this.MenuWrapDom.style.display = "none";
 
 		this.inAnimation = true;
 		new TWEEN.Tween(this.menuSpinGroup.rotation)
@@ -635,7 +639,6 @@ class PuzzleMenu{
 			.start()
 			.onComplete(function(){
 				this.inAnimation = false;
-				console.log('complete!')
 			}.bind(this));
 
 	}

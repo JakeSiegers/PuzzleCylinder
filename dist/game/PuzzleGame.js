@@ -276,6 +276,7 @@ var PuzzleGame = function () {
 		value: function startGame(mapType) {
 			this.tower.changeMapType(mapType);
 			this.menu.hideMenu();
+
 			this.setFocus(FOCUS_TOWER);
 			this.tower.setGameMode(MODE_ENDLESS);
 

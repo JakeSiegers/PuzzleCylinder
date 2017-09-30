@@ -124,7 +124,6 @@ var PuzzleMenu = function () {
 		this.menuX = 0;
 		this.menuY = 0;
 		this.currentSelection = -1;
-		this.inAnimation = true;
 
 		this.currentMenuOptions = this.menuOptions;
 
@@ -133,10 +132,7 @@ var PuzzleMenu = function () {
 
 		this.menuSpinGroup.rotation.y = PI;
 		this.menuSpinGroup.rotation.z = -TWO_PI;
-		new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: 0, x: 0, z: 0 }, 2000).easing(TWEEN.Easing.Quadratic.Out).start();
-		new TWEEN.Tween(this.menuGroup.scale).to({ x: 1, y: 1, z: 1 }, 2000).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
-			this.inAnimation = false;
-		}.bind(this));
+		this.showMenu();
 		this.menuGroup.rotation.x = -PI / 16;
 		this.menuShimmyTweenX = new TWEEN.Tween(this.menuGroup.rotation).to({ x: PI / 16 }, 5000).easing(TWEEN.Easing.Quadratic.InOut).repeat(Infinity).yoyo(true).start();
 		this.menuGroup.rotation.y = -PI / 16;
@@ -562,33 +558,32 @@ var PuzzleMenu = function () {
   */
 
 		value: function keyPress(event) {
-
-			if (this.transitionActive === true) {
-				return;
-			}
-
-			switch (event.keyCode) {
-				case KEY_UP:
-					this.setMenuIndex(this.menuIndex - 1);
-					break;
-				case KEY_DOWN:
-					this.setMenuIndex(this.menuIndex + 1);
-					break;
-				case KEY_RIGHT:
-					if (this.menuOptionDoms[this.menuIndex].hasOwnProperty('upBtn')) {
-						this.menuOptionDoms[this.menuIndex].upBtn.click();
-					}
-					break;
-				case KEY_LEFT:
-					if (this.menuOptionDoms[this.menuIndex].hasOwnProperty('downBtn')) {
-						this.menuOptionDoms[this.menuIndex].downBtn.click();
-					}
-					break;
-				case KEY_SPACE:
-					this.MenuItemWrap.getElementsByClassName("selected")[0].click();
-					break;
-
-			}
+			/*
+   if(this.transitionActive === true){
+   	return;
+   }
+   		switch(event.keyCode){
+   	case KEY_UP:
+   		this.setMenuIndex(this.menuIndex-1);
+   		break;
+   	case KEY_DOWN:
+   		this.setMenuIndex(this.menuIndex+1);
+   		break;
+   	case KEY_RIGHT:
+   		if(this.menuOptionDoms[this.menuIndex].hasOwnProperty('upBtn')){
+   			this.menuOptionDoms[this.menuIndex].upBtn.click();
+   		}
+   		break;
+   	case KEY_LEFT:
+   		if(this.menuOptionDoms[this.menuIndex].hasOwnProperty('downBtn')){
+   			this.menuOptionDoms[this.menuIndex].downBtn.click();
+   		}
+   		break;
+   	case KEY_SPACE:
+   		this.MenuItemWrap.getElementsByClassName("selected")[0].click();
+   		break;
+   		}
+   */
 		}
 	}, {
 		key: 'keyUp',
@@ -600,18 +595,22 @@ var PuzzleMenu = function () {
 		value: function showMenu() {
 			//this.MenuWrapDom.style.display = "inherit";
 			//this.MenuWrapDom.style.opacity = "1";
+			this.inAnimation = true;
+			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: 0, x: 0, z: 0 }, 2000).easing(TWEEN.Easing.Quadratic.Out).start();
+			new TWEEN.Tween(this.menuGroup.scale).to({ x: 1, y: 1, z: 1 }, 2000).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
+				this.inAnimation = false;
+			}.bind(this));
 		}
 	}, {
 		key: 'hideMenu',
 		value: function hideMenu() {
-			this.MenuWrapDom.style.opacity = "0";
-			this.MenuWrapDom.style.display = "none";
+			//this.MenuWrapDom.style.opacity = "0";
+			//this.MenuWrapDom.style.display = "none";
 
 			this.inAnimation = true;
 			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: PI, x: 0, z: -TWO_PI }, 2000).easing(TWEEN.Easing.Quadratic.Out).start();
 			new TWEEN.Tween(this.menuGroup.scale).to({ x: 0, y: 0, z: 0 }, 2000).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
 				this.inAnimation = false;
-				console.log('complete!');
 			}.bind(this));
 		}
 	}]);
