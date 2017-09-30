@@ -78,13 +78,15 @@ var PuzzleGame = function () {
 	_createClass(PuzzleGame, [{
 		key: 'loadComplete',
 		value: function loadComplete() {
-			this.generateBackground();
+			//this.generateBackground();
 
 			this.tower = new PuzzleTower(this);
 			this.menu = new PuzzleMenu(this);
 			this.scoreBoard = new PuzzleScore(this);
 
-			this.menu.showMenuWithTransition();
+			//this.menu.showMenuWithTransition();
+
+
 			this.setFocus(FOCUS_MENU);
 			document.addEventListener('keydown', this.keyPress.bind(this));
 			document.addEventListener('keyup', this.keyUp.bind(this));
@@ -228,6 +230,8 @@ var PuzzleGame = function () {
 			this.stats.begin();
 			var now = Date.now();
 
+			//console.log(this.menu.menuShimmyTimer);
+
 			TWEEN.update();
 			this.renderer.render(this.scene, this.camera);
 
@@ -242,14 +246,16 @@ var PuzzleGame = function () {
 
 				this.ThirtyFPSThen = now - elapsed % this.ThirtyFPSInterval;
 
-				this.background.material.map.offset.x += 0.01;
-				if (this.background.material.map.offset.x > 1) {
-					this.background.material.map.offset.x = 0;
-				}
-				this.background.rotation.z += 0.0001;
-				if (this.background.rotation.z > TWO_PI) {
-					this.background.rotation.z = 0;
-				}
+				/*
+    this.background.material.map.offset.x += 0.01;
+    if (this.background.material.map.offset.x > 1) {
+    	this.background.material.map.offset.x = 0;
+    }
+    this.background.rotation.z += 0.0001;
+    if(this.background.rotation.z > TWO_PI){
+    	this.background.rotation.z = 0;
+    }
+    */
 
 				this.tower.gameAnimations();
 			}
@@ -269,7 +275,7 @@ var PuzzleGame = function () {
 		key: 'startGame',
 		value: function startGame(mapType) {
 			this.tower.changeMapType(mapType);
-			this.menu.hideMenuWithTransition();
+			this.menu.hideMenu();
 			this.setFocus(FOCUS_TOWER);
 			this.tower.setGameMode(MODE_ENDLESS);
 

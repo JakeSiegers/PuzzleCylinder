@@ -69,7 +69,7 @@ class PuzzleGame{
 	}
 
 	loadComplete(){
-		this.generateBackground();
+		//this.generateBackground();
 
 		this.tower = new PuzzleTower(this);
 		this.menu = new PuzzleMenu(this);
@@ -77,7 +77,9 @@ class PuzzleGame{
 
 
 
-		this.menu.showMenuWithTransition();
+		//this.menu.showMenuWithTransition();
+
+
 		this.setFocus(FOCUS_MENU);
 		document.addEventListener('keydown', this.keyPress.bind(this));
 		document.addEventListener('keyup', this.keyUp.bind(this));
@@ -219,6 +221,8 @@ class PuzzleGame{
 		this.stats.begin();
 		let now = Date.now();
 
+		//console.log(this.menu.menuShimmyTimer);
+
 		TWEEN.update();
 		this.renderer.render(this.scene, this.camera);
 
@@ -233,6 +237,7 @@ class PuzzleGame{
 
 			this.ThirtyFPSThen = now - (elapsed % this.ThirtyFPSInterval);
 
+			/*
 			this.background.material.map.offset.x += 0.01;
 			if (this.background.material.map.offset.x > 1) {
 				this.background.material.map.offset.x = 0;
@@ -241,6 +246,7 @@ class PuzzleGame{
 			if(this.background.rotation.z > TWO_PI){
 				this.background.rotation.z = 0;
 			}
+			*/
 
 			this.tower.gameAnimations();
 		}
@@ -258,7 +264,7 @@ class PuzzleGame{
 
 	startGame(mapType){
 		this.tower.changeMapType(mapType);
-		this.menu.hideMenuWithTransition();
+		this.menu.hideMenu();
 		this.setFocus(FOCUS_TOWER);
 		this.tower.setGameMode(MODE_ENDLESS);
 

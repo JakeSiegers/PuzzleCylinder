@@ -23,7 +23,7 @@ var PuzzleCSSLoader = function () {
 
 			self.cssLoaderText = document.createElement('div');
 			self.cssLoaderText.className = 'cssLoaderText';
-			self.cssLoaderText.innerHTML = "";
+			self.cssLoaderText.innerHTML = "0";
 
 			self.cssLoader.appendChild(self.cssLoaderWrap);
 			self.cssLoaderWrap.appendChild(self.cssLoaderBox);
