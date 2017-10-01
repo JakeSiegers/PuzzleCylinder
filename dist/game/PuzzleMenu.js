@@ -49,36 +49,45 @@ var PuzzleMenu = function () {
 
 		var p = null;
 
+		this.backFn = function () {
+			this.changeMenu('', true);
+		}.bind(this);
+
 		this.menuOptions = {
 			'2D Mode': {
 				'Start 2D': this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_2D),
 				//'Start 2D VS AI':this.PuzzleGame.startGame.bind(this.PuzzleGame,MAP_2D),
 				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower, 1, 1, 12],
-				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5]
+				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5],
+				'< - Back': this.backFn
 			},
 			'3D Mode': {
 				'Start 3D': this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_3D),
 				'Start Height': ['numeric', 'startingHeight', this.PuzzleGame.tower, 1, 1, 12],
-				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5]
+				'Difficulty': ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5],
+				'< - Back': this.backFn
 			},
 			'How to Play': {
 				'Arrow Keys - Move': [],
 				'Space Bar - Swap': [],
-				'X - Speed Up': []
+				'X - Speed Up': [],
+				'< - Back': this.backFn
 			},
 			'Settings': {
 				'Anti Aliasing': ['bool', 'antiAlias', this.PuzzleGame.settings],
-				'Texture Filtering': ['bool', 'textureFiltering', this.PuzzleGame.settings]
+				'Texture Filtering': ['bool', 'textureFiltering', this.PuzzleGame.settings],
+				'< - Back': this.backFn
 			},
 			'Credits': {
 				//'Temporary Credits': [],
-				'Designed And Programmed By:': [],
+				'Programmed By:': [],
 				' --> Jake Siegers <-- ': PuzzleUtils.openLink.bind(this, 'http://jakesiegers.com/'),
-				'Open Source Libraries Used': [],
+				'Open Source Libraries': [],
 				'three.js': PuzzleUtils.openLink.bind(this, 'https://threejs.org/'),
 				'tween.js': PuzzleUtils.openLink.bind(this, 'https://github.com/tweenjs/tween.js/'),
 				'Babel': PuzzleUtils.openLink.bind(this, 'https://babeljs.io/'),
-				'html2canvas': PuzzleUtils.openLink.bind(this, 'http://html2canvas.hertzen.com/')
+				'html2canvas': PuzzleUtils.openLink.bind(this, 'http://html2canvas.hertzen.com/'),
+				'< - Back': this.backFn
 			} /*,
      'TIMER DEBUG': {
      'Timer Test Init': function () {
@@ -104,12 +113,12 @@ var PuzzleMenu = function () {
 
 		//Colors - 900,500,200
 		this.menuColors = {
-			'': ['#1A237E', '#3F51B5', '#9FA8DA'],
-			'2D Mode': ['#B71C1C', '#F44336', '#EF9A9A'],
-			'3D Mode': ['#311B92', '#673AB7', '#D1C4E9'],
-			'How to Play': ['#BF360C', '#FF5722', '#FFAB91'],
-			'Settings': ['#004D40', '#009688', '#80CBC4'],
-			'Credits': ['#3E2723', '#795548', '#BCAAA4']
+			'': { r: 156, g: 39, b: 176 }, //['#1A237E','#3F51B5','#9FA8DA'],
+			'2D Mode': { r: 183, g: 28, b: 28 }, //['#B71C1C','#F44336','#EF9A9A'],
+			'3D Mode': { r: 26, g: 5, b: 126 }, //['#311B92','#673AB7','#D1C4E9'],
+			'How to Play': { r: 191, g: 54, b: 12 }, //['#BF360C','#FF5722','#FFAB91'],
+			'Settings': { r: 0, g: 150, b: 136 }, //['#004D40','#009688','#80CBC4'],
+			'Credits': { r: 62, g: 39, b: 35 } //['#3E2723','#795548','#BCAAA4']
 		};
 
 		//this.menuIndex = 0;
@@ -126,6 +135,7 @@ var PuzzleMenu = function () {
 		this.currentSelection = -1;
 
 		this.currentMenuOptions = this.menuOptions;
+		this.currentColor = this.menuColors[''];
 
 		this.renderCube();
 		this.setMenuOptions();
@@ -150,14 +160,14 @@ var PuzzleMenu = function () {
 			this.texture = new THREE.Texture(this.canvas);
 			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer, this.texture, true);
 			var mainSide = new THREE.MeshBasicMaterial({ map: this.texture });
-			var otherSides = new THREE.MeshBasicMaterial({ color: 0x9C27B0, map: this.PuzzleGame.blankTexture });
+			this.otherSides = new THREE.MeshBasicMaterial({ color: 0x9C27B0, map: this.PuzzleGame.blankTexture });
 
-			var material = [otherSides, //right
-			otherSides, //left
-			otherSides, //top
-			otherSides, //bottom
+			var material = [this.otherSides, //right
+			this.otherSides, //left
+			this.otherSides, //top
+			this.otherSides, //bottom
 			mainSide, //front
-			otherSides //back
+			this.otherSides //back
 
 			];
 
@@ -177,7 +187,7 @@ var PuzzleMenu = function () {
 			this.ctx.font = '12pt Roboto';
 			this.ctx.fillStyle = 'black'; //'#9C27B0';
 			this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-			this.ctx.fillStyle = 'rgba(156,39,176,0.25)';
+			this.ctx.fillStyle = 'rgba(' + this.currentColor.r + ',' + this.currentColor.g + ',' + this.currentColor.b + ',0.25)';
 			this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
 			//When using stroke on the canvas textures, the game will slowly lag over time.
@@ -187,13 +197,13 @@ var PuzzleMenu = function () {
 			//this.ctx.rect(13,13,this.canvas.width-26,this.canvas.height-26);
 			//this.ctx.stroke();
 
-			this.ctx.fillStyle = 'rgba(156,39,176,0.5)';
+			this.ctx.fillStyle = 'rgba(' + this.currentColor.r + ',' + this.currentColor.g + ',' + this.currentColor.b + ',0.5)';
 			this.ctx.fillRect(0, 0, this.canvas.width, 26);
 			this.ctx.fillRect(0, this.canvas.height - 26, this.canvas.width, 26);
 			this.ctx.fillRect(0, 0, 26, this.canvas.height);
 			this.ctx.fillRect(this.canvas.width - 26, 0, 26, this.canvas.height);
 
-			this.ctx.fillStyle = 'rgb(156,39,176)';
+			this.ctx.fillStyle = 'rgb(' + this.currentColor.r + ',' + this.currentColor.g + ',' + this.currentColor.b + ')';
 			this.ctx.fillRect(0, 0, 52, 26);
 			this.ctx.fillRect(0, 26, 26, 26);
 			this.ctx.fillRect(this.canvas.width - 52, 0, 52, 26);
@@ -212,7 +222,7 @@ var PuzzleMenu = function () {
 			var i = 0;
 			for (var label in this.currentMenuOptions) {
 				if (this.currentSelection === i) {
-					this.ctx.fillStyle = 'rgb(156,39,176)';
+					this.ctx.fillStyle = 'rgb(' + this.currentColor.r + ',' + this.currentColor.g + ',' + this.currentColor.b + ')';
 				} else {
 					this.ctx.fillStyle = 'white';
 				}
@@ -239,13 +249,22 @@ var PuzzleMenu = function () {
 		}
 	}, {
 		key: 'changeMenu',
-		value: function changeMenu(newMenu) {
+		value: function changeMenu(newMenu, reverse) {
 			this.inAnimation = true;
-			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: "-" + TWO_PI, x: 0, z: 0 }, 1000).easing(TWEEN.Easing.Back.Out).start().onComplete(function () {
+
+			var direction = reverse ? "+" + TWO_PI : "-" + TWO_PI;
+
+			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: direction, x: 0, z: 0 }, 1000).easing(TWEEN.Easing.Back.Out).start().onComplete(function () {
 				this.inAnimation = false;
 			}.bind(this));
 			setTimeout(function () {
-				this.currentMenuOptions = this.menuOptions[newMenu];
+				this.currentColor = this.menuColors[newMenu];
+				this.otherSides.color = new THREE.Color(this.currentColor.r / 255, this.currentColor.g / 255, this.currentColor.b / 255);
+				if (newMenu === '') {
+					this.currentMenuOptions = this.menuOptions;
+				} else {
+					this.currentMenuOptions = this.menuOptions[newMenu];
+				}
 				this.setMenuOptions();
 			}.bind(this), 200);
 			new TWEEN.Tween(this.menuGroup.scale).to({ x: 0.8, y: 0.8, z: 0.8 }, 500).easing(TWEEN.Easing.Back.Out).yoyo(true).repeat(1).start();
