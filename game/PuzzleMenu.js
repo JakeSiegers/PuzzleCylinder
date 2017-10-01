@@ -124,7 +124,7 @@ class PuzzleMenu{
 
 		this.menuSpinGroup.rotation.y = PI;
 		this.menuSpinGroup.rotation.z = -TWO_PI;
-		this.showMenu();
+
 		this.menuGroup.rotation.x = -PI/16;
 		this.menuShimmyTweenX = new TWEEN.Tween(this.menuGroup.rotation)
 			.to({x:PI/16},5000)
@@ -207,8 +207,8 @@ class PuzzleMenu{
 		this.ctx.fillRect(this.canvas.width-26, this.canvas.height-52, 26, 26);
 
 
-		this.ctx.fillStyle = 'white';
-		this.ctx.fillRect(this.menuX-5,this.menuY-5,10,10);
+		//this.ctx.fillStyle = 'white';
+		//this.ctx.fillRect(this.menuX-5,this.menuY-5,10,10);
 
 
 		this.ctx.textAlign = "center";
@@ -269,12 +269,23 @@ class PuzzleMenu{
 
 	detectIfSelectionNeedsToChange(){
 		let i = 0;
-		this.currentSelection = -1;
+		let somethingSelected = false;
 		for(let label in this.currentMenuOptions){
 			if(this.menuY > 50+(20*(i-1)) && this.menuY < 50+(20*(i))){
 				this.currentSelection = i;
+				this.setMenuOptions();
+				somethingSelected = true;
 			}
 			i++;
+		}
+		if(!somethingSelected){
+			if(this.currentSelection !== -1) {
+				this.currentSelection = -1;
+				this.setMenuOptions();
+			}else{
+				this.currentSelection = -1;
+			}
+
 		}
 	}
 
@@ -293,7 +304,7 @@ class PuzzleMenu{
 			this.menuX = uv.x*this.canvas.width;
 			this.menuY = uv.y*this.canvas.height;
 			this.detectIfSelectionNeedsToChange();
-			this.setMenuOptions();
+			//this.setMenuOptions();
 
 
 		}

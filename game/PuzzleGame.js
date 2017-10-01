@@ -71,7 +71,7 @@ class PuzzleGame{
 	}
 
 	loadComplete(){
-		//this.generateBackground();
+		this.generateBackground();
 
 		this.tower = new PuzzleTower(this);
 		this.menu = new PuzzleMenu(this);
@@ -79,7 +79,7 @@ class PuzzleGame{
 
 
 
-		//this.menu.showMenuWithTransition();
+		this.menu.showMenu();
 
 
 		this.setFocus(FOCUS_MENU);
@@ -109,7 +109,7 @@ class PuzzleGame{
 		bgTexture.needsUpdate = true;
 
 		let material = new THREE.MeshBasicMaterial({
-			color: 0x000000,
+			color: 0x9C27B0,
 			//side: THREE.DoubleSide,
 			transparent: true,
 			opacity: 0.5,
@@ -239,7 +239,7 @@ class PuzzleGame{
 
 			this.ThirtyFPSThen = now - (elapsed % this.ThirtyFPSInterval);
 
-			/*
+
 			this.background.material.map.offset.x += 0.01;
 			if (this.background.material.map.offset.x > 1) {
 				this.background.material.map.offset.x = 0;
@@ -248,7 +248,7 @@ class PuzzleGame{
 			if(this.background.rotation.z > TWO_PI){
 				this.background.rotation.z = 0;
 			}
-			*/
+
 
 			this.tower.gameAnimations();
 		}

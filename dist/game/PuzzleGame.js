@@ -80,14 +80,13 @@ var PuzzleGame = function () {
 	_createClass(PuzzleGame, [{
 		key: 'loadComplete',
 		value: function loadComplete() {
-			//this.generateBackground();
+			this.generateBackground();
 
 			this.tower = new PuzzleTower(this);
 			this.menu = new PuzzleMenu(this);
 			this.scoreBoard = new PuzzleScore(this);
 
-			//this.menu.showMenuWithTransition();
-
+			this.menu.showMenu();
 
 			this.setFocus(FOCUS_MENU);
 			document.addEventListener('keydown', this.keyPress.bind(this));
@@ -116,7 +115,7 @@ var PuzzleGame = function () {
 			bgTexture.needsUpdate = true;
 
 			var material = new THREE.MeshBasicMaterial({
-				color: 0x000000,
+				color: 0x9C27B0,
 				//side: THREE.DoubleSide,
 				transparent: true,
 				opacity: 0.5,
@@ -248,16 +247,14 @@ var PuzzleGame = function () {
 
 				this.ThirtyFPSThen = now - elapsed % this.ThirtyFPSInterval;
 
-				/*
-    this.background.material.map.offset.x += 0.01;
-    if (this.background.material.map.offset.x > 1) {
-    	this.background.material.map.offset.x = 0;
-    }
-    this.background.rotation.z += 0.0001;
-    if(this.background.rotation.z > TWO_PI){
-    	this.background.rotation.z = 0;
-    }
-    */
+				this.background.material.map.offset.x += 0.01;
+				if (this.background.material.map.offset.x > 1) {
+					this.background.material.map.offset.x = 0;
+				}
+				this.background.rotation.z += 0.0001;
+				if (this.background.rotation.z > TWO_PI) {
+					this.background.rotation.z = 0;
+				}
 
 				this.tower.gameAnimations();
 			}
