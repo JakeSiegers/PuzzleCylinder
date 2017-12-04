@@ -53,7 +53,7 @@ var PuzzleScore = function () {
 						this.ctx.fillText("Chain / Max", 5, 140);
 						this.ctx.fillText(this.PuzzleGame.tower.chainCount + " / " + this.PuzzleGame.tower.highestChain, 5, 160);
 						this.ctx.fillText("Difficulty", 5, 180);
-						this.ctx.fillText(DIFFICULTIES[this.PuzzleGame.tower.difficulty], 5, 200);
+						this.ctx.fillText(PuzzleGame.DIFFICULTIES[this.PuzzleGame.tower.difficulty], 5, 200);
 						this.ctx.fillText("Speed Level", 5, 220);
 						this.ctx.fillText(Math.floor(100 - this.PuzzleGame.tower.pushDelay) + "", 5, 240);
 						this.texture.needsUpdate = true;

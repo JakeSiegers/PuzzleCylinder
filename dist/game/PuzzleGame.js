@@ -20,30 +20,44 @@ var PI = Math.PI;
 var TWO_PI = PI * 2;
 var HALF_PI = PI / 2;
 
-var KEY_UP = 38;
-var KEY_DOWN = 40;
-var KEY_LEFT = 37;
-var KEY_RIGHT = 39;
-var KEY_SPACE = 32;
-var KEY_ESCAPE = 27;
-
 var CAT_GAME = 'game';
 
-var DIFFICULTIES = {
-	1: 'Easy',
-	2: 'Normal',
-	3: 'Hard',
-	4: 'Very Hard',
-	5: 'Super Hard'
-};
-
 var PuzzleGame = function () {
+	_createClass(PuzzleGame, null, [{
+		key: 'DIFFICULTIES',
+		get: function get() {
+			return {
+				1: 'Easy',
+				2: 'Normal',
+				3: 'Hard',
+				4: 'Very Hard',
+				5: 'Super Hard'
+			};
+		}
+	}, {
+		key: 'KEY',
+		get: function get() {
+			return {
+				UP: 38,
+				DOWN: 40,
+				LEFT: 37,
+				RIGHT: 39,
+				SPACE: 32,
+				ESCAPE: 27
+			};
+		}
+	}]);
+
 	function PuzzleGame() {
 		_classCallCheck(this, PuzzleGame);
 
 		this.loaded = false;
 		this.paused = false;
 		this.piTimer = 0;
+
+		//The last known position of the mouse.
+		this.mouseX = null;
+		this.mouseY = null;
 
 		//Lock less important animations at 30
 		this.ThirtyFPSInterval = 1000 / 30;
@@ -327,6 +341,10 @@ var PuzzleGame = function () {
 		key: 'mouseMove',
 		value: function mouseMove(event) {
 			event.preventDefault();
+			var _ref = [event.clientX, event.clientY];
+			this.mouseX = _ref[0];
+			this.mouseY = _ref[1];
+
 			switch (this.currentFocus) {
 				case FOCUS_MENU:
 					this.menu.mouseMove(event);

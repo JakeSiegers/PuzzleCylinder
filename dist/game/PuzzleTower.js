@@ -603,7 +603,7 @@ var PuzzleTower = function () {
 	}, {
 		key: 'keyPress',
 		value: function keyPress(event) {
-			if (!this.hasControl || this.PuzzleGame.paused && event.keyCode !== KEY_ESCAPE) {
+			if (!this.hasControl || this.PuzzleGame.paused && event.keyCode !== PuzzleGame.KEY.ESCAPE) {
 				return;
 			}
 
@@ -614,26 +614,22 @@ var PuzzleTower = function () {
 					//this.destroyBlock(this.selectorX,this.selectorY);
 					this.quickPush = true;
 					break;
-				case KEY_ESCAPE:
+				case PuzzleGame.KEY.ESCAPE:
 					this.pauseGame();
 					break;
-				case KEY_SPACE:
-					//Space
+				case PuzzleGame.KEY.SPACE:
 					this.swapSelectedBlocks();
 					break;
-				case KEY_UP:
+				case PuzzleGame.KEY.UP:
 					this.adjustSelector('up');
 					break;
-				case KEY_DOWN:
-					//down
+				case PuzzleGame.KEY.DOWN:
 					this.adjustSelector('down');
 					break;
-				case KEY_LEFT:
-					//left
+				case PuzzleGame.KEY.LEFT:
 					this.adjustSelector('left');
 					break;
-				case KEY_RIGHT:
-					//right
+				case PuzzleGame.KEY.RIGHT:
 					this.adjustSelector('right');
 					break;
 			}

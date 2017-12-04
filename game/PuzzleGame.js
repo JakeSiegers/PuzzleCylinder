@@ -14,29 +14,39 @@ const PI = Math.PI;
 const TWO_PI = PI*2;
 const HALF_PI = PI/2;
 
-const KEY_UP = 38;
-const KEY_DOWN = 40;
-const KEY_LEFT = 37;
-const KEY_RIGHT = 39;
-const KEY_SPACE = 32;
-const KEY_ESCAPE = 27;
-
 const CAT_GAME = 'game';
 
-const DIFFICULTIES = {
-	1:'Easy',
-	2:'Normal',
-	3:'Hard',
-	4:'Very Hard',
-	5:'Super Hard'
-};
-
 class PuzzleGame{
+
+	static get DIFFICULTIES(){
+		return {
+			1: 'Easy',
+			2: 'Normal',
+			3: 'Hard',
+			4: 'Very Hard',
+			5: 'Super Hard'
+		}
+	};
+
+	static get KEY(){
+		return {
+			UP:38,
+			DOWN:40,
+			LEFT:37,
+			RIGHT:39,
+			SPACE:32,
+			ESCAPE:27,
+		}
+	}
 
 	constructor(){
 		this.loaded = false;
 		this.paused = false;
 		this.piTimer = 0;
+
+		//The last known position of the mouse.
+		this.mouseX = null;
+		this.mouseY = null;
 
 		//Lock less important animations at 30
 		this.ThirtyFPSInterval = 1000 / 30;
@@ -283,8 +293,6 @@ class PuzzleGame{
 		}
 
 		this.scoreBoard.showScoreBoard();
-
-
 	}
 
 	setFocus(newFocus){
@@ -317,12 +325,14 @@ class PuzzleGame{
 
 	mouseMove(event){
 		event.preventDefault();
+		[this.mouseX,this.mouseY] = [event.clientX, event.clientY];
 		switch(this.currentFocus){
 			case FOCUS_MENU:
 				this.menu.mouseMove(event);
 				break;
 		}
-	}
+	};
+
 
 	mouseUp(event){
 		event.preventDefault();
