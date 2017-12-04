@@ -45,7 +45,6 @@ var PuzzleMenu = function () {
 		document.body.appendChild(this.ScoreDom);
 
 		//TODO: Perhaps allow for a dom object in the menu? Pass an ID or something?
-
 		//TODO: Change number change events to a function call, so I can control the number changing... This menu is doing a bit too much.
 		//TODO: Or perhaps do that for the "Custom" Selection?... Yeah. That outta work. (For words to ints, like easy, medium, hard)
 
@@ -176,7 +175,6 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'setMenuOptions',
 		value: function setMenuOptions() {
-			this.ctx.font = '12pt Arial';
 
 			//Box Background
 			this.ctx.fillStyle = 'black'; //'#9C27B0';
@@ -221,7 +219,8 @@ var PuzzleMenu = function () {
 
 			if (this.currentMenuOptions.hasOwnProperty('label')) {
 				this.ctx.fillStyle = 'white';
-				this.ctx.fillText(this.currentMenuOptions.label, this.canvas.width / 2, 0);
+				this.ctx.font = '10pt Arial';
+				this.ctx.fillText(this.currentMenuOptions.label, this.canvas.width / 2, 40);
 			}
 			this.itemSpacingTop = 78;
 			this.itemTextHeight = 20;
@@ -239,6 +238,7 @@ var PuzzleMenu = function () {
 				if (item.hasOwnProperty('action') || item.hasOwnProperty('items')) {
 					label = '[ ' + label + ' ]';
 				}
+				this.ctx.font = '12pt Arial';
 				this.ctx.fillText(label, this.canvas.width / 2, this.itemSpacingTop + this.itemTextHeight * i);
 				i++;
 			}
@@ -272,7 +272,7 @@ var PuzzleMenu = function () {
 		value: function changeMenu(newMenu, reverse) {
 			this.inAnimation = true;
 			var direction = reverse ? "+" + TWO_PI : "-" + TWO_PI;
-			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: direction, x: 0, z: 0 }, 1000).easing(TWEEN.Easing.Back.Out).start().onComplete(function () {
+			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: direction, x: 0, z: 0 }, 500).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
 				this.inAnimation = false;
 				this.updateMouseMenuPosition(this.PuzzleGame.mouseX, this.PuzzleGame.mouseY);
 			}.bind(this));
@@ -282,7 +282,7 @@ var PuzzleMenu = function () {
 				this.currentMenuOptions = newMenu;
 				this.setMenuOptions();
 			}.bind(this), 200);
-			new TWEEN.Tween(this.menuGroup.scale).to({ x: 0.8, y: 0.8, z: 0.8 }, 500).easing(TWEEN.Easing.Back.Out).yoyo(true).repeat(1).start();
+			new TWEEN.Tween(this.menuGroup.scale).to({ x: 0.8, y: 0.8, z: 0.8 }, 250).easing(TWEEN.Easing.Back.Out).yoyo(true).repeat(1).start();
 		}
 	}, {
 		key: 'detectIfSelectionNeedsToChange',
@@ -290,7 +290,7 @@ var PuzzleMenu = function () {
 			var i = 0;
 			var somethingSelected = false;
 			for (var label in this.currentMenuOptions.items) {
-				if (this.menuY > this.itemSpacingTop + this.itemTextHeight * i - this.itemTextHeight / 2 && this.menuY < this.itemSpacingTop + this.itemTextHeight * (i + 1) - this.itemTextHeight / 2) {
+				if (this.menuY > this.itemSpacingTop + this.itemTextHeight * i - this.itemTextHeight / 2 && this.menuY < this.itemSpacingTop + this.itemTextHeight * (i + 1) - this.itemTextHeight / 2 && (this.currentMenuOptions.items[label].hasOwnProperty('action') || this.currentMenuOptions.items[label].hasOwnProperty('items'))) {
 					this.currentSelection = label;
 					this.setMenuOptions();
 					somethingSelected = true;
