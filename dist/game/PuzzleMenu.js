@@ -118,8 +118,9 @@ var PuzzleMenu = function () {
 			label: 'Pause',
 			color: { r: 62, g: 39, b: 35 },
 			items: {
-				start2d: { label: 'Un Pause' }
+				start2d: { label: 'Resume', action: this.PuzzleGame.tower.pauseGame.bind(this.PuzzleGame.tower) }
 			}
+
 		};
 
 		//this.menuIndex = 0;
@@ -348,6 +349,33 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'keyPress',
 		value: function keyPress(event) {
+			if (this.inAnimation === true) {
+				return;
+			}
+
+			switch (event.keyCode) {
+				case PuzzleGame.KEY.ESCAPE:
+					if (this.PuzzleGame.paused) {
+						this.PuzzleGame.tower.pauseGame();
+					}
+					break;
+				case PuzzleGame.KEY.SPACE:
+
+					break;
+				case PuzzleGame.KEY.UP:
+
+					break;
+				case PuzzleGame.KEY.DOWN:
+
+					break;
+				case PuzzleGame.KEY.LEFT:
+
+					break;
+				case PuzzleGame.KEY.RIGHT:
+
+					break;
+			}
+
 			/*
    if(this.transitionActive === true){
    	return;
@@ -400,12 +428,14 @@ var PuzzleMenu = function () {
 		value: function showMenu() {
 
 			console.log('showing menu!');
+			//this.menuShimmyTweenX.start();
+			//this.menuShimmyTweenY.start();
 
 			//this.MenuWrapDom.style.display = "inherit";
 			//this.MenuWrapDom.style.opacity = "1";
 			this.inAnimation = true;
-			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: 0, x: 0, z: 0 }, 2000).easing(TWEEN.Easing.Quadratic.Out).start();
-			new TWEEN.Tween(this.menuSpinGroup.scale).to({ x: 1, y: 1, z: 1 }, 2000).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
+			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: 0, x: 0, z: 0 }, 1000).easing(TWEEN.Easing.Quadratic.Out).start();
+			new TWEEN.Tween(this.menuSpinGroup.scale).to({ x: 1, y: 1, z: 1 }, 1000).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
 				this.inAnimation = false;
 			}.bind(this));
 		}
@@ -417,10 +447,23 @@ var PuzzleMenu = function () {
 
 
 			this.inAnimation = true;
-			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: PI, x: 0, z: -TWO_PI }, 2000).easing(TWEEN.Easing.Quadratic.Out).start();
-			new TWEEN.Tween(this.menuGroup.position).to({ x: 0, y: 0, z: 1000 }, 2000).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
+			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: PI, x: 0, z: -TWO_PI }, 1000).easing(TWEEN.Easing.Quadratic.Out).start();
+
+			new TWEEN.Tween(this.menuSpinGroup.scale).to({ x: 0, y: 0, z: 0 }, 1000).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
 				this.inAnimation = false;
+				//this.menuShimmyTweenX.stop();
+				//this.menuShimmyTweenY.stop();
 			}.bind(this));
+
+			/*
+   new TWEEN.Tween(this.menuGroup.position)
+   	.to({x:0,y:0,z:1000},2000)
+   	.easing(TWEEN.Easing.Quadratic.Out)
+   	.start()
+   	.onComplete(function(){
+   		this.inAnimation = false;
+   	}.bind(this));
+   */
 		}
 	}]);
 
