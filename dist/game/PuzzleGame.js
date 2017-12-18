@@ -68,6 +68,10 @@ var PuzzleGame = function () {
 			textureFiltering: true
 		};
 
+		this.gameSettings = {
+			startingHeight: 4
+		};
+
 		this.renderer = new THREE.WebGLRenderer({ antialias: this.settings.antiAlias, alpha: true });
 		this.renderer.setClearColor(0x000000, 0);
 		this.windowWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
@@ -87,7 +91,9 @@ var PuzzleGame = function () {
 		window.addEventListener('resize', this.onWindowResize.bind(this), false);
 		window.addEventListener('mousemove', this.mouseMove.bind(this), false);
 		window.addEventListener('mouseup', this.mouseUp.bind(this), false);
-
+		this.renderer.domElement.addEventListener('touchstart', this.touchEvent.bind(this, 'Start'), false);
+		this.renderer.domElement.addEventListener('touchmove', this.touchEvent.bind(this, 'Move'), false);
+		this.renderer.domElement.addEventListener('touchend', this.touchEvent.bind(this, 'End'), false);
 		this.initLoaders(this.loadComplete, this);
 	}
 
@@ -288,7 +294,7 @@ var PuzzleGame = function () {
 		key: 'startGame',
 		value: function startGame(mapType) {
 			this.tower.changeMapType(mapType);
-			this.menu.hideMenu();
+			//this.menu.hideMenu();
 
 			this.setFocus(FOCUS_TOWER);
 			this.tower.setGameMode(MODE_ENDLESS);
@@ -360,6 +366,21 @@ var PuzzleGame = function () {
 					this.menu.mouseUp(event);
 					break;
 			}
+		}
+	}, {
+		key: 'touchEvent',
+		value: function touchEvent(type, event) {
+			event.preventDefault();
+			var obj = null;
+			switch (this.currentFocus) {
+				case FOCUS_MENU:
+					obj = this.menu;
+					break;
+				case FOCUS_TOWER:
+					obj = this.tower;
+					break;
+			}
+			obj['touch' + type].call(obj, event);
 		}
 	}]);
 

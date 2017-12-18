@@ -67,11 +67,10 @@ class PuzzleTower {
 		this.touchTimer = null;
 		this.xTouchChain = 0;
 		this.yTouchChain = 0;
-		this.PuzzleGame.renderer.domElement.addEventListener( 'touchstart', this.onDocumentTouchStart.bind(this), false );
-		this.PuzzleGame.renderer.domElement.addEventListener( 'touchmove', this.onDocumentTouchMove.bind(this), false );
+
 	}
 
-	onDocumentTouchStart( event ){
+	touchStart(event){
 		let sThis = this;
 		event.preventDefault();
 
@@ -103,7 +102,7 @@ class PuzzleTower {
 	/**
 	 * @param event
 	 */
-	onDocumentTouchMove(event){
+	touchMove(event){
 		event.preventDefault();
 
 		if ( event.touches.length === 1 ) {
@@ -528,15 +527,20 @@ class PuzzleTower {
 			this.hidePause();
 			this.openTube();
 			PuzzleTimer.resumeAllInCategory(CAT_GAME);
+			this.towerGroup.position.z = 0;
 		}else{
 			this.showPause();
 			this.closeTube();
 			PuzzleTimer.pauseAllInCategory(CAT_GAME);
+			this.towerGroup.position.z = -200;
 		}
 		this.PuzzleGame.paused = !this.PuzzleGame.paused;
 	}
 
 	showPause(){
+		this.PuzzleGame.menu.changeMenu(this.PuzzleGame.menu.pauseMenuOptions);
+		this.PuzzleGame.menu.showMenu();
+		/*
 		let pauseCanvas = document.createElement('canvas');
 		let pauseCtx = pauseCanvas.getContext('2d');
 
@@ -567,10 +571,12 @@ class PuzzleTower {
 		}
 		pauseTexture.needsUpdate = true;
 		this.PuzzleGame.scene.add( this.pauseMesh );
+		*/
 	}
 
 	hidePause(){
-		this.PuzzleGame.scene.remove( this.pauseMesh );
+		this.PuzzleGame.menu.hideMenu();
+		//this.PuzzleGame.scene.remove( this.pauseMesh );
 	}
 
 	keyPress(event){

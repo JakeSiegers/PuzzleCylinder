@@ -76,12 +76,10 @@ var PuzzleTower = function () {
 			this.touchTimer = null;
 			this.xTouchChain = 0;
 			this.yTouchChain = 0;
-			this.PuzzleGame.renderer.domElement.addEventListener('touchstart', this.onDocumentTouchStart.bind(this), false);
-			this.PuzzleGame.renderer.domElement.addEventListener('touchmove', this.onDocumentTouchMove.bind(this), false);
 		}
 	}, {
-		key: 'onDocumentTouchStart',
-		value: function onDocumentTouchStart(event) {
+		key: 'touchStart',
+		value: function touchStart(event) {
 			var sThis = this;
 			event.preventDefault();
 
@@ -115,8 +113,8 @@ var PuzzleTower = function () {
    */
 
 	}, {
-		key: 'onDocumentTouchMove',
-		value: function onDocumentTouchMove(event) {
+		key: 'touchMove',
+		value: function touchMove(event) {
 			event.preventDefault();
 
 			if (event.touches.length === 1) {
@@ -554,51 +552,53 @@ var PuzzleTower = function () {
 				this.hidePause();
 				this.openTube();
 				PuzzleTimer.resumeAllInCategory(CAT_GAME);
+				this.towerGroup.position.z = 0;
 			} else {
 				this.showPause();
 				this.closeTube();
 				PuzzleTimer.pauseAllInCategory(CAT_GAME);
+				this.towerGroup.position.z = -200;
 			}
 			this.PuzzleGame.paused = !this.PuzzleGame.paused;
 		}
 	}, {
 		key: 'showPause',
 		value: function showPause() {
-			var pauseCanvas = document.createElement('canvas');
-			var pauseCtx = pauseCanvas.getContext('2d');
-
-			pauseCanvas.width = 256;
-			pauseCanvas.height = 128;
-
-			pauseCtx.font = '40pt Roboto';
-			pauseCtx.fillStyle = '#ffffff';
-			pauseCtx.fillRect(0, 0, pauseCanvas.width, pauseCanvas.height);
-			pauseCtx.fillStyle = '#607D8B';
-			pauseCtx.textAlign = "center";
-			//pauseCtx.textA = "Center";
-			pauseCtx.fillText("PAUSED", pauseCanvas.width / 2, pauseCanvas.height / 2);
-			pauseCtx.font = '12pt Roboto';
-			pauseCtx.fillText("(press esc / tap to continue)", pauseCanvas.width / 2, pauseCanvas.height / 2 + 30);
-
-			var pauseTexture = new THREE.Texture(pauseCanvas);
-
-			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer, pauseTexture, true);
-
-			var material = new THREE.MeshBasicMaterial({ map: pauseTexture });
-			var geometry = new THREE.PlaneGeometry(256, 128);
-			this.pauseMesh = new THREE.Mesh(geometry, material);
-			if (this.mapType === MAP_3D) {
-				this.pauseMesh.position.z = this.boardRadius + this.blockDepth + 10;
-			} else {
-				this.pauseMesh.position.z = this.blockDepth + 10;
-			}
-			pauseTexture.needsUpdate = true;
-			this.PuzzleGame.scene.add(this.pauseMesh);
+			this.PuzzleGame.menu.changeMenu(this.PuzzleGame.menu.pauseMenuOptions);
+			this.PuzzleGame.menu.showMenu();
+			/*
+   let pauseCanvas = document.createElement('canvas');
+   let pauseCtx = pauseCanvas.getContext('2d');
+   		pauseCanvas.width = 256;
+   pauseCanvas.height = 128;
+   		pauseCtx.font = '40pt Roboto';
+   pauseCtx.fillStyle = '#ffffff';
+   pauseCtx.fillRect(0, 0, pauseCanvas.width, pauseCanvas.height);
+   pauseCtx.fillStyle = '#607D8B';
+   pauseCtx.textAlign = "center";
+   //pauseCtx.textA = "Center";
+   pauseCtx.fillText("PAUSED", pauseCanvas.width/2,pauseCanvas.height/2);
+   pauseCtx.font = '12pt Roboto';
+   pauseCtx.fillText("(press esc / tap to continue)", pauseCanvas.width/2,pauseCanvas.height/2 + 30);
+   		let pauseTexture = new THREE.Texture(pauseCanvas);
+   		PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer,pauseTexture, true);
+   		let material = new THREE.MeshBasicMaterial({ map: pauseTexture });
+   let geometry = new THREE.PlaneGeometry(256, 128);
+   this.pauseMesh = new THREE.Mesh( geometry, material );
+   if(this.mapType === MAP_3D) {
+   	this.pauseMesh.position.z = this.boardRadius + this.blockDepth +10;
+   }else{
+   	this.pauseMesh.position.z = this.blockDepth +10;
+   }
+   pauseTexture.needsUpdate = true;
+   this.PuzzleGame.scene.add( this.pauseMesh );
+   */
 		}
 	}, {
 		key: 'hidePause',
 		value: function hidePause() {
-			this.PuzzleGame.scene.remove(this.pauseMesh);
+			this.PuzzleGame.menu.hideMenu();
+			//this.PuzzleGame.scene.remove( this.pauseMesh );
 		}
 	}, {
 		key: 'keyPress',

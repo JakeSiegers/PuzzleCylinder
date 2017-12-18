@@ -51,7 +51,7 @@ var PuzzleMenu = function () {
 		var p = null;
 
 		this.backFn = function () {
-			this.changeMenu(this.menuOptions, true);
+			this.changeMenuAnimation(this.menuOptions, true);
 		}.bind(this);
 
 		this.menuOptions = {
@@ -63,7 +63,7 @@ var PuzzleMenu = function () {
 					color: { r: 183, g: 28, b: 28 }, //['#B71C1C','#F44336','#EF9A9A'],
 					items: {
 						start2d: { label: 'Start 2D', action: this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_2D) },
-						startHeight: { label: 'Start Height' }, //,['numeric', 'startingHeight', this.PuzzleGame.tower, 1, 1, 12],
+						startHeight: { label: 'Start Height ' + this.PuzzleGame.gameSettings.startingHeight, type: 'toggle', min: 0, max: 11, step: 1 }, //,['numeric', 'startingHeight', this.PuzzleGame.tower, 1, 1, 12],
 						difficulty: { label: 'Difficulty' }, // ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5],
 						back: { label: 'Back', action: this.backFn }
 					}
@@ -111,6 +111,14 @@ var PuzzleMenu = function () {
 						back: { label: 'Back', action: this.backFn }
 					}
 				}
+			}
+		};
+
+		this.pauseMenuOptions = {
+			label: 'Pause',
+			color: { r: 62, g: 39, b: 35 },
+			items: {
+				start2d: { label: 'Un Pause' }
 			}
 		};
 
@@ -247,29 +255,23 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'mouseUp',
 		value: function mouseUp() {
+			this.clickCurrentSelection();
+		}
+	}, {
+		key: 'clickCurrentSelection',
+		value: function clickCurrentSelection() {
 			if (this.currentSelection !== -1 && !this.inAnimation) {
 				var item = this.currentMenuOptions.items[this.currentSelection];
 				if (item.hasOwnProperty('items')) {
-					this.changeMenu(item);
+					this.changeMenuAnimation(item);
 				} else if (item.hasOwnProperty('action')) {
 					item.action();
 				}
-				//let label = Object.keys(this.currentMenuOptions)[this.currentSelection];
-				//console.log(label);
-				//let menuAction = this.currentMenuOptions[label];
-				//if (typeof menuAction === "function") {
-				//	//item.addEventListener('click',menuAction);
-				//	menuAction.call();
-				//}else if(Array.isArray(menuAction)){
-
-				//}else{
-				//	this.changeMenu(label);
-				//}
 			}
 		}
 	}, {
-		key: 'changeMenu',
-		value: function changeMenu(newMenu, reverse) {
+		key: 'changeMenuAnimation',
+		value: function changeMenuAnimation(newMenu, reverse) {
 			this.inAnimation = true;
 			var direction = reverse ? "+" + TWO_PI : "-" + TWO_PI;
 			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: direction, x: 0, z: 0 }, 500).easing(TWEEN.Easing.Quadratic.Out).start().onComplete(function () {
@@ -277,12 +279,17 @@ var PuzzleMenu = function () {
 				this.updateMouseMenuPosition(this.PuzzleGame.mouseX, this.PuzzleGame.mouseY);
 			}.bind(this));
 			setTimeout(function () {
-				this.currentColor = newMenu.color;
-				this.otherSides.color = new THREE.Color(this.currentColor.r / 255, this.currentColor.g / 255, this.currentColor.b / 255);
-				this.currentMenuOptions = newMenu;
-				this.setMenuOptions();
+				this.changeMenu(newMenu);
 			}.bind(this), 200);
 			new TWEEN.Tween(this.menuGroup.scale).to({ x: 0.8, y: 0.8, z: 0.8 }, 250).easing(TWEEN.Easing.Back.Out).yoyo(true).repeat(1).start();
+		}
+	}, {
+		key: 'changeMenu',
+		value: function changeMenu(newMenu) {
+			this.currentColor = newMenu.color;
+			this.otherSides.color = new THREE.Color(this.currentColor.r / 255, this.currentColor.g / 255, this.currentColor.b / 255);
+			this.currentMenuOptions = newMenu;
+			this.setMenuOptions();
 		}
 	}, {
 		key: 'detectIfSelectionNeedsToChange',
@@ -334,272 +341,12 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'getIntersects',
 		value: function getIntersects(point, objects) {
-
 			this.mouse.set(point.x * 2 - 1, -(point.y * 2) + 1);
-
 			this.raycaster.setFromCamera(this.mouse, this.PuzzleGame.camera);
-
 			return this.raycaster.intersectObjects(objects);
 		}
 	}, {
 		key: 'keyPress',
-
-
-		/*
-  showMenuWithTransition(){
-  	this.transitionActive = true;
-  	this.showMenu();
-  	html2canvas(this.MenuWrapScreenshotDom, {
-  		onrendered: function (canvas) {
-  			let height = this.MenuWrapScreenshotDom.scrollHeight;
-  			let width = this.MenuWrapScreenshotDom.scrollWidth;
-  			this.animateToNewMenu(canvas,'imageCell','forward2',width,height,function(){
-  				this.showMenu();
-  				this.transitionActive = false;
-  				this.setMenuIndex(0);
-  			});
-  		}.bind(this)
-  	});
-  	this.MenuWrapDom.style.opacity = "0";
-  }
-  
-  hideMenuWithTransition(){
-  	this.transitionActive = true;
-  	html2canvas(this.MenuWrapScreenshotDom, {
-  		onrendered: function (canvas) {
-  			this.MenuWrapDom.style.opacity = "0";
-  			let height = this.MenuWrapScreenshotDom.scrollHeight;
-  			let width = this.MenuWrapScreenshotDom.scrollWidth;
-  			this.animateToNewMenu(canvas,'imageCell','forward',width,height,function(){
-  				this.hideMenu();
-  				this.transitionActive = false;
-  			});
-  		}.bind(this)
-  	});
-  }
-  
-  setMenuWithTransition(parentObject,labelClicked,direction){
-  	this.transitionActive = true;
-  	html2canvas(this.MenuWrapScreenshotDom, {
-  		onrendered: function(canvas) {
-  			//document.body.appendChild(canvas);
-  
-  			let height = this.MenuWrapScreenshotDom.scrollHeight;
-  			let width = this.MenuWrapScreenshotDom.scrollWidth;
-  			this.animateToNewMenu(canvas,'imageCell',direction,width,height,function(){});
-  
-  			this.setMenu(parentObject,labelClicked);
-  
-  			let height2 = this.MenuWrapScreenshotDom.scrollHeight;
-  			let width2 = this.MenuWrapScreenshotDom.scrollWidth;
-  			html2canvas(this.MenuWrapScreenshotDom, {
-  				onrendered: function (canvas) {
-  					this.animateToNewMenu(canvas,'imageCell2',direction+'2',width2,height2,function(){
-  						this.showMenu();
-  						this.transitionActive = false;
-  						this.setMenuIndex(0);
-  					});
-  				}.bind(this)
-  			});
-  
-  			this.hideMenu();
-  
-  		}.bind(this)
-  	});
-  }
-  */
-
-		/*
-  animateToNewMenu(canvas, cellCls, direction, width, height, endFn){
-  
-  	let dataUrl = canvas.toDataURL("image/png");
-  	let tileWrap = document.createElement('div');
-  	tileWrap.className = 'menuScreenshot';
-  	tileWrap.style.width=width+'px';
-  	tileWrap.style.height=height+'px';
-  	let blockWidth = 80;
-  	let blockHeight = 80;
-  	let cellXNum = Math.ceil(width/blockWidth);
-  	let cellYNum = Math.ceil(height/blockHeight);
-  
-  	let style = document.createElement('div');
-  	style.innerHTML="<style>."+cellCls+"{background:url("+dataUrl+");perspective:150px;transition: all 0.3s;}</style>";
-  	document.body.appendChild(style);
-  
-  	let flipDelay = 30;
-  
-  	for(let y=0;y<cellYNum;y++) {
-  		for(let x=0;x<cellXNum;x++){
-  			let cell = document.createElement('div');
-  			cell.style.width = (width / cellXNum) + 'px';
-  			cell.style.height = (height / cellYNum) + 'px';
-  			cell.style.position = 'absolute';
-  			cell.style.top = (height / cellYNum) * y+'px';
-  			cell.style.left = (width / cellXNum) * x+'px';
-  			cell.className = cellCls;
-  			cell.style.backgroundPosition = '-' + (width / cellXNum) * x + 'px -' + (height / cellYNum) * y + 'px';
-  			tileWrap.appendChild(cell);
-  			switch(direction){
-  				case 'forward':
-  					setTimeout(function () {
-  						//cell.style.transform = 'rotateY(90deg)';
-  						cell.style.opacity = '0';
-  					}, flipDelay * x + flipDelay * y);
-  					break;
-  				case 'forward2':
-  					//cell.style.transform = 'rotateY(90deg)';
-  					cell.style.opacity = '0';
-  					setTimeout(function () {
-  						//cell.style.transform = 'rotateY(0deg)';
-  						cell.style.opacity = '1';
-  					}, flipDelay * x + flipDelay * y);
-  					break;
-  				case 'back':
-  					setTimeout(function () {
-  						//cell.style.transform = 'rotateY(-90deg)';
-  						cell.style.opacity = '0';
-  					}, flipDelay * (cellXNum-x) + flipDelay * (cellYNum-y));
-  					break;
-  				case 'back2':
-  					//cell.style.transform = 'rotateY(-90deg)';
-  					cell.style.opacity = '0';
-  					setTimeout(function () {
-  						//cell.style.transform = 'rotateY(0deg)';
-  						cell.style.opacity = '1';
-  					}, flipDelay * (cellXNum-x) + flipDelay * (cellYNum-y));
-  					break;
-  			}
-  		}
-  	}
-  
-  	setTimeout(function(){
-  		document.body.removeChild(tileWrap);
-  		document.body.removeChild(style);
-  		endFn.call(this)
-  	}.bind(this),flipDelay*(cellXNum-1)+flipDelay*(cellYNum-1)+300);
-  	document.body.appendChild(tileWrap);
-  }
-  */
-		/*
-  setMenu(parentObject,labelClicked){
-  
-  	while (this.MenuItemWrap.hasChildNodes()) {
-  		this.MenuItemWrap.removeChild(this.MenuItemWrap.lastChild);
-  	}
-  
-  	this.currentMenu = parentObject;
-  
-  	if(labelClicked !== ""){
-  		this.currentMenu = this.currentMenu[labelClicked];
-  		this.currentMenu['< Back'] = this.setMenuWithTransition.bind(this,parentObject,"","back");
-  	}
-  
-  	this.currentMenuKeys = Object.keys(this.currentMenu);
-  	this.currentMenuLength = this.currentMenuKeys.length;
-  
-  	this.menuOptionDoms = [];
-  	let index = 0;
-  
-  	if(this.menuColors.hasOwnProperty(labelClicked)){
-  		let colorCss = document.createElement('style');
-  		let colors = this.menuColors[labelClicked];
-  		colorCss.innerHTML = ".menuTitle{background:"+colors[0]+";} .menuItemWrap{background:"+colors[1]+";} .menuItem.selected{background:"+colors[2]+";color:"+colors[0]+";}";
-  		this.MenuItemWrap.appendChild(colorCss);
-  
-  		let lastX = 0;
-  		if(this.backgroundTween !== null){
-  			this.backgroundTween.stop();
-  		}
-  		this.backgroundTween = new TWEEN.Tween(1).to(1,1000).onUpdate(function(x){
-  			x*=10;
-  			if(Math.floor(x)>lastX){
-  				lastX = Math.floor(x);
-  			}
-  			this.PuzzleGame.background.material.color.lerp(new THREE.Color(colors[0]),0.1);
-  		}.bind(this)).start();
-  
-  	}
-  
-  	for(let label in this.currentMenu){
-  		let item = document.createElement( 'div' );
-  		item.label = label;
-  		item.innerHTML = label;
-  		item.className = 'menuItem';
-  
-  		item.addEventListener('mouseover',this.setMenuIndex.bind(this,index));
-  
-  		let menuAction = this.currentMenu[label];
-  		if (typeof menuAction === "function") {
-  			item.addEventListener('click',menuAction);
-  		}else if(Array.isArray(menuAction)){
-  			switch(menuAction[0]){
-  				case 'bool':
-  					let boolName = menuAction[1];
-  					let boolScope = menuAction[2];
-  					item.innerHTML += ': '+(boolScope[boolName]?'ON':'OFF');
-  					item.addEventListener('click',function(){
-  						boolScope[boolName] = !boolScope[boolName];
-  						item.innerHTML = item.label+': '+(boolScope[boolName]?'ON':'OFF');
-  					});
-  					break;
-  				case 'numeric':
-  					let numName = menuAction[1];
-  					let numScope = menuAction[2];
-  					let numStep = menuAction[3];
-  					let numMin = menuAction[4];
-  					let numMax = menuAction[5];
-  					item.numValue = document.createElement( 'span' );
-  					item.numValue.innerHTML = numScope[numName];
-  					item.numValue.style.display = 'inline-block';
-  					item.numValue.style.minWidth = '30px';
-  					item.upBtn = document.createElement( 'span' );
-  					item.upBtn.innerHTML = ' -> ';
-  					item.upBtn.addEventListener('click',function() {
-  						if(numScope[numName] < numMax) {
-  							numScope[numName]+=numStep;
-  							item.numValue.innerHTML = numScope[numName];
-  						}
-  					});
-  					item.downBtn = document.createElement( 'span' );
-  					item.downBtn.innerHTML = ' <- ';
-  					item.downBtn.addEventListener('click',function() {
-  						if(numScope[numName] > numMin) {
-  							numScope[numName]-=numStep;
-  							item.numValue.innerHTML = numScope[numName];
-  						}
-  					});
-  					item.innerHTML = item.label;
-  					item.appendChild(item.downBtn);
-  					item.appendChild(item.numValue);
-  					item.appendChild(item.upBtn);
-  					break;
-  			}
-  		}else{
-  			item.addEventListener('click',this.setMenuWithTransition.bind(this,this.currentMenu,label,'forward'));
-  		}
-  		this.menuOptionDoms.push(item);
-  		this.MenuItemWrap.appendChild(item);
-  		index++;
-  	}
-  }
-  
-  setMenuIndex(index){
-  	if(this.transitionActive === true){
-  		return;
-  	}
-  	if(this.menuIndex < this.currentMenuLength) {
-  		PuzzleUtils.removeCls(this.menuOptionDoms[this.menuIndex], 'selected');
-  	}
-  	let adj = index%(this.currentMenuLength);
-  	if(adj < 0){
-  		this.menuIndex = this.currentMenuLength-adj-2;
-  	}else{
-  		this.menuIndex = adj;
-  	}
-  	PuzzleUtils.addCls(this.menuOptionDoms[this.menuIndex],'selected');
-  }
-  */
-
 		value: function keyPress(event) {
 			/*
    if(this.transitionActive === true){
@@ -634,8 +381,26 @@ var PuzzleMenu = function () {
 			//console.log('key up');
 		}
 	}, {
+		key: 'touchStart',
+		value: function touchStart(event) {
+			this.updateMouseMenuPosition(event.touches[0].clientX, event.touches[0].clientY);
+		}
+	}, {
+		key: 'touchMove',
+		value: function touchMove(event) {
+			this.updateMouseMenuPosition(event.touches[0].clientX, event.touches[0].clientY);
+		}
+	}, {
+		key: 'touchEnd',
+		value: function touchEnd(event) {
+			this.clickCurrentSelection();
+		}
+	}, {
 		key: 'showMenu',
 		value: function showMenu() {
+
+			console.log('showing menu!');
+
 			//this.MenuWrapDom.style.display = "inherit";
 			//this.MenuWrapDom.style.opacity = "1";
 			this.inAnimation = true;
@@ -649,6 +414,7 @@ var PuzzleMenu = function () {
 		value: function hideMenu() {
 			//this.MenuWrapDom.style.opacity = "0";
 			//this.MenuWrapDom.style.display = "none";
+
 
 			this.inAnimation = true;
 			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: PI, x: 0, z: -TWO_PI }, 2000).easing(TWEEN.Easing.Quadratic.Out).start();
