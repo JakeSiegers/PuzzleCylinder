@@ -527,14 +527,18 @@ class PuzzleTower {
 			this.hidePause();
 			this.openTube();
 			this.PuzzleGame.setFocus(FOCUS_TOWER);
+			new TWEEN.Tween(this.towerGroup.position).to({
+				z: 0
+			}, 500).easing(TWEEN.Easing.Quadratic.Out).start();
 			PuzzleTimer.resumeAllInCategory(CAT_GAME);
-			this.towerGroup.position.z = 0;
 		}else{
 			this.showPause();
 			this.PuzzleGame.setFocus(FOCUS_MENU);
 			this.closeTube();
 			PuzzleTimer.pauseAllInCategory(CAT_GAME);
-			this.towerGroup.position.z = -200;
+			new TWEEN.Tween(this.towerGroup.position).to({
+				z: -200
+			}, 500).easing(TWEEN.Easing.Quadratic.Out).start();
 		}
 		this.PuzzleGame.paused = !this.PuzzleGame.paused;
 	}
