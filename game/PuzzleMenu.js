@@ -100,6 +100,9 @@ class PuzzleMenu{
 						6:{label:'Babel', action:PuzzleUtils.openLink.bind(this, 'https://babeljs.io/')},
 						back:{label:'Back',action:this.backFn}
 					}
+				},
+				build:{
+					label:'Build: '+new Date(lastUpdateTime*1000).toLocaleString()
 				}
 			}
 		};
@@ -131,12 +134,11 @@ class PuzzleMenu{
 		this.currentColor = this.currentMenuOptions.color;
 
 		this.renderCube();
-		this.setMenuOptions();
+		this.renderMenuText();
 
+		this.menuSpinGroup.rotation.z = -PI;
 
-		this.menuSpinGroup.rotation.y = PI;
-		this.menuSpinGroup.rotation.z = -TWO_PI;
-
+		/*
 		this.menuGroup.rotation.x = -PI/16;
 		this.menuShimmyTweenX = new TWEEN.Tween(this.menuGroup.rotation)
 			.to({x:PI/16},5000)
@@ -151,6 +153,7 @@ class PuzzleMenu{
 			.repeat(Infinity)
 			.yoyo(true)
 			.start();
+		*/
 	}
 
 	renderCube(){
@@ -183,7 +186,7 @@ class PuzzleMenu{
 		this.menuGroup.add(this.menuSpinGroup);
 	}
 
-	setMenuOptions(){
+	renderMenuText(){
 
 
 		//Box Background
@@ -276,7 +279,7 @@ class PuzzleMenu{
 		let direction = (reverse?"+"+TWO_PI:"-"+TWO_PI);
 		new TWEEN.Tween(this.menuSpinGroup.rotation)
 			.to({y:direction,x:0,z:0},500)
-			.easing(TWEEN.Easing.Quadratic.Out)
+			.easing(TWEEN.Easing.Exponential.InOut)
 			.start()
 			.onComplete(function(){
 				this.inAnimation = false;
@@ -297,7 +300,7 @@ class PuzzleMenu{
 		this.currentColor =newMenu.color;
 		this.otherSides.color = new THREE.Color(this.currentColor.r/255,this.currentColor.g/255,this.currentColor.b/255);
 		this.currentMenuOptions = newMenu;
-		this.setMenuOptions();
+		this.renderMenuText();
 	}
 
 	detectIfSelectionNeedsToChange(){
@@ -308,7 +311,7 @@ class PuzzleMenu{
 				&& this.menuY < this.itemSpacingTop+(this.itemTextHeight*(i+1))-this.itemTextHeight/2
 				&& (this.currentMenuOptions.items[label].hasOwnProperty('action') || this.currentMenuOptions.items[label].hasOwnProperty('items'))){
 				this.currentSelection = label;
-				this.setMenuOptions();
+				this.renderMenuText();
 				somethingSelected = true;
 			}
 			i++;
@@ -316,7 +319,7 @@ class PuzzleMenu{
 		if(!somethingSelected){
 			if(this.currentSelection !== -1) {
 				this.currentSelection = -1;
-				this.setMenuOptions();
+				this.renderMenuText();
 			}else{
 				this.currentSelection = -1;
 			}
@@ -326,6 +329,11 @@ class PuzzleMenu{
 
 	mouseMove( evt ) {
 		evt.preventDefault();
+		let rect = this.PuzzleGame.renderer.domElement.getBoundingClientRect();
+		let xScale = ( evt.clientX- rect.left ) / rect.width;
+		let yScale = ( evt.clientY - rect.top ) / rect.height;
+		this.menuGroup.rotation.x = (PI/8)*yScale-(PI/16);
+		this.menuGroup.rotation.y = (PI/8)*xScale-(PI/16);
 		if(this.inAnimation){
 			return;
 		}
@@ -334,8 +342,9 @@ class PuzzleMenu{
 
 	updateMouseMenuPosition(x,y){
 		let rect = this.PuzzleGame.renderer.domElement.getBoundingClientRect();
-		let array = [ ( x - rect.left ) / rect.width, ( y - rect.top ) / rect.height ];
-		this.onClickPosition.fromArray( array );
+		let xScale = ( x - rect.left ) / rect.width;
+		let yScale = ( y - rect.top ) / rect.height;
+		this.onClickPosition.fromArray([xScale,yScale]);
 		let intersects = this.getIntersects( this.onClickPosition, this.menuSpinGroup.children );
 		//Make sure you're pointing at the 4th face, or the canvas side.
 		if ( intersects.length > 0 && intersects[ 0 ].uv && intersects[0].face.materialIndex === 4) {
@@ -365,13 +374,41 @@ class PuzzleMenu{
 				}
 				break;
 			case PuzzleGame.KEY.SPACE:
-
+				this.clickCurrentSelection();
 				break;
 			case PuzzleGame.KEY.UP:
-
+				let previousSelection = null;
+				for(let selection in this.currentMenuOptions.items){
+					if(selection === this.currentSelection){
+						break;
+					}
+					previousSelection = selection;
+				}
+				if(previousSelection === null){
+					let selections = Object.keys(this.currentMenuOptions.items);
+					previousSelection = selections[selections.length-1];
+				}
+				this.currentSelection = previousSelection;
+				this.renderMenuText();
 				break;
 			case PuzzleGame.KEY.DOWN:
-
+				let next = null;
+				let nextIsNext = false;
+				for(let selection in this.currentMenuOptions.items){
+					if(nextIsNext){
+						next = selection;
+						break;
+					}
+					if(selection === this.currentSelection){
+						nextIsNext = true;
+					}
+				}
+				if(next === null){
+					let selections = Object.keys(this.currentMenuOptions.items);
+					next = selections[0];
+				}
+				this.currentSelection = next;
+				this.renderMenuText();
 				break;
 			case PuzzleGame.KEY.LEFT:
 
@@ -428,21 +465,19 @@ class PuzzleMenu{
 	}
 
 	showMenu(){
+		if(this.inAnimation){
+			return;
+		}
 
-		console.log('showing menu!');
-		//this.menuShimmyTweenX.start();
-		//this.menuShimmyTweenY.start();
-
-		//this.MenuWrapDom.style.display = "inherit";
-		//this.MenuWrapDom.style.opacity = "1";
 		this.inAnimation = true;
+		this.menuGroup.visible = true;
 		new TWEEN.Tween(this.menuSpinGroup.rotation)
-			.to({y:0,x:0,z:0},1000)
-			.easing(TWEEN.Easing.Quadratic.Out)
+			.to({z:0},1000)
+			.easing(TWEEN.Easing.Exponential.InOut)
 			.start();
 		new TWEEN.Tween(this.menuSpinGroup.scale)
 			.to({x:1,y:1,z:1},1000)
-			.easing(TWEEN.Easing.Quadratic.Out)
+			.easing(TWEEN.Easing.Exponential.InOut)
 			.start()
 			.onComplete(function(){
 				this.inAnimation = false;
@@ -451,35 +486,24 @@ class PuzzleMenu{
 	}
 
 	hideMenu(){
-		//this.MenuWrapDom.style.opacity = "0";
-		//this.MenuWrapDom.style.display = "none";
-
+		if(this.inAnimation){
+			return;
+		}
 
 		this.inAnimation = true;
 		new TWEEN.Tween(this.menuSpinGroup.rotation)
-			.to({y:PI,x:0,z:-TWO_PI},1000)
-			.easing(TWEEN.Easing.Quadratic.Out)
+			.to({z:-PI},1000)
+			.easing(TWEEN.Easing.Exponential.InOut)
 			.start();
 
 		new TWEEN.Tween(this.menuSpinGroup.scale)
 			.to({x:0,y:0,z:0},1000)
-			.easing(TWEEN.Easing.Quadratic.Out)
+			.easing(TWEEN.Easing.Exponential.InOut)
 			.start()
 			.onComplete(function(){
 				this.inAnimation = false;
-				//this.menuShimmyTweenX.stop();
-				//this.menuShimmyTweenY.stop();
+				this.menuGroup.visible = false;
 			}.bind(this));
-
-		/*
-		new TWEEN.Tween(this.menuGroup.position)
-			.to({x:0,y:0,z:1000},2000)
-			.easing(TWEEN.Easing.Quadratic.Out)
-			.start()
-			.onComplete(function(){
-				this.inAnimation = false;
-			}.bind(this));
-		*/
 
 	}
 }

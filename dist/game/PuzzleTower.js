@@ -548,6 +548,9 @@ var PuzzleTower = function () {
 	}, {
 		key: 'pauseGame',
 		value: function pauseGame() {
+			if (this.PuzzleGame.menu.inAnimation) {
+				return;
+			}
 			if (this.PuzzleGame.paused) {
 				this.hidePause();
 				this.openTube();

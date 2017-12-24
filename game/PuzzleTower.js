@@ -523,6 +523,9 @@ class PuzzleTower {
 	}
 
 	pauseGame(){
+		if(this.PuzzleGame.menu.inAnimation){
+			return;
+		}
 		if(this.PuzzleGame.paused){
 			this.hidePause();
 			this.openTube();
