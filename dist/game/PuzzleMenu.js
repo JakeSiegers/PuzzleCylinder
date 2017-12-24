@@ -173,6 +173,12 @@ var PuzzleMenu = function () {
 			this.PuzzleGame.scene.add(this.menuGroup);
 			this.canvas = document.createElement('canvas'); //document.getElementById('canvas');
 			this.ctx = this.canvas.getContext('2d');
+			this.ctx.imageSmoothingEnabled = true;
+			//this.ctx.imageSmoothingQuality = 'high';
+
+			console.log(this.ctx.imageSmoothingEnabled);
+			console.log(this.ctx.imageSmoothingQuality);
+
 			this.texture = new THREE.Texture(this.canvas);
 			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer, this.texture, true);
 			var mainSide = new THREE.MeshBasicMaterial({ map: this.texture });
@@ -187,10 +193,10 @@ var PuzzleMenu = function () {
 
 			];
 
-			var geometry = new THREE.BoxGeometry(300, 300, 100);
+			var geometry = new THREE.BoxGeometry(400, 400, 133);
 			var mesh = new THREE.Mesh(geometry, material);
-			this.canvas.width = 256;
-			this.canvas.height = 256;
+			this.canvas.width = 512;
+			this.canvas.height = 512;
 			this.menuSpinGroup.add(mesh);
 			this.menuSpinGroup.scale.x = this.menuSpinGroup.scale.y = this.menuSpinGroup.scale.z = 0;
 			this.menuGroup.add(this.menuSpinGroup);
@@ -242,11 +248,11 @@ var PuzzleMenu = function () {
 
 			if (this.currentMenuOptions.hasOwnProperty('label')) {
 				this.ctx.fillStyle = 'white';
-				this.ctx.font = '10pt Arial';
-				this.ctx.fillText(this.currentMenuOptions.label, this.canvas.width / 2, 40);
+				this.ctx.font = '20pt Arial';
+				this.ctx.fillText(this.currentMenuOptions.label, this.canvas.width / 2, 80);
 			}
-			this.itemSpacingTop = 78;
-			this.itemTextHeight = 20;
+			this.itemSpacingTop = 156;
+			this.itemTextHeight = 40;
 			var i = 0;
 			for (var label in this.currentMenuOptions.items) {
 				var item = this.currentMenuOptions.items[label];
@@ -261,7 +267,7 @@ var PuzzleMenu = function () {
 				if (item.hasOwnProperty('action') || item.hasOwnProperty('items')) {
 					label = '[ ' + label + ' ]';
 				}
-				this.ctx.font = '12pt Arial';
+				this.ctx.font = '24pt Arial';
 				this.ctx.fillText(label, this.canvas.width / 2, this.itemSpacingTop + this.itemTextHeight * i);
 				i++;
 			}
