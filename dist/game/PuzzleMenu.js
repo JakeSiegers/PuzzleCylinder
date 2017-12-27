@@ -12,6 +12,8 @@ var PuzzleMenu = function () {
   * @param {PuzzleGame} PuzzleGame
   * */
 	function PuzzleMenu(PuzzleGame) {
+		var _this = this;
+
 		_classCallCheck(this, PuzzleMenu);
 
 		this.PuzzleGame = PuzzleGame;
@@ -128,11 +130,49 @@ var PuzzleMenu = function () {
 
 		this.pauseMenuOptions = {
 			label: 'Pause',
-			color: { r: 62, g: 39, b: 35 },
 			items: {
-				start2d: { label: 'Resume', action: this.PuzzleGame.tower.pauseGame.bind(this.PuzzleGame.tower) }
+				resume: { label: 'Resume', action: this.PuzzleGame.tower.pauseGame.bind(this.PuzzleGame.tower) },
+				restart: { label: 'Restart', action: function action() {
+						if (_this.PuzzleGame.tower.mapType === MAP_3D) {
+							_this.PuzzleGame.startGame(MAP_3D);
+						} else {
+							_this.PuzzleGame.startGame(MAP_2D);
+						}
+					} }
 			}
+		};
 
+		this.endingScreen = {
+			label: 'Game Over',
+			render: function render(ctx) {
+				_this.ctx.fillStyle = 'rgb(' + _this.currentColor.r + ',' + _this.currentColor.g + ',' + _this.currentColor.b + ')';
+				ctx.textAlign = "right";
+				ctx.textBaseline = "middle";
+				ctx.fillText('Score: ', _this.canvas.width / 2, 120);
+				ctx.fillText('Matches: ', _this.canvas.width / 2, 150);
+				ctx.fillText('Rows Created: ', _this.canvas.width / 2, 180);
+				ctx.fillText('Longest Chain: ', _this.canvas.width / 2, 210);
+				ctx.fillText('Difficulty: ', _this.canvas.width / 2, 240);
+
+				_this.ctx.fillStyle = 'white';
+				ctx.textAlign = "left";
+				ctx.fillText(_this.PuzzleGame.tower.stats.score, _this.canvas.width / 2, 120);
+				ctx.fillText(_this.PuzzleGame.tower.stats.matches, _this.canvas.width / 2, 150);
+				ctx.fillText(_this.PuzzleGame.tower.stats.rowsCreated, _this.canvas.width / 2, 180);
+				ctx.fillText(_this.PuzzleGame.tower.stats.highestChain, _this.canvas.width / 2, 210);
+				ctx.fillText(_this.PuzzleGame.DIFFICULTIES()[_this.PuzzleGame.tower.difficulty], _this.canvas.width / 2, 240);
+			},
+			itemSpacingTop: 300,
+			items: {
+				restart: { label: 'Restart', action: function action() {
+						if (_this.PuzzleGame.tower.mapType === MAP_3D) {
+							_this.PuzzleGame.startGame(MAP_3D);
+						} else {
+							_this.PuzzleGame.startGame(MAP_2D);
+						}
+					} },
+				quit: { label: 'Quit', action: this.backFn }
+			}
 		};
 
 		//this.menuIndex = 0;
@@ -146,12 +186,11 @@ var PuzzleMenu = function () {
 		this.onClickPosition = new THREE.Vector2();
 		this.menuX = 0;
 		this.menuY = 0;
-		this.currentSelection = -1;
 
-		this.currentMenuOptions = this.menuOptions;
-		this.currentColor = this.currentMenuOptions.color;
+		this.usingKeyboard = false;
 
 		this.renderCube();
+		this.changeMenu(this.menuOptions);
 		this.renderMenuText();
 
 		this.menuSpinGroup.rotation.z = -PI;
@@ -202,14 +241,14 @@ var PuzzleMenu = function () {
 
 			];
 
-			var geometry = new THREE.BoxGeometry(300, 300, 100);
+			var geometry = new THREE.BoxGeometry(200, 200, 66);
 			var mesh = new THREE.Mesh(geometry, material);
 			this.canvas.width = 512;
 			this.canvas.height = 512;
 			this.menuSpinGroup.add(mesh);
 			this.menuSpinGroup.scale.x = this.menuSpinGroup.scale.y = this.menuSpinGroup.scale.z = 0;
 			this.menuGroup.add(this.menuSpinGroup);
-			this.menuGroup.position.z = 100;
+			this.menuGroup.position.z = 200;
 		}
 	}, {
 		key: 'renderMenuText',
@@ -253,6 +292,17 @@ var PuzzleMenu = function () {
 			//this.ctx.fillStyle = 'white';
 			//this.ctx.fillRect(this.menuX-5,this.menuY-5,10,10);
 
+
+			this.itemSpacingTop = 156;
+			if (this.currentMenuOptions.hasOwnProperty('itemSpacingTop')) {
+				this.itemSpacingTop = this.currentMenuOptions.itemSpacingTop;
+			}
+			this.itemTextHeight = 40;
+
+			if (this.currentMenuOptions.hasOwnProperty('render')) {
+				this.currentMenuOptions.render.call(this, this.ctx);
+			}
+
 			this.ctx.textAlign = "center";
 			this.ctx.textBaseline = "middle";
 
@@ -261,8 +311,7 @@ var PuzzleMenu = function () {
 				this.ctx.font = '20pt Arial';
 				this.ctx.fillText(this.currentMenuOptions.label, this.canvas.width / 2, 80);
 			}
-			this.itemSpacingTop = 156;
-			this.itemTextHeight = 40;
+
 			var i = 0;
 			for (var label in this.currentMenuOptions.items) {
 				var item = this.currentMenuOptions.items[label];
@@ -344,8 +393,10 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'clickCurrentSelection',
 		value: function clickCurrentSelection() {
-			if (this.currentSelection !== -1 && !this.inAnimation) {
+			if (this.currentSelection !== null && !this.inAnimation) {
 				var item = this.currentMenuOptions.items[this.currentSelection];
+				this.currentMenuOptions.lastSelected = this.currentSelection;
+				//console.log(this.currentSelection,this.menuOptions.lastSelected);
 				if (item.hasOwnProperty('items')) {
 					this.changeMenuAnimation(item);
 				} else if (item.hasOwnProperty('action')) {
@@ -356,22 +407,36 @@ var PuzzleMenu = function () {
 							item.value = !item.value;
 							break;
 						case 'number':
-							if (this.menuX < this.canvas.width / 2) {
-								item.valueScope[item.valueKey] -= item.step;
-							} else {
-								item.valueScope[item.valueKey] += item.step;
-							}
-							if (item.valueScope[item.valueKey] > item.max) {
-								item.valueScope[item.valueKey] = item.max;
-							}
-							if (item.valueScope[item.valueKey] < item.min) {
-								item.valueScope[item.valueKey] = item.min;
+							if (!this.usingKeyboard) {
+								if (this.menuX < this.canvas.width / 2) {
+									this.decrementNumberValue(item);
+								} else {
+									this.incrementNumberValue(item);
+								}
 							}
 							break;
 					}
 					this.renderMenuText();
 				}
 			}
+		}
+	}, {
+		key: 'incrementNumberValue',
+		value: function incrementNumberValue(item) {
+			item.valueScope[item.valueKey] += item.step;
+			if (item.valueScope[item.valueKey] > item.max) {
+				item.valueScope[item.valueKey] = item.max;
+			}
+			this.renderMenuText();
+		}
+	}, {
+		key: 'decrementNumberValue',
+		value: function decrementNumberValue(item) {
+			item.valueScope[item.valueKey] -= item.step;
+			if (item.valueScope[item.valueKey] < item.min) {
+				item.valueScope[item.valueKey] = item.min;
+			}
+			this.renderMenuText();
 		}
 	}, {
 		key: 'changeMenuAnimation',
@@ -396,9 +461,16 @@ var PuzzleMenu = function () {
 	}, {
 		key: 'changeMenu',
 		value: function changeMenu(newMenu) {
-			this.currentColor = newMenu.color;
+			if (newMenu.hasOwnProperty('color')) {
+				this.currentColor = newMenu.color;
+			}
 			this.otherSides.color = new THREE.Color(this.currentColor.r / 255, this.currentColor.g / 255, this.currentColor.b / 255);
 			this.currentMenuOptions = newMenu;
+			if (newMenu.hasOwnProperty('lastSelected')) {
+				this.currentSelection = newMenu.lastSelected;
+			} else if (newMenu.hasOwnProperty('items')) {
+				this.currentSelection = Object.keys(newMenu.items)[0];
+			}
 			this.renderMenuText();
 		}
 	}, {
@@ -420,11 +492,11 @@ var PuzzleMenu = function () {
 				i++;
 			}
 			if (!somethingSelected) {
-				if (this.currentSelection !== -1) {
-					this.currentSelection = -1;
+				if (this.currentSelection !== null) {
+					this.currentSelection = null;
 					this.renderMenuText();
 				} else {
-					this.currentSelection = -1;
+					this.currentSelection = null;
 				}
 			}
 		}
@@ -473,6 +545,13 @@ var PuzzleMenu = function () {
 				return;
 			}
 
+			var item = {};
+			if (this.currentSelection !== null) {
+				item = this.currentMenuOptions.items[this.currentSelection];
+			}
+
+			this.menuGroup.rotation.x = this.menuGroup.rotation.y = 0;
+
 			switch (event.keyCode) {
 				case PuzzleGame.KEY.ESCAPE:
 					if (this.PuzzleGame.paused) {
@@ -480,6 +559,7 @@ var PuzzleMenu = function () {
 					}
 					break;
 				case PuzzleGame.KEY.SPACE:
+				case PuzzleGame.KEY.ENTER:
 					this.clickCurrentSelection();
 					break;
 				case PuzzleGame.KEY.UP:
@@ -517,10 +597,14 @@ var PuzzleMenu = function () {
 					this.renderMenuText();
 					break;
 				case PuzzleGame.KEY.LEFT:
-
+					if (item.hasOwnProperty('type') && item.type === 'number') {
+						this.decrementNumberValue(item);
+					}
 					break;
 				case PuzzleGame.KEY.RIGHT:
-
+					if (item.hasOwnProperty('type') && item.type === 'number') {
+						this.incrementNumberValue(item);
+					}
 					break;
 			}
 		}

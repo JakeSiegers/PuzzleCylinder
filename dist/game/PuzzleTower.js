@@ -19,6 +19,15 @@ var PuzzleTower = function () {
 
 		this.currentMode = MODE_LOADING;
 
+		this.resettedStats = {
+			score: 0,
+			matches: 0,
+			rowsCreated: 0,
+			chainCount: 0,
+			highestChain: 0
+		};
+		this.stats = Object.assign({}, this.resettedStats);
+
 		//Timer Objects
 		this.pushTimeoutObj = null;
 
@@ -194,9 +203,9 @@ var PuzzleTower = function () {
 		value: function makeHarder() {
 			if (this.pushDelay > 0) {
 				if (this.mapType === MAP_3D) {
-					this.pushDelay = 100 - this.matches / (6 - this.difficulty);
+					this.pushDelay = 100 - this.stats.matches / (6 - this.difficulty);
 				} else {
-					this.pushDelay = 50 - this.matches / (6 - this.difficulty);
+					this.pushDelay = 50 - this.stats.matches / (6 - this.difficulty);
 				}
 
 				if (this.pushDelay < 0) {
@@ -237,7 +246,7 @@ var PuzzleTower = function () {
 			this.startingHeight = this.PuzzleGame.gameSettings.startingHeight;
 
 			this.animationQueue = 0;
-			this.score = 0;
+			this.stats = Object.assign({}, this.resettedStats);
 			this.gameGrid = [];
 
 			this.circlePieceSize = TWO_PI / this.boardWidth;
@@ -254,10 +263,6 @@ var PuzzleTower = function () {
 
 			this.handicap = 5 - this.difficulty;
 
-			this.matches = 0;
-			this.rowsCreated = 0;
-			this.chainCount = 0;
-			this.highestChain = 0;
 			this.chainTimer = null;
 			this.quickPush = false;
 		}
@@ -371,6 +376,7 @@ var PuzzleTower = function () {
 	}, {
 		key: 'pushTowerUp',
 		value: function pushTowerUp() {
+			var _this = this;
 
 			for (var tx = 0; tx < this.boardWidth; tx++) {
 				if (this.gameGrid[tx][this.boardHeight - 1] !== null) {
@@ -379,9 +385,10 @@ var PuzzleTower = function () {
 					this.gameActive = false;
 					this.loseAnimation();
 					new PuzzleTimer(function () {
-						this.PuzzleGame.menu.showMenu();
-						this.PuzzleGame.menu.changeMenu(this.PuzzleGame.menu.menuOptions);
-						this.PuzzleGame.setFocus(FOCUS_MENU);
+						_this.PuzzleGame.menu.showMenu();
+						_this.PuzzleGame.menu.changeMenu(_this.PuzzleGame.menu.endingScreen);
+						_this.PuzzleGame.scoreBoard.hideScoreBoard();
+						_this.PuzzleGame.setFocus(FOCUS_MENU);
 					}, 3000, CAT_GAME, this);
 					return false;
 				}
@@ -675,7 +682,7 @@ var PuzzleTower = function () {
 					}
 
 					if (matchChainX.length >= 3) {
-						this.matches++;
+						this.stats.matches++;
 						comboCount++;
 						for (var i = 0; i < matchChainX.length; i++) {
 							this.gameGrid[matchChainX[i]][y].userData.alreadyMatchedX = true;
@@ -704,7 +711,7 @@ var PuzzleTower = function () {
 					}
 
 					if (matchChainY.length >= 3) {
-						this.matches++;
+						this.stats.matches++;
 						comboCount++;
 						for (var _i = 0; _i < matchChainY.length; _i++) {
 							this.gameGrid[x][matchChainY[_i]].userData.alreadyMatchedY = true;
@@ -720,9 +727,9 @@ var PuzzleTower = function () {
 			}
 
 			if (blocksToBeDestroyed.length > 0) {
-				this.chainCount++;
-				if (this.chainCount > this.highestChain) {
-					this.highestChain = this.chainCount;
+				this.stats.chainCount++;
+				if (this.stats.chainCount > this.stats.highestChain) {
+					this.stats.highestChain = this.stats.chainCount;
 				}
 
 				if (this.chainTimer !== null) {
@@ -730,13 +737,13 @@ var PuzzleTower = function () {
 				}
 				this.chainTimer = new PuzzleTimer(this.resetChain, this.dropDelay + 600, CAT_GAME, this); //setTimeout(this.resetChain.bind(this), this.dropDelay + 600);
 
-				if (this.chainCount > 1) {
-					console.log('CHAIN ' + this.chainCount);
+				if (this.stats.chainCount > 1) {
+					console.log('CHAIN ' + this.stats.chainCount);
 				}
 			}
 
 			for (var d = 0; d < blocksToBeDestroyed.length; d++) {
-				this.score += comboCount * this.chainCount;
+				this.stats.score += comboCount * this.stats.chainCount;
 				this.makeHarder();
 				this.destroyBlock(blocksToBeDestroyed[d].x, blocksToBeDestroyed[d].y);
 			}
@@ -744,7 +751,7 @@ var PuzzleTower = function () {
 	}, {
 		key: 'resetChain',
 		value: function resetChain() {
-			this.chainCount = 0;
+			this.stats.chainCount = 0;
 			this.chainTimer = null;
 		}
 	}, {
@@ -867,7 +874,7 @@ var PuzzleTower = function () {
 	}, {
 		key: 'dropBlocksStartingAtPoint',
 		value: function dropBlocksStartingAtPoint(x, y) {
-			var _this = this;
+			var _this2 = this;
 
 			this.animationQueue--;
 			var stillGottaFall = true;
@@ -875,20 +882,20 @@ var PuzzleTower = function () {
 				if (this.gameGrid[x][i] !== null && !this.gameGrid[x][i].userData.exploding) {
 					var _ret = function () {
 						//You moved a block under this block about to fall.
-						if (_this.gameGrid[x][i - 1] !== null) {
-							_this.gameGrid[x][i].userData.locked = false;
+						if (_this2.gameGrid[x][i - 1] !== null) {
+							_this2.gameGrid[x][i].userData.locked = false;
 							//Set texture back to normal, non debug texture.
 							//this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
 							stillGottaFall = false;
 							return 'continue';
 						}
-						var sThis = _this;
-						_this.animationQueue++;
-						new TWEEN.Tween(_this.gameGrid[x][i].position).to({ y: _this.calcYBlockPos(i - 1) }, 200).easing(TWEEN.Easing.Bounce.Out).start().onComplete(function () {
+						var sThis = _this2;
+						_this2.animationQueue++;
+						new TWEEN.Tween(_this2.gameGrid[x][i].position).to({ y: _this2.calcYBlockPos(i - 1) }, 200).easing(TWEEN.Easing.Bounce.Out).start().onComplete(function () {
 							sThis.animationQueue--;
 						});
-						_this.gameGrid[x][i - 1] = _this.gameGrid[x][i];
-						_this.gameGrid[x][i] = null;
+						_this2.gameGrid[x][i - 1] = _this2.gameGrid[x][i];
+						_this2.gameGrid[x][i] = null;
 					}();
 
 					if (_ret === 'continue') continue;
@@ -1063,7 +1070,7 @@ var PuzzleTower = function () {
 			} else {
 				this.nextRow.rotation.y = 0;
 			}
-			this.rowsCreated++;
+			this.stats.rowsCreated++;
 		}
 	}, {
 		key: 'generateNextRowMeshArray',

@@ -110,11 +110,51 @@ class PuzzleMenu{
 
 		this.pauseMenuOptions = {
 			label:'Pause',
-			color:{r:62,g:39,b:35},
 			items: {
-				start2d: {label: 'Resume', action:this.PuzzleGame.tower.pauseGame.bind(this.PuzzleGame.tower)},
+				resume: {label: 'Resume', action:this.PuzzleGame.tower.pauseGame.bind(this.PuzzleGame.tower)},
+				restart: {label: 'Restart', action: () => {
+						if(this.PuzzleGame.tower.mapType === MAP_3D){
+							this.PuzzleGame.startGame(MAP_3D);
+						}else{
+							this.PuzzleGame.startGame(MAP_2D);
+						}
+					}},
 			}
+		};
 
+
+
+		this.endingScreen = {
+			label:'Game Over',
+			render:(ctx) => {
+				this.ctx.fillStyle = 'rgb('+this.currentColor.r+','+this.currentColor.g+','+this.currentColor.b+')';
+				ctx.textAlign = "right";
+				ctx.textBaseline="middle";
+				ctx.fillText('Score: ', this.canvas.width/2,120);
+				ctx.fillText('Matches: ', this.canvas.width/2,150);
+				ctx.fillText('Rows Created: ', this.canvas.width/2,180);
+				ctx.fillText('Longest Chain: ', this.canvas.width/2,210);
+				ctx.fillText('Difficulty: ', this.canvas.width/2,240);
+
+				this.ctx.fillStyle = 'white';
+				ctx.textAlign = "left";
+				ctx.fillText(this.PuzzleGame.tower.stats.score, this.canvas.width/2,120);
+				ctx.fillText(this.PuzzleGame.tower.stats.matches, this.canvas.width/2,150);
+				ctx.fillText(this.PuzzleGame.tower.stats.rowsCreated, this.canvas.width/2,180);
+				ctx.fillText(this.PuzzleGame.tower.stats.highestChain, this.canvas.width/2,210);
+				ctx.fillText(this.PuzzleGame.DIFFICULTIES()[this.PuzzleGame.tower.difficulty], this.canvas.width/2,240);
+			},
+			itemSpacingTop:300,
+			items: {
+				restart: {label: 'Restart', action: () => {
+					if(this.PuzzleGame.tower.mapType === MAP_3D){
+						this.PuzzleGame.startGame(MAP_3D);
+					}else{
+						this.PuzzleGame.startGame(MAP_2D);
+					}
+				}},
+				quit: {label: 'Quit', action: this.backFn}
+			}
 		};
 
 		//this.menuIndex = 0;
@@ -128,14 +168,13 @@ class PuzzleMenu{
 		this.onClickPosition = new THREE.Vector2();
 		this.menuX = 0;
 		this.menuY = 0;
-		this.currentSelection = -1;
 
-
-		this.currentMenuOptions = this.menuOptions;
-		this.currentColor = this.currentMenuOptions.color;
+		this.usingKeyboard = false;
 
 		this.renderCube();
+		this.changeMenu(this.menuOptions);
 		this.renderMenuText();
+
 
 		this.menuSpinGroup.rotation.z = -PI;
 
@@ -184,18 +223,17 @@ class PuzzleMenu{
 
 		];
 
-		let geometry = new THREE.BoxGeometry(300, 300, 100);
+		let geometry = new THREE.BoxGeometry(200, 200, 66);
 		let mesh = new THREE.Mesh( geometry, material );
 		this.canvas.width = 512;
 		this.canvas.height = 512;
 		this.menuSpinGroup.add(mesh);
 		this.menuSpinGroup.scale.x = this.menuSpinGroup.scale.y = this.menuSpinGroup.scale.z = 0;
 		this.menuGroup.add(this.menuSpinGroup);
-		this.menuGroup.position.z = 100;
+		this.menuGroup.position.z = 200;
 	}
 
 	renderMenuText(){
-
 
 		//Box Background
 		this.ctx.fillStyle = 'black';//'#9C27B0';
@@ -236,6 +274,18 @@ class PuzzleMenu{
 		//this.ctx.fillStyle = 'white';
 		//this.ctx.fillRect(this.menuX-5,this.menuY-5,10,10);
 
+
+
+		this.itemSpacingTop = 156;
+		if(this.currentMenuOptions.hasOwnProperty('itemSpacingTop')){
+			this.itemSpacingTop = this.currentMenuOptions.itemSpacingTop;
+		}
+		this.itemTextHeight = 40;
+
+		if(this.currentMenuOptions.hasOwnProperty('render')){
+			this.currentMenuOptions.render.call(this,this.ctx);
+		}
+
 		this.ctx.textAlign = "center";
 		this.ctx.textBaseline="middle";
 
@@ -244,8 +294,8 @@ class PuzzleMenu{
 			this.ctx.font = '20pt Arial';
 			this.ctx.fillText(this.currentMenuOptions.label, this.canvas.width/2,80);
 		}
-		this.itemSpacingTop = 156;
-		this.itemTextHeight = 40;
+
+
 		let i = 0;
 		for(let label in this.currentMenuOptions.items){
 			let item = this.currentMenuOptions.items[label];
@@ -323,8 +373,10 @@ class PuzzleMenu{
 	}
 
 	clickCurrentSelection(){
-		if(this.currentSelection !== -1 && !this.inAnimation){
+		if(this.currentSelection !== null && !this.inAnimation){
 			let item = this.currentMenuOptions.items[this.currentSelection];
+			this.currentMenuOptions.lastSelected = this.currentSelection;
+			//console.log(this.currentSelection,this.menuOptions.lastSelected);
 			if(item.hasOwnProperty('items')){
 				this.changeMenuAnimation(item);
 			}else if(item.hasOwnProperty('action')){
@@ -335,22 +387,34 @@ class PuzzleMenu{
 						item.value = !item.value;
 						break;
 					case 'number':
-						if(this.menuX < this.canvas.width/2){
-							item.valueScope[item.valueKey]-=item.step;
-						}else{
-							item.valueScope[item.valueKey]+=item.step;
-						}
-						if(item.valueScope[item.valueKey] > item.max){
-							item.valueScope[item.valueKey] = item.max;
-						}
-						if(item.valueScope[item.valueKey] < item.min){
-							item.valueScope[item.valueKey] = item.min;
+						if(!this.usingKeyboard) {
+							if (this.menuX < this.canvas.width / 2) {
+								this.decrementNumberValue(item);
+							} else {
+								this.incrementNumberValue(item);
+							}
 						}
 						break;
 				}
 				this.renderMenuText();
 			}
 		}
+	}
+
+	incrementNumberValue(item){
+		item.valueScope[item.valueKey]+=item.step;
+		if(item.valueScope[item.valueKey] > item.max){
+			item.valueScope[item.valueKey] = item.max;
+		}
+		this.renderMenuText();
+	}
+
+	decrementNumberValue(item){
+		item.valueScope[item.valueKey]-=item.step;
+		if(item.valueScope[item.valueKey] < item.min){
+			item.valueScope[item.valueKey] = item.min;
+		}
+		this.renderMenuText();
 	}
 
 	changeMenuAnimation(newMenu,reverse){
@@ -385,9 +449,16 @@ class PuzzleMenu{
 	}
 
 	changeMenu(newMenu){
-		this.currentColor =newMenu.color;
+		if(newMenu.hasOwnProperty('color')) {
+			this.currentColor = newMenu.color;
+		}
 		this.otherSides.color = new THREE.Color(this.currentColor.r/255,this.currentColor.g/255,this.currentColor.b/255);
 		this.currentMenuOptions = newMenu;
+		if(newMenu.hasOwnProperty('lastSelected')){
+			this.currentSelection = newMenu.lastSelected;
+		}else if(newMenu.hasOwnProperty('items')){
+			this.currentSelection = Object.keys(newMenu.items)[0];
+		}
 		this.renderMenuText();
 	}
 
@@ -414,11 +485,11 @@ class PuzzleMenu{
 			i++;
 		}
 		if(!somethingSelected){
-			if(this.currentSelection !== -1) {
-				this.currentSelection = -1;
+			if(this.currentSelection !== null) {
+				this.currentSelection = null;
 				this.renderMenuText();
 			}else{
-				this.currentSelection = -1;
+				this.currentSelection = null;
 			}
 
 		}
@@ -464,6 +535,13 @@ class PuzzleMenu{
 			return;
 		}
 
+		let item = {};
+		if(this.currentSelection !== null){
+			item = this.currentMenuOptions.items[this.currentSelection];
+		}
+
+		this.menuGroup.rotation.x = this.menuGroup.rotation.y = 0;
+
 		switch (event.keyCode) {
 			case PuzzleGame.KEY.ESCAPE:
 				if(this.PuzzleGame.paused) {
@@ -471,6 +549,7 @@ class PuzzleMenu{
 				}
 				break;
 			case PuzzleGame.KEY.SPACE:
+			case PuzzleGame.KEY.ENTER:
 				this.clickCurrentSelection();
 				break;
 			case PuzzleGame.KEY.UP:
@@ -508,10 +587,14 @@ class PuzzleMenu{
 				this.renderMenuText();
 				break;
 			case PuzzleGame.KEY.LEFT:
-
+				if(item.hasOwnProperty('type') && item.type === 'number'){
+					this.decrementNumberValue(item);
+				}
 				break;
 			case PuzzleGame.KEY.RIGHT:
-
+				if(item.hasOwnProperty('type') && item.type === 'number'){
+					this.incrementNumberValue(item);
+				}
 				break;
 		}
 	}

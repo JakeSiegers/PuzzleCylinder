@@ -12,6 +12,15 @@ class PuzzleTower {
 
 		this.currentMode = MODE_LOADING;
 
+		this.resettedStats = {
+			score:0,
+			matches:0,
+			rowsCreated:0,
+			chainCount:0,
+			highestChain:0
+		};
+		this.stats = Object.assign({},this.resettedStats);
+
 		//Timer Objects
 		this.pushTimeoutObj = null;
 
@@ -179,9 +188,9 @@ class PuzzleTower {
 	makeHarder(){
 		if (this.pushDelay > 0) {
 			if(this.mapType === MAP_3D) {
-				this.pushDelay = 100 - (this.matches / (6 - this.difficulty));
+				this.pushDelay = 100 - (this.stats.matches / (6 - this.difficulty));
 			}else{
-				this.pushDelay = 50 - (this.matches / (6 - this.difficulty));
+				this.pushDelay = 50 - (this.stats.matches / (6 - this.difficulty));
 			}
 
 			if (this.pushDelay < 0) {
@@ -221,14 +230,13 @@ class PuzzleTower {
 		this.startingHeight = this.PuzzleGame.gameSettings.startingHeight;
 
 		this.animationQueue = 0;
-		this.score = 0;
+		this.stats = Object.assign({},this.resettedStats);
 		this.gameGrid = [];
 
 		this.circlePieceSize = (TWO_PI / this.boardWidth);
 		this.stackHeights = [];
 
 		this.boardPixelHeight = (this.boardHeight) * this.blockHeight;
-
 
 		this.halfBoardPixelHeight = this.boardPixelHeight / 2;
 
@@ -239,10 +247,7 @@ class PuzzleTower {
 
 		this.handicap = 5-this.difficulty;
 
-		this.matches = 0;
-		this.rowsCreated = 0;
-		this.chainCount = 0;
-		this.highestChain = 0;
+
 		this.chainTimer = null;
 		this.quickPush = false;
 	}
@@ -359,9 +364,10 @@ class PuzzleTower {
 				this.hasControl = false;
 				this.gameActive = false;
 				this.loseAnimation();
-				new PuzzleTimer(function(){
+				new PuzzleTimer(() => {
 					this.PuzzleGame.menu.showMenu();
-					this.PuzzleGame.menu.changeMenu(this.PuzzleGame.menu.menuOptions);
+					this.PuzzleGame.menu.changeMenu(this.PuzzleGame.menu.endingScreen);
+					this.PuzzleGame.scoreBoard.hideScoreBoard();
 					this.PuzzleGame.setFocus(FOCUS_MENU);
 				},3000,CAT_GAME,this);
 				return false;
@@ -643,7 +649,7 @@ class PuzzleTower {
 				}
 
 				if (matchChainX.length >= 3) {
-					this.matches++;
+					this.stats.matches++;
 					comboCount++;
 					for (let i = 0; i < matchChainX.length; i++) {
 						this.gameGrid[matchChainX[i]][y].userData.alreadyMatchedX = true;
@@ -672,7 +678,7 @@ class PuzzleTower {
 				}
 
 				if (matchChainY.length >= 3) {
-					this.matches++;
+					this.stats.matches++;
 					comboCount++;
 					for (let i = 0; i < matchChainY.length; i++) {
 						this.gameGrid[x][matchChainY[i]].userData.alreadyMatchedY = true;
@@ -689,9 +695,9 @@ class PuzzleTower {
 
 
 		if (blocksToBeDestroyed.length > 0) {
-			this.chainCount++;
-			if(this.chainCount > this.highestChain){
-				this.highestChain = this.chainCount;
+			this.stats.chainCount++;
+			if(this.stats.chainCount > this.stats.highestChain){
+				this.stats.highestChain = this.stats.chainCount;
 			}
 
 			if (this.chainTimer !== null) {
@@ -699,20 +705,20 @@ class PuzzleTower {
 			}
 			this.chainTimer = new PuzzleTimer(this.resetChain,this.dropDelay + 600,CAT_GAME,this);//setTimeout(this.resetChain.bind(this), this.dropDelay + 600);
 
-			if (this.chainCount > 1) {
-				console.log('CHAIN ' + this.chainCount);
+			if (this.stats.chainCount > 1) {
+				console.log('CHAIN ' + this.stats.chainCount);
 			}
 		}
 
 		for (let d = 0; d < blocksToBeDestroyed.length; d++) {
-			this.score += comboCount * this.chainCount;
+			this.stats.score += comboCount * this.stats.chainCount;
 			this.makeHarder();
 			this.destroyBlock(blocksToBeDestroyed[d].x, blocksToBeDestroyed[d].y);
 		}
 	}
 
 	resetChain(){
-		this.chainCount = 0;
+		this.stats.chainCount = 0;
 		this.chainTimer = null;
 	}
 
@@ -1014,7 +1020,7 @@ class PuzzleTower {
 		}else{
 			this.nextRow.rotation.y = 0;
 		}
-		this.rowsCreated++;
+		this.stats.rowsCreated++;
 	}
 
 	generateNextRowMeshArray(colorPoolIn){

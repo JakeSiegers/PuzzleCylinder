@@ -23,9 +23,9 @@ var HALF_PI = PI / 2;
 var CAT_GAME = 'game';
 
 var PuzzleGame = function () {
-	_createClass(PuzzleGame, null, [{
+	_createClass(PuzzleGame, [{
 		key: 'DIFFICULTIES',
-		get: function get() {
+		value: function DIFFICULTIES() {
 			return {
 				1: 'Easy',
 				2: 'Normal',
@@ -34,7 +34,7 @@ var PuzzleGame = function () {
 				5: 'Super Hard'
 			};
 		}
-	}, {
+	}], [{
 		key: 'KEY',
 		get: function get() {
 			return {
@@ -43,7 +43,8 @@ var PuzzleGame = function () {
 				LEFT: 37,
 				RIGHT: 39,
 				SPACE: 32,
-				ESCAPE: 27
+				ESCAPE: 27,
+				ENTER: 13
 			};
 		}
 	}]);
@@ -148,6 +149,52 @@ var PuzzleGame = function () {
 			this.background = new THREE.Mesh(geometry, material);
 			this.background.position.z = -300;
 			this.scene.add(this.background);
+
+			/*
+   //Fun little background blocks concept...
+   		this.backgroundBlocks = new THREE.Group();
+   this.backgroundBlocksRadius = 1000;
+   for(let i = 0; i< 10;i++){
+   	let blockMat = new THREE.MeshBasicMaterial({color: 0x9C27B0, map: this.blankTexture});
+   	let blockGeo = new THREE.BoxGeometry(100, 100, 33);
+   	let blockMesh = new THREE.Mesh( blockGeo, blockMat );
+   	blockMesh.position.x = Math.cos((TWO_PI/10)*i)*this.backgroundBlocksRadius;
+   	blockMesh.position.y = Math.sin((TWO_PI/10)*i)*this.backgroundBlocksRadius;
+   	this.backgroundBlocks.add(blockMesh);
+   			new TWEEN.Tween(blockMesh.rotation)
+   		.to({x:TWO_PI},Math.random()*5000+5000)
+   		.easing(TWEEN.Easing.Linear.None)
+   		.repeat(Infinity)
+   		.start();
+   	new TWEEN.Tween(blockMesh.rotation)
+   		.to({y:-TWO_PI},Math.random()*5000+5000)
+   		.easing(TWEEN.Easing.Linear.None)
+   		.repeat(Infinity)
+   		.start();
+   	new TWEEN.Tween(blockMesh.rotation)
+   		.to({z:TWO_PI},Math.random()*5000+5000)
+   		.easing(TWEEN.Easing.Linear.None)
+   		.repeat(Infinity)
+   		.start();
+   }
+   this.scene.add(this.backgroundBlocks);
+   
+   this.backgroundBlocksRadius = 300;
+   for(let i in this.backgroundBlocks.children){
+   	new TWEEN.Tween(this.backgroundBlocks.children[i].position)
+   		.to({
+   			x:Math.cos((TWO_PI/10)*i)*this.backgroundBlocksRadius,
+   			y:Math.sin((TWO_PI/10)*i)*this.backgroundBlocksRadius
+   		},1000)
+   		.easing(TWEEN.Easing.Circular.InOut)
+   		.start();
+   }
+   		new TWEEN.Tween(this.backgroundBlocks.rotation)
+   	.to({z:TWO_PI},40000)
+   	.easing(TWEEN.Easing.Linear.None)
+   	.repeat(Infinity)
+   	.start();
+   		*/
 
 			new TWEEN.Tween(this.background.material.map.offset).to({ x: 1 }, 4000).easing(TWEEN.Easing.Linear.None).repeat(Infinity).start();
 
@@ -317,6 +364,7 @@ var PuzzleGame = function () {
 				this.scoreBoard.scoreGroup.position.y = this.tower.boardPixelHeight / 2 - this.scoreBoard.canvas.height / 2;
 			} else {
 				this.tower.towerGroup.position.x = -50;
+				this.tower.towerGroup.rotation.y = 0;
 				this.scoreBoard.scoreGroup.position.x = this.tower.boardPixelWidth / 2 + this.scoreBoard.canvas.width / 2 - 50;
 				this.scoreBoard.scoreGroup.position.y = this.tower.boardPixelHeight / 2 - this.scoreBoard.canvas.height / 2;
 			}
@@ -332,6 +380,8 @@ var PuzzleGame = function () {
 		key: 'keyPress',
 		value: function keyPress(event) {
 			event.preventDefault();
+			document.body.style.cursor = 'none';
+			this.usingKeyboard = true;
 			switch (this.currentFocus) {
 				case FOCUS_MENU:
 					this.menu.keyPress(event);
@@ -358,6 +408,8 @@ var PuzzleGame = function () {
 		key: 'mouseMove',
 		value: function mouseMove(event) {
 			event.preventDefault();
+			this.usingKeyboard = false;
+			document.body.style.cursor = 'pointer';
 			var _ref = [event.clientX, event.clientY];
 			this.mouseX = _ref[0];
 			this.mouseY = _ref[1];

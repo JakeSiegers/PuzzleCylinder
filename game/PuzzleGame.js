@@ -18,7 +18,7 @@ const CAT_GAME = 'game';
 
 class PuzzleGame{
 
-	static get DIFFICULTIES(){
+	DIFFICULTIES(){
 		return {
 			1: 'Easy',
 			2: 'Normal',
@@ -36,6 +36,7 @@ class PuzzleGame{
 			RIGHT:39,
 			SPACE:32,
 			ESCAPE:27,
+			ENTER:13
 		}
 	}
 
@@ -135,6 +136,57 @@ class PuzzleGame{
 		this.background = new THREE.Mesh(geometry, material);
 		this.background.position.z = -300;
 		this.scene.add(this.background);
+
+		/*
+		//Fun little background blocks concept...
+
+		this.backgroundBlocks = new THREE.Group();
+		this.backgroundBlocksRadius = 1000;
+		for(let i = 0; i< 10;i++){
+			let blockMat = new THREE.MeshBasicMaterial({color: 0x9C27B0, map: this.blankTexture});
+			let blockGeo = new THREE.BoxGeometry(100, 100, 33);
+			let blockMesh = new THREE.Mesh( blockGeo, blockMat );
+			blockMesh.position.x = Math.cos((TWO_PI/10)*i)*this.backgroundBlocksRadius;
+			blockMesh.position.y = Math.sin((TWO_PI/10)*i)*this.backgroundBlocksRadius;
+			this.backgroundBlocks.add(blockMesh);
+
+			new TWEEN.Tween(blockMesh.rotation)
+				.to({x:TWO_PI},Math.random()*5000+5000)
+				.easing(TWEEN.Easing.Linear.None)
+				.repeat(Infinity)
+				.start();
+			new TWEEN.Tween(blockMesh.rotation)
+				.to({y:-TWO_PI},Math.random()*5000+5000)
+				.easing(TWEEN.Easing.Linear.None)
+				.repeat(Infinity)
+				.start();
+			new TWEEN.Tween(blockMesh.rotation)
+				.to({z:TWO_PI},Math.random()*5000+5000)
+				.easing(TWEEN.Easing.Linear.None)
+				.repeat(Infinity)
+				.start();
+		}
+		this.scene.add(this.backgroundBlocks);
+
+
+		this.backgroundBlocksRadius = 300;
+		for(let i in this.backgroundBlocks.children){
+			new TWEEN.Tween(this.backgroundBlocks.children[i].position)
+				.to({
+					x:Math.cos((TWO_PI/10)*i)*this.backgroundBlocksRadius,
+					y:Math.sin((TWO_PI/10)*i)*this.backgroundBlocksRadius
+				},1000)
+				.easing(TWEEN.Easing.Circular.InOut)
+				.start();
+		}
+
+		new TWEEN.Tween(this.backgroundBlocks.rotation)
+			.to({z:TWO_PI},40000)
+			.easing(TWEEN.Easing.Linear.None)
+			.repeat(Infinity)
+			.start();
+
+		*/
 
 		new TWEEN.Tween(this.background.material.map.offset)
 			.to({x:1},4000)
@@ -306,6 +358,7 @@ class PuzzleGame{
 			this.scoreBoard.scoreGroup.position.y = (this.tower.boardPixelHeight/2) - (this.scoreBoard.canvas.height/2);
 		}else{
 			this.tower.towerGroup.position.x = -50;
+			this.tower.towerGroup.rotation.y = 0;
 			this.scoreBoard.scoreGroup.position.x = (this.tower.boardPixelWidth/2) + (this.scoreBoard.canvas.width/2) -50;
 			this.scoreBoard.scoreGroup.position.y = (this.tower.boardPixelHeight/2) - (this.scoreBoard.canvas.height/2);
 		}
@@ -319,6 +372,8 @@ class PuzzleGame{
 
 	keyPress(event) {
 		event.preventDefault();
+		document.body.style.cursor = 'none';
+		this.usingKeyboard = true;
 		switch(this.currentFocus){
 			case FOCUS_MENU:
 				this.menu.keyPress(event);
@@ -343,6 +398,8 @@ class PuzzleGame{
 
 	mouseMove(event){
 		event.preventDefault();
+		this.usingKeyboard = false;
+		document.body.style.cursor = 'pointer';
 		[this.mouseX,this.mouseY] = [event.clientX, event.clientY];
 		switch(this.currentFocus){
 			case FOCUS_MENU:
