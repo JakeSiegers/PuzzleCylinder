@@ -63,8 +63,12 @@ var PuzzleMenu = function () {
 					color: { r: 183, g: 28, b: 28 }, //['#B71C1C','#F44336','#EF9A9A'],
 					items: {
 						start2d: { label: 'Start 2D', action: this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_2D) },
-						startHeight: { label: 'Start Height ' + this.PuzzleGame.gameSettings.startingHeight, type: 'toggle', min: 0, max: 11, step: 1 }, //,['numeric', 'startingHeight', this.PuzzleGame.tower, 1, 1, 12],
-						difficulty: { label: 'Difficulty' }, // ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5],
+						startHeight: { label: function () {
+								return 'Start Height ' + this.PuzzleGame.gameSettings.startingHeight;
+							}.bind(this), type: 'number', valueScope: this.PuzzleGame.gameSettings, valueKey: 'startingHeight', min: 0, max: 12, step: 1 },
+						difficulty: { label: function () {
+								return 'Difficulty ' + this.PuzzleGame.gameSettings.difficulty;
+							}.bind(this), type: 'number', valueScope: this.PuzzleGame.gameSettings, valueKey: 'difficulty', min: 1, max: 5, step: 1 },
 						back: { label: 'Back', action: this.backFn }
 					}
 				},
@@ -73,8 +77,12 @@ var PuzzleMenu = function () {
 					color: { r: 26, g: 5, b: 126 }, //['#311B92','#673AB7','#D1C4E9'],
 					items: {
 						start3d: { label: 'Start 3D', action: this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_3D) },
-						startHeight: { label: 'Start Height' }, //,['numeric', 'startingHeight', this.PuzzleGame.tower, 1, 1, 12],
-						difficulty: { label: 'Difficulty' }, // ['numeric', 'difficulty', this.PuzzleGame.tower, 1, 1, 5],
+						startHeight: { label: function () {
+								return 'Start Height ' + this.PuzzleGame.gameSettings.startingHeight;
+							}.bind(this), type: 'number', valueScope: this.PuzzleGame.gameSettings, valueKey: 'startingHeight', min: 0, max: 12, step: 1 },
+						difficulty: { label: function () {
+								return 'Difficulty ' + this.PuzzleGame.gameSettings.difficulty;
+							}.bind(this), type: 'number', valueScope: this.PuzzleGame.gameSettings, valueKey: 'difficulty', min: 1, max: 5, step: 1 },
 						back: { label: 'Back', action: this.backFn }
 					}
 				},
@@ -92,8 +100,9 @@ var PuzzleMenu = function () {
 					label: 'Settings',
 					color: { r: 0, g: 150, b: 136 }, //['#004D40','#009688','#80CBC4'],
 					items: {
-						aa: { label: 'Anti Aliasing' }, // ['bool', 'antiAlias', this.PuzzleGame.settings],
-						tf: { label: 'Texture Filtering' }, //['bool', 'textureFiltering', this.PuzzleGame.settings],
+						lol: { label: '(These have no effect yet)' },
+						aa: { label: 'Anti Aliasing', type: 'toggle', value: this.PuzzleGame.settings.antiAlias }, // ['bool', 'antiAlias', this.PuzzleGame.settings],
+						tf: { label: 'Texture Filtering', type: 'toggle', value: this.PuzzleGame.settings.textureFiltering }, //['bool', 'textureFiltering', this.PuzzleGame.settings],
 						back: { label: 'Back', action: this.backFn }
 					}
 				},
@@ -176,8 +185,8 @@ var PuzzleMenu = function () {
 			this.ctx.imageSmoothingEnabled = true;
 			//this.ctx.imageSmoothingQuality = 'high';
 
-			console.log(this.ctx.imageSmoothingEnabled);
-			console.log(this.ctx.imageSmoothingQuality);
+			//console.log(this.ctx.imageSmoothingEnabled);
+			//console.log(this.ctx.imageSmoothingQuality);
 
 			this.texture = new THREE.Texture(this.canvas);
 			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer, this.texture, true);
@@ -193,13 +202,14 @@ var PuzzleMenu = function () {
 
 			];
 
-			var geometry = new THREE.BoxGeometry(400, 400, 133);
+			var geometry = new THREE.BoxGeometry(300, 300, 100);
 			var mesh = new THREE.Mesh(geometry, material);
 			this.canvas.width = 512;
 			this.canvas.height = 512;
 			this.menuSpinGroup.add(mesh);
 			this.menuSpinGroup.scale.x = this.menuSpinGroup.scale.y = this.menuSpinGroup.scale.z = 0;
 			this.menuGroup.add(this.menuSpinGroup);
+			this.menuGroup.position.z = 100;
 		}
 	}, {
 		key: 'renderMenuText',
@@ -256,22 +266,75 @@ var PuzzleMenu = function () {
 			var i = 0;
 			for (var label in this.currentMenuOptions.items) {
 				var item = this.currentMenuOptions.items[label];
+				var color = 'white';
 				if (this.currentSelection === label) {
 					this.ctx.fillStyle = 'rgba(255,255,255,1)'; //'rgba('+this.currentColor.r+','+this.currentColor.g+','+this.currentColor.b+',0.8)';
 					this.ctx.fillRect(26, this.itemSpacingTop + this.itemTextHeight * i - this.itemTextHeight / 2, this.canvas.width - 52, this.itemTextHeight);
-					this.ctx.fillStyle = 'rgb(' + this.currentColor.r + ',' + this.currentColor.g + ',' + this.currentColor.b + ')';
-				} else {
-					this.ctx.fillStyle = 'white';
+					color = 'rgb(' + this.currentColor.r + ',' + this.currentColor.g + ',' + this.currentColor.b + ')';
 				}
-				var label = item.label;
+				this.ctx.fillStyle = color;
+				this.ctx.strokeStyle = color;
+				var label = '';
+				if (PuzzleUtils.isFunction(item.label)) {
+					label = item.label.call(this);
+				} else {
+					label = item.label;
+				}
 				if (item.hasOwnProperty('action') || item.hasOwnProperty('items')) {
 					label = '[ ' + label + ' ]';
+				} else if (item.hasOwnProperty('type')) {
+					switch (item.type) {
+						case 'toggle':
+							this.drawTick(412, this.itemSpacingTop + this.itemTextHeight * i, item.value);
+							break;
+						case 'number':
+							this.drawTriangle(100, this.itemSpacingTop + this.itemTextHeight * i, false);
+							this.drawTriangle(412, this.itemSpacingTop + this.itemTextHeight * i, true);
+							break;
+					}
 				}
 				this.ctx.font = '24pt Arial';
 				this.ctx.fillText(label, this.canvas.width / 2, this.itemSpacingTop + this.itemTextHeight * i);
 				i++;
 			}
 			this.texture.needsUpdate = true;
+		}
+	}, {
+		key: 'drawTriangle',
+		value: function drawTriangle(x, y, right) {
+			//let previousFillStyle = this.ctx.fillStyle;
+			//this.ctx.fillStyle = 'white';
+			this.ctx.beginPath();
+			this.ctx.moveTo(x, y - 10);
+			this.ctx.lineTo(x, y + 10);
+			if (right) {
+				this.ctx.lineTo(x + 20, y);
+			} else {
+				this.ctx.lineTo(x - 20, y);
+			}
+			this.ctx.fill();
+			//this.ctx.fillStyle = previousFillStyle;
+		}
+	}, {
+		key: 'drawTick',
+		value: function drawTick(x, y, active) {
+			if (active) {
+				this.ctx.beginPath();
+				this.ctx.moveTo(x - 10, y - 5);
+				this.ctx.lineTo(x, y + 5);
+				this.ctx.lineTo(x + 20, y - 15);
+				this.ctx.lineWidth = 5;
+				this.ctx.stroke();
+			}
+
+			this.ctx.beginPath();
+			this.ctx.moveTo(x - 10, y - 10);
+			this.ctx.lineTo(x + 10, y - 10);
+			this.ctx.lineTo(x + 10, y + 10);
+			this.ctx.lineTo(x - 10, y + 10);
+			this.ctx.lineTo(x - 10, y - 10);
+			this.ctx.lineWidth = 3;
+			this.ctx.stroke();
 		}
 	}, {
 		key: 'mouseUp',
@@ -287,6 +350,26 @@ var PuzzleMenu = function () {
 					this.changeMenuAnimation(item);
 				} else if (item.hasOwnProperty('action')) {
 					item.action();
+				} else if (item.hasOwnProperty('type')) {
+					switch (item.type) {
+						case 'toggle':
+							item.value = !item.value;
+							break;
+						case 'number':
+							if (this.menuX < this.canvas.width / 2) {
+								item.valueScope[item.valueKey] -= item.step;
+							} else {
+								item.valueScope[item.valueKey] += item.step;
+							}
+							if (item.valueScope[item.valueKey] > item.max) {
+								item.valueScope[item.valueKey] = item.max;
+							}
+							if (item.valueScope[item.valueKey] < item.min) {
+								item.valueScope[item.valueKey] = item.min;
+							}
+							break;
+					}
+					this.renderMenuText();
 				}
 			}
 		}
@@ -303,6 +386,12 @@ var PuzzleMenu = function () {
 				this.changeMenu(newMenu);
 			}.bind(this), 200);
 			new TWEEN.Tween(this.menuGroup.scale).to({ x: 0.8, y: 0.8, z: 0.8 }, 250).easing(TWEEN.Easing.Back.Out).yoyo(true).repeat(1).start();
+
+			new TWEEN.Tween(this.PuzzleGame.background.material.color).to({
+				r: newMenu.color.r / 255,
+				g: newMenu.color.g / 255,
+				b: newMenu.color.b / 255
+			}, 500).easing(TWEEN.Easing.Exponential.InOut).start();
 		}
 	}, {
 		key: 'changeMenu',
@@ -318,7 +407,12 @@ var PuzzleMenu = function () {
 			var i = 0;
 			var somethingSelected = false;
 			for (var label in this.currentMenuOptions.items) {
-				if (this.menuY > this.itemSpacingTop + this.itemTextHeight * i - this.itemTextHeight / 2 && this.menuY < this.itemSpacingTop + this.itemTextHeight * (i + 1) - this.itemTextHeight / 2 && (this.currentMenuOptions.items[label].hasOwnProperty('action') || this.currentMenuOptions.items[label].hasOwnProperty('items'))) {
+
+				var currentItem = this.currentMenuOptions.items[label];
+
+				var selectableItem = currentItem.hasOwnProperty('action') || currentItem.hasOwnProperty('items') || currentItem.hasOwnProperty('type');
+
+				if (this.menuY > this.itemSpacingTop + this.itemTextHeight * i - this.itemTextHeight / 2 && this.menuY < this.itemSpacingTop + this.itemTextHeight * (i + 1) - this.itemTextHeight / 2 && selectableItem) {
 					this.currentSelection = label;
 					this.renderMenuText();
 					somethingSelected = true;
@@ -429,33 +523,6 @@ var PuzzleMenu = function () {
 
 					break;
 			}
-
-			/*
-   if(this.transitionActive === true){
-   	return;
-   }
-   		switch(event.keyCode){
-   	case KEY_UP:
-   		this.setMenuIndex(this.menuIndex-1);
-   		break;
-   	case KEY_DOWN:
-   		this.setMenuIndex(this.menuIndex+1);
-   		break;
-   	case KEY_RIGHT:
-   		if(this.menuOptionDoms[this.menuIndex].hasOwnProperty('upBtn')){
-   			this.menuOptionDoms[this.menuIndex].upBtn.click();
-   		}
-   		break;
-   	case KEY_LEFT:
-   		if(this.menuOptionDoms[this.menuIndex].hasOwnProperty('downBtn')){
-   			this.menuOptionDoms[this.menuIndex].downBtn.click();
-   		}
-   		break;
-   	case KEY_SPACE:
-   		this.MenuItemWrap.getElementsByClassName("selected")[0].click();
-   		break;
-   		}
-   */
 		}
 	}, {
 		key: 'keyUp',
@@ -499,9 +566,9 @@ var PuzzleMenu = function () {
 			}
 
 			this.inAnimation = true;
-			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ z: -PI }, 1000).easing(TWEEN.Easing.Exponential.InOut).start();
+			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ z: -PI }, 500).easing(TWEEN.Easing.Back.In).start();
 
-			new TWEEN.Tween(this.menuSpinGroup.scale).to({ x: 0, y: 0, z: 0 }, 1000).easing(TWEEN.Easing.Exponential.InOut).start().onComplete(function () {
+			new TWEEN.Tween(this.menuSpinGroup.scale).to({ x: 0, y: 0, z: 0 }, 500).easing(TWEEN.Easing.Back.In).start().onComplete(function () {
 				this.inAnimation = false;
 				this.menuGroup.visible = false;
 			}.bind(this));

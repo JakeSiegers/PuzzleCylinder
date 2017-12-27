@@ -69,7 +69,8 @@ var PuzzleGame = function () {
 		};
 
 		this.gameSettings = {
-			startingHeight: 4
+			startingHeight: 4,
+			difficulty: 2
 		};
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: this.settings.antiAlias, alpha: true });
@@ -86,6 +87,7 @@ var PuzzleGame = function () {
 		this.scene = new THREE.Scene();
 
 		this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 100, 850);
+		//this.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
 		this.camera.position.z = 500;
 
 		window.addEventListener('resize', this.onWindowResize.bind(this), false);
@@ -146,6 +148,10 @@ var PuzzleGame = function () {
 			this.background = new THREE.Mesh(geometry, material);
 			this.background.position.z = -300;
 			this.scene.add(this.background);
+
+			new TWEEN.Tween(this.background.material.map.offset).to({ x: 1 }, 4000).easing(TWEEN.Easing.Linear.None).repeat(Infinity).start();
+
+			new TWEEN.Tween(this.background.rotation).to({ z: TWO_PI }, 1000000).easing(TWEEN.Easing.Linear.None).repeat(Infinity).start();
 		}
 	}, {
 		key: 'initLoaders',
@@ -217,10 +223,10 @@ var PuzzleGame = function () {
 					PuzzleUtils.sharpenTexture(this.renderer, this.blockTextures[i], true);
 				}
 
-				var faceMaterial = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockTextures[i] });
-				var sideMaterial = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockSideTexture });
-				var topMaterial = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockTopTexture });
-				this.blockMaterials[i] = faceMaterial;
+				//let faceMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTextures[i]});
+				//let sideMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockSideTexture});
+				//let topMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTopTexture});
+				this.blockMaterials[i] = new THREE.MeshBasicMaterial({ color: this.blockColors[i], map: this.blockTextures[i] });
 				/*new THREE.MultiMaterial([
      sideMaterial,   //right
      sideMaterial,   //left
@@ -246,6 +252,20 @@ var PuzzleGame = function () {
 			}
 		}
 	}, {
+		key: 'blankOutBlockTextures',
+		value: function blankOutBlockTextures() {
+			for (var i in this.blockMaterials) {
+				this.blockMaterials[i].map = this.blankTexture;
+			}
+		}
+	}, {
+		key: 'resetBlockTextures',
+		value: function resetBlockTextures() {
+			for (var i in this.blockMaterials) {
+				this.blockMaterials[i].map = this.blockTextures[i];
+			}
+		}
+	}, {
 		key: 'animate',
 		value: function animate() {
 			this.stats.begin();
@@ -266,15 +286,6 @@ var PuzzleGame = function () {
 				}
 
 				this.ThirtyFPSThen = now - elapsed % this.ThirtyFPSInterval;
-
-				this.background.material.map.offset.x += 0.01;
-				if (this.background.material.map.offset.x > 1) {
-					this.background.material.map.offset.x = 0;
-				}
-				this.background.rotation.z += 0.0001;
-				if (this.background.rotation.z > TWO_PI) {
-					this.background.rotation.z = 0;
-				}
 
 				this.tower.gameAnimations();
 			}

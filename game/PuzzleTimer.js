@@ -55,6 +55,7 @@ class PuzzleTimer{
 			console.error('Timer ('+this.timerId+') already ended!');
 			return;
 		}
+
 		this.completed = true;
 		clearTimeout(this.timerId);
 		if(this.callback){
@@ -74,13 +75,18 @@ class PuzzleTimer{
 	}
 
 	static pauseAllInCategory(category){
+		console.log('PAUSED----------------------');
 		for(let i in PuzzleTimer.timers[category]){
+			console.log(PuzzleTimer.timers[category][i]);
 			PuzzleTimer.timers[category][i].pause();
 		}
+
 	}
 
 	static resumeAllInCategory(category){
+		console.log('RESUME----------------------');
 		for(let i in PuzzleTimer.timers[category]){
+			console.log(PuzzleTimer.timers[category][i]);
 			PuzzleTimer.timers[category][i].resume();
 		}
 	}

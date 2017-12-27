@@ -58,6 +58,12 @@ var PuzzleUtils = function () {
 			return r + "," + g + "," + b;
 		}
 	}, {
+		key: "isFunction",
+		value: function isFunction(functionToCheck) {
+			var getType = {};
+			return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+		}
+	}, {
 		key: "windowHeight",
 		get: function get() {
 			return Math.max(document.documentElement.clientHeight, window.innerHeight || 0);

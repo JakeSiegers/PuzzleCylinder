@@ -19,9 +19,6 @@ var PuzzleTower = function () {
 
 		this.currentMode = MODE_LOADING;
 
-		this.difficulty = 2;
-		this.startingHeight = 4;
-
 		//Timer Objects
 		this.pushTimeoutObj = null;
 
@@ -235,6 +232,10 @@ var PuzzleTower = function () {
 			}
 
 			//TODO:Sort these!
+
+			this.difficulty = this.PuzzleGame.gameSettings.difficulty;
+			this.startingHeight = this.PuzzleGame.gameSettings.startingHeight;
+
 			this.animationQueue = 0;
 			this.score = 0;
 			this.gameGrid = [];
@@ -265,6 +266,8 @@ var PuzzleTower = function () {
 		value: function resetGame() {
 
 			//TWEEN.removeAll();
+
+			this.PuzzleGame.resetBlockTextures();
 
 			this.resetGameVariables();
 
@@ -325,10 +328,11 @@ var PuzzleTower = function () {
 	}, {
 		key: 'loseAnimation',
 		value: function loseAnimation() {
+			this.PuzzleGame.blankOutBlockTextures();
 			for (var x = 0; x < this.boardWidth; x++) {
 				for (var y = 0; y < this.boardHeight; y++) {
 					if (this.gameGrid[x][y] !== null) {
-						this.gameGrid[x][y].material.map = this.PuzzleGame.blankTexture;
+						//this.gameGrid[x][y].material.map = this.PuzzleGame.blankTexture;
 						var delay = 500;
 						if (this.gameGrid[x][this.boardHeight - 1] !== null) {
 							delay = 2000;
@@ -342,12 +346,6 @@ var PuzzleTower = function () {
 			}
 			//setTimeout(this.closeAndSetGameMode.bind(this, MODE_NONE), 2500);
 			new PuzzleTimer(this.closeAndSetGameMode.bind(this, MODE_NONE), 2500, CAT_GAME, this);
-
-			new PuzzleTimer(function () {
-				console.log('TODO:Prep game reset here');
-				//this.PuzzleGame.menu.showMenuWithTransition();
-				//this.PuzzleGame.setFocus(FOCUS_MENU);
-			}, 3000, CAT_GAME, this);
 		}
 	}, {
 		key: 'checkToPushBlocks',
@@ -380,6 +378,11 @@ var PuzzleTower = function () {
 					this.hasControl = false;
 					this.gameActive = false;
 					this.loseAnimation();
+					new PuzzleTimer(function () {
+						this.PuzzleGame.menu.showMenu();
+						this.PuzzleGame.menu.changeMenu(this.PuzzleGame.menu.menuOptions);
+						this.PuzzleGame.setFocus(FOCUS_MENU);
+					}, 3000, CAT_GAME, this);
 					return false;
 				}
 			}
@@ -553,20 +556,20 @@ var PuzzleTower = function () {
 			}
 			if (this.PuzzleGame.paused) {
 				this.hidePause();
-				this.openTube();
 				this.PuzzleGame.setFocus(FOCUS_TOWER);
-				new TWEEN.Tween(this.towerGroup.position).to({
-					z: 0
-				}, 500).easing(TWEEN.Easing.Quadratic.Out).start();
+				//new TWEEN.Tween(this.towerGroup.position).to({
+				//	z: 0
+				//}, 500).easing(TWEEN.Easing.Quadratic.Out).start();
 				PuzzleTimer.resumeAllInCategory(CAT_GAME);
+				this.openTube();
 			} else {
 				this.showPause();
 				this.PuzzleGame.setFocus(FOCUS_MENU);
-				this.closeTube();
 				PuzzleTimer.pauseAllInCategory(CAT_GAME);
-				new TWEEN.Tween(this.towerGroup.position).to({
-					z: -200
-				}, 500).easing(TWEEN.Easing.Quadratic.Out).start();
+				//new TWEEN.Tween(this.towerGroup.position).to({
+				//	z: -200
+				//}, 500).easing(TWEEN.Easing.Quadratic.Out).start();
+				this.closeTube();
 			}
 			this.PuzzleGame.paused = !this.PuzzleGame.paused;
 		}
