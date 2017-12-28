@@ -468,8 +468,6 @@ class PuzzleMenu{
 		let i = 0;
 		let somethingSelected = false;
 
-		console.log(this.menuX);
-
 		for(let label in this.currentMenuOptions.items){
 
 			let currentItem = this.currentMenuOptions.items[label];
