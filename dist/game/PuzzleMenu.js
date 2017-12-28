@@ -445,7 +445,9 @@ var PuzzleMenu = function () {
 			var direction = reverse ? "+" + TWO_PI : "-" + TWO_PI;
 			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: direction, x: 0, z: 0 }, 500).easing(TWEEN.Easing.Exponential.InOut).start().onComplete(function () {
 				this.inAnimation = false;
-				this.updateMouseMenuPosition(this.PuzzleGame.mouseX, this.PuzzleGame.mouseY);
+				if (!this.PuzzleGame.usingKeyboard) {
+					this.updateMouseMenuPosition(this.PuzzleGame.mouseX, this.PuzzleGame.mouseY);
+				}
 			}.bind(this));
 			setTimeout(function () {
 				this.changeMenu(newMenu);

@@ -428,7 +428,9 @@ class PuzzleMenu{
 			.start()
 			.onComplete(function(){
 				this.inAnimation = false;
-				this.updateMouseMenuPosition(this.PuzzleGame.mouseX,this.PuzzleGame.mouseY);
+				if(!this.PuzzleGame.usingKeyboard) {
+					this.updateMouseMenuPosition(this.PuzzleGame.mouseX, this.PuzzleGame.mouseY);
+				}
 			}.bind(this));
 		setTimeout(function(){
 			this.changeMenu(newMenu);
