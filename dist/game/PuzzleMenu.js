@@ -478,6 +478,9 @@ var PuzzleMenu = function () {
 		value: function detectIfSelectionNeedsToChange() {
 			var i = 0;
 			var somethingSelected = false;
+
+			console.log(this.menuX);
+
 			for (var label in this.currentMenuOptions.items) {
 
 				var currentItem = this.currentMenuOptions.items[label];
@@ -607,6 +610,9 @@ var PuzzleMenu = function () {
 				this.menuX = uv.x * this.canvas.width;
 				this.menuY = uv.y * this.canvas.height;
 				this.detectIfSelectionNeedsToChange();
+			} else if (this.currentSelection !== null) {
+				this.currentSelection = null;
+				this.renderMenuText();
 			}
 		}
 	}, {
