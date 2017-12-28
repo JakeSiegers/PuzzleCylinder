@@ -467,6 +467,7 @@ class PuzzleMenu{
 	detectIfSelectionNeedsToChange(){
 		let i = 0;
 		let somethingSelected = false;
+
 		for(let label in this.currentMenuOptions.items){
 
 			let currentItem = this.currentMenuOptions.items[label];
@@ -596,6 +597,9 @@ class PuzzleMenu{
 			this.menuX = uv.x*this.canvas.width;
 			this.menuY = uv.y*this.canvas.height;
 			this.detectIfSelectionNeedsToChange();
+		}else if(this.currentSelection !== null) {
+				this.currentSelection = null;
+				this.renderMenuText();
 		}
 	}
 
