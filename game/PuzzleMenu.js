@@ -169,8 +169,6 @@ class PuzzleMenu{
 		this.menuX = 0;
 		this.menuY = 0;
 
-		this.usingKeyboard = false;
-
 		this.renderCube();
 		this.changeMenu(this.menuOptions);
 		this.renderMenuText();
@@ -233,7 +231,7 @@ class PuzzleMenu{
 		this.menuGroup.position.z = 200;
 	}
 
-	renderMenuText(){
+	renderMenuText(debug){
 
 		//Box Background
 		this.ctx.fillStyle = 'black';//'#9C27B0';
@@ -297,10 +295,14 @@ class PuzzleMenu{
 
 
 		let i = 0;
-		for(let label in this.currentMenuOptions.items){
-			let item = this.currentMenuOptions.items[label];
+
+
+
+		for(let key in this.currentMenuOptions.items){
+			let item = this.currentMenuOptions.items[key];
 			let color = 'white';
-			if(this.currentSelection === label){
+
+			if(this.currentSelection === key){
 				this.ctx.fillStyle = 'rgba(255,255,255,1)';//'rgba('+this.currentColor.r+','+this.currentColor.g+','+this.currentColor.b+',0.8)';
 				this.ctx.fillRect(26, (this.itemSpacingTop+(this.itemTextHeight*i))-this.itemTextHeight/2, this.canvas.width-52, this.itemTextHeight);
 				color = 'rgb('+this.currentColor.r+','+this.currentColor.g+','+this.currentColor.b+')';
@@ -387,7 +389,7 @@ class PuzzleMenu{
 						item.value = !item.value;
 						break;
 					case 'number':
-						if(!this.usingKeyboard) {
+						if(!this.PuzzleGame.usingKeyboard) {
 							if (this.menuX < this.canvas.width / 2) {
 								this.decrementNumberValue(item);
 							} else {
@@ -457,7 +459,7 @@ class PuzzleMenu{
 		if(newMenu.hasOwnProperty('lastSelected')){
 			this.currentSelection = newMenu.lastSelected;
 		}else if(newMenu.hasOwnProperty('items')){
-			this.currentSelection = Object.keys(newMenu.items)[0];
+			this.selectFirstTop();
 		}
 		this.renderMenuText();
 	}
@@ -469,15 +471,9 @@ class PuzzleMenu{
 
 			let currentItem = this.currentMenuOptions.items[label];
 
-			let selectableItem = (
-				currentItem.hasOwnProperty('action') ||
-				currentItem.hasOwnProperty('items') ||
-				currentItem.hasOwnProperty('type')
-			);
-
 			if(this.menuY > this.itemSpacingTop+(this.itemTextHeight*(i))-this.itemTextHeight/2
 				&& this.menuY < this.itemSpacingTop+(this.itemTextHeight*(i+1))-this.itemTextHeight/2
-				&& selectableItem){
+				&& this.isSelectable(currentItem)){
 				this.currentSelection = label;
 				this.renderMenuText();
 				somethingSelected = true;
@@ -493,6 +489,85 @@ class PuzzleMenu{
 			}
 
 		}
+	}
+
+	isSelectable(item){
+		return (
+			item.hasOwnProperty('action') ||
+			item.hasOwnProperty('items') ||
+			item.hasOwnProperty('type')
+		);
+	}
+
+	selectFirstTop(){
+		for(let selection in this.currentMenuOptions.items){
+			if(this.isSelectable(this.currentMenuOptions.items[selection])){
+				this.currentSelection = selection;
+				this.renderMenuText(true);
+				break;
+			}
+		}
+	}
+
+	selectFirstBot(){
+		for(let selection in this.currentMenuOptions.items){
+			if(this.isSelectable(this.currentMenuOptions.items[selection])){
+				this.currentSelection = selection;
+			}
+		}
+		this.renderMenuText();
+	}
+
+	selectNext(){
+		if(this.currentSelection === null){
+			this.selectFirstTop();
+			return;
+		}
+
+		let next = false;
+		let nextSelection = null;
+		for(let selection in this.currentMenuOptions.items){
+			if(!this.isSelectable(this.currentMenuOptions.items[selection])){
+				continue;
+			}
+			if(next){
+				nextSelection = selection;
+				break;
+			}
+			if(this.currentSelection === selection){
+				next = true;
+			}
+		}
+		if(nextSelection === null){
+			this.selectFirstTop();
+			return;
+		}
+		this.currentSelection = nextSelection;
+		this.renderMenuText();
+	}
+
+	selectPrevious(){
+		if(this.currentSelection === null){
+			this.selectFirstBot();
+			return;
+		}
+
+		let previousSelection = null;
+		for(let selection in this.currentMenuOptions.items){
+			if(!this.isSelectable(this.currentMenuOptions.items[selection])){
+				continue;
+			}
+			if(this.currentSelection === selection){
+				break;
+			}
+			previousSelection = selection;
+		}
+		if(previousSelection === null){
+			this.selectFirstBot();
+			return;
+		}
+		this.currentSelection = previousSelection;
+		this.renderMenuText();
 	}
 
 	mouseMove( evt ) {
@@ -553,38 +628,10 @@ class PuzzleMenu{
 				this.clickCurrentSelection();
 				break;
 			case PuzzleGame.KEY.UP:
-				let previousSelection = null;
-				for(let selection in this.currentMenuOptions.items){
-					if(selection === this.currentSelection){
-						break;
-					}
-					previousSelection = selection;
-				}
-				if(previousSelection === null){
-					let selections = Object.keys(this.currentMenuOptions.items);
-					previousSelection = selections[selections.length-1];
-				}
-				this.currentSelection = previousSelection;
-				this.renderMenuText();
+				this.selectPrevious();
 				break;
 			case PuzzleGame.KEY.DOWN:
-				let next = null;
-				let nextIsNext = false;
-				for(let selection in this.currentMenuOptions.items){
-					if(nextIsNext){
-						next = selection;
-						break;
-					}
-					if(selection === this.currentSelection){
-						nextIsNext = true;
-					}
-				}
-				if(next === null){
-					let selections = Object.keys(this.currentMenuOptions.items);
-					next = selections[0];
-				}
-				this.currentSelection = next;
-				this.renderMenuText();
+				this.selectNext();
 				break;
 			case PuzzleGame.KEY.LEFT:
 				if(item.hasOwnProperty('type') && item.type === 'number'){

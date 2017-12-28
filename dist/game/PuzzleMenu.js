@@ -187,8 +187,6 @@ var PuzzleMenu = function () {
 		this.menuX = 0;
 		this.menuY = 0;
 
-		this.usingKeyboard = false;
-
 		this.renderCube();
 		this.changeMenu(this.menuOptions);
 		this.renderMenuText();
@@ -252,7 +250,7 @@ var PuzzleMenu = function () {
 		}
 	}, {
 		key: 'renderMenuText',
-		value: function renderMenuText() {
+		value: function renderMenuText(debug) {
 
 			//Box Background
 			this.ctx.fillStyle = 'black'; //'#9C27B0';
@@ -313,10 +311,12 @@ var PuzzleMenu = function () {
 			}
 
 			var i = 0;
-			for (var label in this.currentMenuOptions.items) {
-				var item = this.currentMenuOptions.items[label];
+
+			for (var key in this.currentMenuOptions.items) {
+				var item = this.currentMenuOptions.items[key];
 				var color = 'white';
-				if (this.currentSelection === label) {
+
+				if (this.currentSelection === key) {
 					this.ctx.fillStyle = 'rgba(255,255,255,1)'; //'rgba('+this.currentColor.r+','+this.currentColor.g+','+this.currentColor.b+',0.8)';
 					this.ctx.fillRect(26, this.itemSpacingTop + this.itemTextHeight * i - this.itemTextHeight / 2, this.canvas.width - 52, this.itemTextHeight);
 					color = 'rgb(' + this.currentColor.r + ',' + this.currentColor.g + ',' + this.currentColor.b + ')';
@@ -407,7 +407,7 @@ var PuzzleMenu = function () {
 							item.value = !item.value;
 							break;
 						case 'number':
-							if (!this.usingKeyboard) {
+							if (!this.PuzzleGame.usingKeyboard) {
 								if (this.menuX < this.canvas.width / 2) {
 									this.decrementNumberValue(item);
 								} else {
@@ -469,7 +469,7 @@ var PuzzleMenu = function () {
 			if (newMenu.hasOwnProperty('lastSelected')) {
 				this.currentSelection = newMenu.lastSelected;
 			} else if (newMenu.hasOwnProperty('items')) {
-				this.currentSelection = Object.keys(newMenu.items)[0];
+				this.selectFirstTop();
 			}
 			this.renderMenuText();
 		}
@@ -482,9 +482,7 @@ var PuzzleMenu = function () {
 
 				var currentItem = this.currentMenuOptions.items[label];
 
-				var selectableItem = currentItem.hasOwnProperty('action') || currentItem.hasOwnProperty('items') || currentItem.hasOwnProperty('type');
-
-				if (this.menuY > this.itemSpacingTop + this.itemTextHeight * i - this.itemTextHeight / 2 && this.menuY < this.itemSpacingTop + this.itemTextHeight * (i + 1) - this.itemTextHeight / 2 && selectableItem) {
+				if (this.menuY > this.itemSpacingTop + this.itemTextHeight * i - this.itemTextHeight / 2 && this.menuY < this.itemSpacingTop + this.itemTextHeight * (i + 1) - this.itemTextHeight / 2 && this.isSelectable(currentItem)) {
 					this.currentSelection = label;
 					this.renderMenuText();
 					somethingSelected = true;
@@ -499,6 +497,86 @@ var PuzzleMenu = function () {
 					this.currentSelection = null;
 				}
 			}
+		}
+	}, {
+		key: 'isSelectable',
+		value: function isSelectable(item) {
+			return item.hasOwnProperty('action') || item.hasOwnProperty('items') || item.hasOwnProperty('type');
+		}
+	}, {
+		key: 'selectFirstTop',
+		value: function selectFirstTop() {
+			for (var selection in this.currentMenuOptions.items) {
+				if (this.isSelectable(this.currentMenuOptions.items[selection])) {
+					this.currentSelection = selection;
+					this.renderMenuText(true);
+					break;
+				}
+			}
+		}
+	}, {
+		key: 'selectFirstBot',
+		value: function selectFirstBot() {
+			for (var selection in this.currentMenuOptions.items) {
+				if (this.isSelectable(this.currentMenuOptions.items[selection])) {
+					this.currentSelection = selection;
+				}
+			}
+			this.renderMenuText();
+		}
+	}, {
+		key: 'selectNext',
+		value: function selectNext() {
+			if (this.currentSelection === null) {
+				this.selectFirstTop();
+				return;
+			}
+
+			var next = false;
+			var nextSelection = null;
+			for (var selection in this.currentMenuOptions.items) {
+				if (!this.isSelectable(this.currentMenuOptions.items[selection])) {
+					continue;
+				}
+				if (next) {
+					nextSelection = selection;
+					break;
+				}
+				if (this.currentSelection === selection) {
+					next = true;
+				}
+			}
+			if (nextSelection === null) {
+				this.selectFirstTop();
+				return;
+			}
+			this.currentSelection = nextSelection;
+			this.renderMenuText();
+		}
+	}, {
+		key: 'selectPrevious',
+		value: function selectPrevious() {
+			if (this.currentSelection === null) {
+				this.selectFirstBot();
+				return;
+			}
+
+			var previousSelection = null;
+			for (var selection in this.currentMenuOptions.items) {
+				if (!this.isSelectable(this.currentMenuOptions.items[selection])) {
+					continue;
+				}
+				if (this.currentSelection === selection) {
+					break;
+				}
+				previousSelection = selection;
+			}
+			if (previousSelection === null) {
+				this.selectFirstBot();
+				return;
+			}
+			this.currentSelection = previousSelection;
+			this.renderMenuText();
 		}
 	}, {
 		key: 'mouseMove',
@@ -563,38 +641,10 @@ var PuzzleMenu = function () {
 					this.clickCurrentSelection();
 					break;
 				case PuzzleGame.KEY.UP:
-					var previousSelection = null;
-					for (var selection in this.currentMenuOptions.items) {
-						if (selection === this.currentSelection) {
-							break;
-						}
-						previousSelection = selection;
-					}
-					if (previousSelection === null) {
-						var selections = Object.keys(this.currentMenuOptions.items);
-						previousSelection = selections[selections.length - 1];
-					}
-					this.currentSelection = previousSelection;
-					this.renderMenuText();
+					this.selectPrevious();
 					break;
 				case PuzzleGame.KEY.DOWN:
-					var next = null;
-					var nextIsNext = false;
-					for (var _selection in this.currentMenuOptions.items) {
-						if (nextIsNext) {
-							next = _selection;
-							break;
-						}
-						if (_selection === this.currentSelection) {
-							nextIsNext = true;
-						}
-					}
-					if (next === null) {
-						var _selections = Object.keys(this.currentMenuOptions.items);
-						next = _selections[0];
-					}
-					this.currentSelection = next;
-					this.renderMenuText();
+					this.selectNext();
 					break;
 				case PuzzleGame.KEY.LEFT:
 					if (item.hasOwnProperty('type') && item.type === 'number') {
