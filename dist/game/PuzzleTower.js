@@ -19,8 +19,14 @@ var PuzzleTower = function () {
 
 		this.currentMode = MODE_LOADING;
 
-		this.difficulty = 2;
-		this.startingHeight = 4;
+		this.resettedStats = {
+			score: 0,
+			matches: 0,
+			rowsCreated: 0,
+			chainCount: 0,
+			highestChain: 0
+		};
+		this.stats = Object.assign({}, this.resettedStats);
 
 		//Timer Objects
 		this.pushTimeoutObj = null;
@@ -76,12 +82,10 @@ var PuzzleTower = function () {
 			this.touchTimer = null;
 			this.xTouchChain = 0;
 			this.yTouchChain = 0;
-			this.PuzzleGame.renderer.domElement.addEventListener('touchstart', this.onDocumentTouchStart.bind(this), false);
-			this.PuzzleGame.renderer.domElement.addEventListener('touchmove', this.onDocumentTouchMove.bind(this), false);
 		}
 	}, {
-		key: 'onDocumentTouchStart',
-		value: function onDocumentTouchStart(event) {
+		key: 'touchStart',
+		value: function touchStart(event) {
 			var sThis = this;
 			event.preventDefault();
 
@@ -115,8 +119,8 @@ var PuzzleTower = function () {
    */
 
 	}, {
-		key: 'onDocumentTouchMove',
-		value: function onDocumentTouchMove(event) {
+		key: 'touchMove',
+		value: function touchMove(event) {
 			event.preventDefault();
 
 			if (event.touches.length === 1) {
@@ -166,7 +170,7 @@ var PuzzleTower = function () {
 				case MODE_ENDLESS:
 
 					this.openTube();
-					var sThis = this;
+					//let sThis = this;
 
 					/*setTimeout(function(){
      	sThis.gameBoard.visible = true;
@@ -181,12 +185,12 @@ var PuzzleTower = function () {
      */
 
 					new PuzzleTimer(function () {
-						sThis.gameBoard.visible = true;
-						sThis.cursorObj.visible = true;
-						sThis.nextRow.visible = true;
-						sThis.depthFilter.visible = true;
-						sThis.resetGame();
-						new TWEEN.Tween(sThis.depthFilter.material).to({
+						this.gameBoard.visible = true;
+						this.cursorObj.visible = true;
+						this.nextRow.visible = true;
+						this.depthFilter.visible = true;
+						this.resetGame();
+						new TWEEN.Tween(this.depthFilter.material).to({
 							opacity: 0.5
 						}, 2000).easing(TWEEN.Easing.Exponential.Out).start();
 					}, 1000, CAT_GAME, this);
@@ -199,9 +203,9 @@ var PuzzleTower = function () {
 		value: function makeHarder() {
 			if (this.pushDelay > 0) {
 				if (this.mapType === MAP_3D) {
-					this.pushDelay = 100 - this.matches / (6 - this.difficulty);
+					this.pushDelay = 100 - this.stats.matches / (6 - this.difficulty);
 				} else {
-					this.pushDelay = 50 - this.matches / (6 - this.difficulty);
+					this.pushDelay = 50 - this.stats.matches / (6 - this.difficulty);
 				}
 
 				if (this.pushDelay < 0) {
@@ -237,8 +241,12 @@ var PuzzleTower = function () {
 			}
 
 			//TODO:Sort these!
+
+			this.difficulty = this.PuzzleGame.gameSettings.difficulty;
+			this.startingHeight = this.PuzzleGame.gameSettings.startingHeight;
+
 			this.animationQueue = 0;
-			this.score = 0;
+			this.stats = Object.assign({}, this.resettedStats);
 			this.gameGrid = [];
 
 			this.circlePieceSize = TWO_PI / this.boardWidth;
@@ -255,10 +263,6 @@ var PuzzleTower = function () {
 
 			this.handicap = 5 - this.difficulty;
 
-			this.matches = 0;
-			this.rowsCreated = 0;
-			this.chainCount = 0;
-			this.highestChain = 0;
 			this.chainTimer = null;
 			this.quickPush = false;
 		}
@@ -266,7 +270,9 @@ var PuzzleTower = function () {
 		key: 'resetGame',
 		value: function resetGame() {
 
-			TWEEN.removeAll();
+			//TWEEN.removeAll();
+
+			this.PuzzleGame.resetBlockTextures();
 
 			this.resetGameVariables();
 
@@ -327,10 +333,11 @@ var PuzzleTower = function () {
 	}, {
 		key: 'loseAnimation',
 		value: function loseAnimation() {
+			this.PuzzleGame.blankOutBlockTextures();
 			for (var x = 0; x < this.boardWidth; x++) {
 				for (var y = 0; y < this.boardHeight; y++) {
 					if (this.gameGrid[x][y] !== null) {
-						this.gameGrid[x][y].material.map = this.PuzzleGame.blankTexture;
+						//this.gameGrid[x][y].material.map = this.PuzzleGame.blankTexture;
 						var delay = 500;
 						if (this.gameGrid[x][this.boardHeight - 1] !== null) {
 							delay = 2000;
@@ -344,12 +351,6 @@ var PuzzleTower = function () {
 			}
 			//setTimeout(this.closeAndSetGameMode.bind(this, MODE_NONE), 2500);
 			new PuzzleTimer(this.closeAndSetGameMode.bind(this, MODE_NONE), 2500, CAT_GAME, this);
-
-			new PuzzleTimer(function () {
-				console.log('TODO:Prep game reset here');
-				//this.PuzzleGame.menu.showMenuWithTransition();
-				//this.PuzzleGame.setFocus(FOCUS_MENU);
-			}, 3000, CAT_GAME, this);
 		}
 	}, {
 		key: 'checkToPushBlocks',
@@ -375,6 +376,7 @@ var PuzzleTower = function () {
 	}, {
 		key: 'pushTowerUp',
 		value: function pushTowerUp() {
+			var _this = this;
 
 			for (var tx = 0; tx < this.boardWidth; tx++) {
 				if (this.gameGrid[tx][this.boardHeight - 1] !== null) {
@@ -382,6 +384,12 @@ var PuzzleTower = function () {
 					this.hasControl = false;
 					this.gameActive = false;
 					this.loseAnimation();
+					new PuzzleTimer(function () {
+						_this.PuzzleGame.menu.showMenu();
+						_this.PuzzleGame.menu.changeMenu(_this.PuzzleGame.menu.endingScreen);
+						_this.PuzzleGame.scoreBoard.hideScoreBoard();
+						_this.PuzzleGame.setFocus(FOCUS_MENU);
+					}, 3000, CAT_GAME, this);
 					return false;
 				}
 			}
@@ -550,58 +558,43 @@ var PuzzleTower = function () {
 	}, {
 		key: 'pauseGame',
 		value: function pauseGame() {
+			if (this.PuzzleGame.menu.inAnimation) {
+				return;
+			}
 			if (this.PuzzleGame.paused) {
 				this.hidePause();
+				this.PuzzleGame.setFocus(FOCUS_TOWER);
+				//new TWEEN.Tween(this.towerGroup.position).to({
+				//	z: 0
+				//}, 500).easing(TWEEN.Easing.Quadratic.Out).start();
 				PuzzleTimer.resumeAllInCategory(CAT_GAME);
+				this.openTube();
 			} else {
 				this.showPause();
+				this.PuzzleGame.setFocus(FOCUS_MENU);
 				PuzzleTimer.pauseAllInCategory(CAT_GAME);
+				//new TWEEN.Tween(this.towerGroup.position).to({
+				//	z: -200
+				//}, 500).easing(TWEEN.Easing.Quadratic.Out).start();
+				this.closeTube();
 			}
 			this.PuzzleGame.paused = !this.PuzzleGame.paused;
 		}
 	}, {
 		key: 'showPause',
 		value: function showPause() {
-			var pauseCanvas = document.createElement('canvas');
-			var pauseCtx = pauseCanvas.getContext('2d');
-
-			pauseCanvas.width = 256;
-			pauseCanvas.height = 128;
-
-			pauseCtx.font = '40pt Roboto';
-			pauseCtx.fillStyle = '#ffffff';
-			pauseCtx.fillRect(0, 0, pauseCanvas.width, pauseCanvas.height);
-			pauseCtx.fillStyle = '#607D8B';
-			pauseCtx.textAlign = "center";
-			//pauseCtx.textA = "Center";
-			pauseCtx.fillText("PAUSED", pauseCanvas.width / 2, pauseCanvas.height / 2);
-			pauseCtx.font = '12pt Roboto';
-			pauseCtx.fillText("(press esc / tap to continue)", pauseCanvas.width / 2, pauseCanvas.height / 2 + 30);
-
-			var pauseTexture = new THREE.Texture(pauseCanvas);
-
-			PuzzleUtils.sharpenTexture(this.PuzzleGame.renderer, pauseTexture, true);
-
-			var material = new THREE.MeshBasicMaterial({ map: pauseTexture });
-			var geometry = new THREE.PlaneGeometry(256, 128);
-			this.pauseMesh = new THREE.Mesh(geometry, material);
-			if (this.mapType === MAP_3D) {
-				this.pauseMesh.position.z = this.boardRadius + this.blockDepth + 10;
-			} else {
-				this.pauseMesh.position.z = this.blockDepth + 10;
-			}
-			pauseTexture.needsUpdate = true;
-			this.PuzzleGame.scene.add(this.pauseMesh);
+			this.PuzzleGame.menu.changeMenu(this.PuzzleGame.menu.pauseMenuOptions);
+			this.PuzzleGame.menu.showMenu();
 		}
 	}, {
 		key: 'hidePause',
 		value: function hidePause() {
-			this.PuzzleGame.scene.remove(this.pauseMesh);
+			this.PuzzleGame.menu.hideMenu();
 		}
 	}, {
 		key: 'keyPress',
 		value: function keyPress(event) {
-			if (!this.hasControl || this.PuzzleGame.paused && event.keyCode !== KEY_ESCAPE) {
+			if (!this.hasControl || this.PuzzleGame.paused && event.keyCode !== PuzzleGame.KEY.ESCAPE) {
 				return;
 			}
 
@@ -612,26 +605,22 @@ var PuzzleTower = function () {
 					//this.destroyBlock(this.selectorX,this.selectorY);
 					this.quickPush = true;
 					break;
-				case KEY_ESCAPE:
+				case PuzzleGame.KEY.ESCAPE:
 					this.pauseGame();
 					break;
-				case KEY_SPACE:
-					//Space
+				case PuzzleGame.KEY.SPACE:
 					this.swapSelectedBlocks();
 					break;
-				case KEY_UP:
+				case PuzzleGame.KEY.UP:
 					this.adjustSelector('up');
 					break;
-				case KEY_DOWN:
-					//down
+				case PuzzleGame.KEY.DOWN:
 					this.adjustSelector('down');
 					break;
-				case KEY_LEFT:
-					//left
+				case PuzzleGame.KEY.LEFT:
 					this.adjustSelector('left');
 					break;
-				case KEY_RIGHT:
-					//right
+				case PuzzleGame.KEY.RIGHT:
 					this.adjustSelector('right');
 					break;
 			}
@@ -693,7 +682,7 @@ var PuzzleTower = function () {
 					}
 
 					if (matchChainX.length >= 3) {
-						this.matches++;
+						this.stats.matches++;
 						comboCount++;
 						for (var i = 0; i < matchChainX.length; i++) {
 							this.gameGrid[matchChainX[i]][y].userData.alreadyMatchedX = true;
@@ -722,7 +711,7 @@ var PuzzleTower = function () {
 					}
 
 					if (matchChainY.length >= 3) {
-						this.matches++;
+						this.stats.matches++;
 						comboCount++;
 						for (var _i = 0; _i < matchChainY.length; _i++) {
 							this.gameGrid[x][matchChainY[_i]].userData.alreadyMatchedY = true;
@@ -738,9 +727,9 @@ var PuzzleTower = function () {
 			}
 
 			if (blocksToBeDestroyed.length > 0) {
-				this.chainCount++;
-				if (this.chainCount > this.highestChain) {
-					this.highestChain = this.chainCount;
+				this.stats.chainCount++;
+				if (this.stats.chainCount > this.stats.highestChain) {
+					this.stats.highestChain = this.stats.chainCount;
 				}
 
 				if (this.chainTimer !== null) {
@@ -748,13 +737,13 @@ var PuzzleTower = function () {
 				}
 				this.chainTimer = new PuzzleTimer(this.resetChain, this.dropDelay + 600, CAT_GAME, this); //setTimeout(this.resetChain.bind(this), this.dropDelay + 600);
 
-				if (this.chainCount > 1) {
-					console.log('CHAIN ' + this.chainCount);
+				if (this.stats.chainCount > 1) {
+					console.log('CHAIN ' + this.stats.chainCount);
 				}
 			}
 
 			for (var d = 0; d < blocksToBeDestroyed.length; d++) {
-				this.score += comboCount * this.chainCount;
+				this.stats.score += comboCount * this.stats.chainCount;
 				this.makeHarder();
 				this.destroyBlock(blocksToBeDestroyed[d].x, blocksToBeDestroyed[d].y);
 			}
@@ -762,7 +751,7 @@ var PuzzleTower = function () {
 	}, {
 		key: 'resetChain',
 		value: function resetChain() {
-			this.chainCount = 0;
+			this.stats.chainCount = 0;
 			this.chainTimer = null;
 		}
 	}, {
@@ -885,7 +874,7 @@ var PuzzleTower = function () {
 	}, {
 		key: 'dropBlocksStartingAtPoint',
 		value: function dropBlocksStartingAtPoint(x, y) {
-			var _this = this;
+			var _this2 = this;
 
 			this.animationQueue--;
 			var stillGottaFall = true;
@@ -893,20 +882,20 @@ var PuzzleTower = function () {
 				if (this.gameGrid[x][i] !== null && !this.gameGrid[x][i].userData.exploding) {
 					var _ret = function () {
 						//You moved a block under this block about to fall.
-						if (_this.gameGrid[x][i - 1] !== null) {
-							_this.gameGrid[x][i].userData.locked = false;
+						if (_this2.gameGrid[x][i - 1] !== null) {
+							_this2.gameGrid[x][i].userData.locked = false;
 							//Set texture back to normal, non debug texture.
 							//this.gameGrid[x][i].material.map = this.blockTextures[this.gameGrid[x][i].userData.blockType];
 							stillGottaFall = false;
 							return 'continue';
 						}
-						var sThis = _this;
-						_this.animationQueue++;
-						new TWEEN.Tween(_this.gameGrid[x][i].position).to({ y: _this.calcYBlockPos(i - 1) }, 200).easing(TWEEN.Easing.Bounce.Out).start().onComplete(function () {
+						var sThis = _this2;
+						_this2.animationQueue++;
+						new TWEEN.Tween(_this2.gameGrid[x][i].position).to({ y: _this2.calcYBlockPos(i - 1) }, 200).easing(TWEEN.Easing.Bounce.Out).start().onComplete(function () {
 							sThis.animationQueue--;
 						});
-						_this.gameGrid[x][i - 1] = _this.gameGrid[x][i];
-						_this.gameGrid[x][i] = null;
+						_this2.gameGrid[x][i - 1] = _this2.gameGrid[x][i];
+						_this2.gameGrid[x][i] = null;
 					}();
 
 					if (_ret === 'continue') continue;
@@ -1081,7 +1070,7 @@ var PuzzleTower = function () {
 			} else {
 				this.nextRow.rotation.y = 0;
 			}
-			this.rowsCreated++;
+			this.stats.rowsCreated++;
 		}
 	}, {
 		key: 'generateNextRowMeshArray',

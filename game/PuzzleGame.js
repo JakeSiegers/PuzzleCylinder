@@ -14,29 +14,40 @@ const PI = Math.PI;
 const TWO_PI = PI*2;
 const HALF_PI = PI/2;
 
-const KEY_UP = 38;
-const KEY_DOWN = 40;
-const KEY_LEFT = 37;
-const KEY_RIGHT = 39;
-const KEY_SPACE = 32;
-const KEY_ESCAPE = 27;
-
 const CAT_GAME = 'game';
 
-const DIFFICULTIES = {
-	1:'Easy',
-	2:'Normal',
-	3:'Hard',
-	4:'Very Hard',
-	5:'Super Hard'
-};
-
 class PuzzleGame{
+
+	DIFFICULTIES(){
+		return {
+			1: 'Easy',
+			2: 'Normal',
+			3: 'Hard',
+			4: 'Very Hard',
+			5: 'Super Hard'
+		}
+	};
+
+	static get KEY(){
+		return {
+			UP:38,
+			DOWN:40,
+			LEFT:37,
+			RIGHT:39,
+			SPACE:32,
+			ESCAPE:27,
+			ENTER:13
+		}
+	}
 
 	constructor(){
 		this.loaded = false;
 		this.paused = false;
 		this.piTimer = 0;
+
+		//The last known position of the mouse.
+		this.mouseX = null;
+		this.mouseY = null;
 
 		//Lock less important animations at 30
 		this.ThirtyFPSInterval = 1000 / 30;
@@ -45,6 +56,11 @@ class PuzzleGame{
 		this.settings = {
 			antiAlias:true,
 			textureFiltering:true
+		};
+
+		this.gameSettings = {
+			startingHeight:4,
+			difficulty:2
 		};
 
 		this.renderer = new THREE.WebGLRenderer({antialias: this.settings.antiAlias, alpha: true});
@@ -61,10 +77,15 @@ class PuzzleGame{
 		this.scene = new THREE.Scene();
 
 		this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 100, 850);
+		//this.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
 		this.camera.position.z = 500;
 
 		window.addEventListener('resize', this.onWindowResize.bind(this), false);
-
+		window.addEventListener( 'mousemove', this.mouseMove.bind(this), false );
+		window.addEventListener( 'mouseup', this.mouseUp.bind(this), false );
+		this.renderer.domElement.addEventListener('touchstart', this.touchEvent.bind(this,'Start'), false );
+		this.renderer.domElement.addEventListener('touchmove', this.touchEvent.bind(this,'Move'), false );
+		this.renderer.domElement.addEventListener('touchend', this.touchEvent.bind(this,'End'), false );
 		this.initLoaders(this.loadComplete,this);
 	}
 
@@ -75,9 +96,8 @@ class PuzzleGame{
 		this.menu = new PuzzleMenu(this);
 		this.scoreBoard = new PuzzleScore(this);
 
+		this.menu.showMenu();
 
-
-		this.menu.showMenuWithTransition();
 		this.setFocus(FOCUS_MENU);
 		document.addEventListener('keydown', this.keyPress.bind(this));
 		document.addEventListener('keyup', this.keyUp.bind(this));
@@ -105,7 +125,7 @@ class PuzzleGame{
 		bgTexture.needsUpdate = true;
 
 		let material = new THREE.MeshBasicMaterial({
-			color: 0x000000,
+			color: 0x9C27B0,
 			//side: THREE.DoubleSide,
 			transparent: true,
 			opacity: 0.5,
@@ -116,6 +136,69 @@ class PuzzleGame{
 		this.background = new THREE.Mesh(geometry, material);
 		this.background.position.z = -300;
 		this.scene.add(this.background);
+
+		/*
+		//Fun little background blocks concept...
+
+		this.backgroundBlocks = new THREE.Group();
+		this.backgroundBlocksRadius = 1000;
+		for(let i = 0; i< 10;i++){
+			let blockMat = new THREE.MeshBasicMaterial({color: 0x9C27B0, map: this.blankTexture});
+			let blockGeo = new THREE.BoxGeometry(100, 100, 33);
+			let blockMesh = new THREE.Mesh( blockGeo, blockMat );
+			blockMesh.position.x = Math.cos((TWO_PI/10)*i)*this.backgroundBlocksRadius;
+			blockMesh.position.y = Math.sin((TWO_PI/10)*i)*this.backgroundBlocksRadius;
+			this.backgroundBlocks.add(blockMesh);
+
+			new TWEEN.Tween(blockMesh.rotation)
+				.to({x:TWO_PI},Math.random()*5000+5000)
+				.easing(TWEEN.Easing.Linear.None)
+				.repeat(Infinity)
+				.start();
+			new TWEEN.Tween(blockMesh.rotation)
+				.to({y:-TWO_PI},Math.random()*5000+5000)
+				.easing(TWEEN.Easing.Linear.None)
+				.repeat(Infinity)
+				.start();
+			new TWEEN.Tween(blockMesh.rotation)
+				.to({z:TWO_PI},Math.random()*5000+5000)
+				.easing(TWEEN.Easing.Linear.None)
+				.repeat(Infinity)
+				.start();
+		}
+		this.scene.add(this.backgroundBlocks);
+
+
+		this.backgroundBlocksRadius = 300;
+		for(let i in this.backgroundBlocks.children){
+			new TWEEN.Tween(this.backgroundBlocks.children[i].position)
+				.to({
+					x:Math.cos((TWO_PI/10)*i)*this.backgroundBlocksRadius,
+					y:Math.sin((TWO_PI/10)*i)*this.backgroundBlocksRadius
+				},1000)
+				.easing(TWEEN.Easing.Circular.InOut)
+				.start();
+		}
+
+		new TWEEN.Tween(this.backgroundBlocks.rotation)
+			.to({z:TWO_PI},40000)
+			.easing(TWEEN.Easing.Linear.None)
+			.repeat(Infinity)
+			.start();
+
+		*/
+
+		new TWEEN.Tween(this.background.material.map.offset)
+			.to({x:1},4000)
+			.easing(TWEEN.Easing.Linear.None)
+			.repeat(Infinity)
+			.start();
+
+		new TWEEN.Tween(this.background.rotation)
+			.to({z:TWO_PI},1000000)
+			.easing(TWEEN.Easing.Linear.None)
+			.repeat(Infinity)
+			.start();
 	}
 
 	initLoaders(completeFn,completeScope){
@@ -186,10 +269,10 @@ class PuzzleGame{
 				PuzzleUtils.sharpenTexture(this.renderer,this.blockTextures[i], true);
 			}
 
-			let faceMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTextures[i]});
-			let sideMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockSideTexture});
-			let topMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTopTexture});
-			this.blockMaterials[i] = faceMaterial;
+			//let faceMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTextures[i]});
+			//let sideMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockSideTexture});
+			//let topMaterial = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTopTexture});
+			this.blockMaterials[i] = new THREE.MeshBasicMaterial({color: this.blockColors[i], map: this.blockTextures[i]});
 			/*new THREE.MultiMaterial([
 			 sideMaterial,   //right
 			 sideMaterial,   //left
@@ -215,9 +298,23 @@ class PuzzleGame{
 		}
 	}
 
+	blankOutBlockTextures(){
+		for(let i in this.blockMaterials){
+			this.blockMaterials[i].map = this.blankTexture;
+		}
+	}
+
+	resetBlockTextures(){
+		for(let i in this.blockMaterials){
+			this.blockMaterials[i].map = this.blockTextures[i];
+		}
+	}
+
 	animate(){
 		this.stats.begin();
 		let now = Date.now();
+
+		//console.log(this.menu.menuShimmyTimer);
 
 		TWEEN.update();
 		this.renderer.render(this.scene, this.camera);
@@ -232,15 +329,6 @@ class PuzzleGame{
 			}
 
 			this.ThirtyFPSThen = now - (elapsed % this.ThirtyFPSInterval);
-
-			this.background.material.map.offset.x += 0.01;
-			if (this.background.material.map.offset.x > 1) {
-				this.background.material.map.offset.x = 0;
-			}
-			this.background.rotation.z += 0.0001;
-			if(this.background.rotation.z > TWO_PI){
-				this.background.rotation.z = 0;
-			}
 
 			this.tower.gameAnimations();
 		}
@@ -258,7 +346,8 @@ class PuzzleGame{
 
 	startGame(mapType){
 		this.tower.changeMapType(mapType);
-		this.menu.hideMenuWithTransition();
+		this.menu.hideMenu();
+
 		this.setFocus(FOCUS_TOWER);
 		this.tower.setGameMode(MODE_ENDLESS);
 
@@ -269,12 +358,12 @@ class PuzzleGame{
 			this.scoreBoard.scoreGroup.position.y = (this.tower.boardPixelHeight/2) - (this.scoreBoard.canvas.height/2);
 		}else{
 			this.tower.towerGroup.position.x = -50;
+			this.tower.towerGroup.rotation.y = 0;
 			this.scoreBoard.scoreGroup.position.x = (this.tower.boardPixelWidth/2) + (this.scoreBoard.canvas.width/2) -50;
 			this.scoreBoard.scoreGroup.position.y = (this.tower.boardPixelHeight/2) - (this.scoreBoard.canvas.height/2);
 		}
 
 		this.scoreBoard.showScoreBoard();
-
 	}
 
 	setFocus(newFocus){
@@ -283,6 +372,8 @@ class PuzzleGame{
 
 	keyPress(event) {
 		event.preventDefault();
+		document.body.style.cursor = 'none';
+		this.usingKeyboard = true;
 		switch(this.currentFocus){
 			case FOCUS_MENU:
 				this.menu.keyPress(event);
@@ -305,4 +396,39 @@ class PuzzleGame{
 		}
 	}
 
+	mouseMove(event){
+		event.preventDefault();
+		this.usingKeyboard = false;
+		document.body.style.cursor = 'pointer';
+		[this.mouseX,this.mouseY] = [event.clientX, event.clientY];
+		switch(this.currentFocus){
+			case FOCUS_MENU:
+				this.menu.mouseMove(event);
+				break;
+		}
+	};
+
+
+	mouseUp(event){
+		event.preventDefault();
+		switch(this.currentFocus){
+			case FOCUS_MENU:
+				this.menu.mouseUp(event);
+				break;
+		}
+	}
+
+	touchEvent(type,event){
+		event.preventDefault();
+		let obj = null;
+		switch(this.currentFocus){
+			case FOCUS_MENU:
+				obj = this.menu;
+				break;
+			case FOCUS_TOWER:
+				obj = this.tower;
+				break;
+		}
+		obj['touch'+type].call(obj,event);
+	}
 }

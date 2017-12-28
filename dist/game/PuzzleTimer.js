@@ -67,6 +67,7 @@ var PuzzleTimer = function () {
 				console.error('Timer (' + this.timerId + ') already ended!');
 				return;
 			}
+
 			this.completed = true;
 			clearTimeout(this.timerId);
 			if (this.callback) {
@@ -88,14 +89,18 @@ var PuzzleTimer = function () {
 	}], [{
 		key: 'pauseAllInCategory',
 		value: function pauseAllInCategory(category) {
+			console.log('PAUSED----------------------');
 			for (var i in PuzzleTimer.timers[category]) {
+				console.log(PuzzleTimer.timers[category][i]);
 				PuzzleTimer.timers[category][i].pause();
 			}
 		}
 	}, {
 		key: 'resumeAllInCategory',
 		value: function resumeAllInCategory(category) {
+			console.log('RESUME----------------------');
 			for (var i in PuzzleTimer.timers[category]) {
+				console.log(PuzzleTimer.timers[category][i]);
 				PuzzleTimer.timers[category][i].resume();
 			}
 		}

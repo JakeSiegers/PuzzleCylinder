@@ -36,29 +36,35 @@ class PuzzleScore{
 		this.ctx.textAlign = "Left";
 
 		this.ctx.fillText("Score", 5,20);
-		this.ctx.fillText(this.PuzzleGame.tower.score+"", 5,40);
+		this.ctx.fillText(this.PuzzleGame.tower.stats.score+"", 5,40);
 		this.ctx.fillText("Matches", 5,60);
-		this.ctx.fillText(this.PuzzleGame.tower.matches+"", 5,80);
+		this.ctx.fillText(this.PuzzleGame.tower.stats.matches+"", 5,80);
 		this.ctx.fillText("Rows", 5,100);
-		this.ctx.fillText(this.PuzzleGame.tower.rowsCreated+"", 5,120);
+		this.ctx.fillText(this.PuzzleGame.tower.stats.rowsCreated+"", 5,120);
 		this.ctx.fillText("Chain / Max", 5,140);
-		this.ctx.fillText(this.PuzzleGame.tower.chainCount + " / " + this.PuzzleGame.tower.highestChain, 5,160);
+		this.ctx.fillText(this.PuzzleGame.tower.stats.chainCount + " / " + this.PuzzleGame.tower.stats.highestChain, 5,160);
 		this.ctx.fillText("Difficulty", 5,180);
-		this.ctx.fillText(DIFFICULTIES[this.PuzzleGame.tower.difficulty], 5,200);
+		this.ctx.fillText(this.PuzzleGame.DIFFICULTIES()[this.PuzzleGame.tower.difficulty], 5,200);
 		this.ctx.fillText("Speed Level", 5,220);
 		this.ctx.fillText(Math.floor(100-this.PuzzleGame.tower.pushDelay)+"", 5,240);
 		this.texture.needsUpdate = true;
 	}
 
 	showScoreBoard(){
-		this.scoreGroup.visibile = true;
-
-		this.scoreGroup.rotation.x = 0;
-
-
+		this.scoreGroup.visible = true;
 		new TWEEN.Tween(this.scoreGroup.rotation).to({
 			y:0
 		},1000).easing(TWEEN.Easing.Quintic.Out).start();
+	}
 
+	hideScoreBoard(){
+		new TWEEN.Tween(this.scoreGroup.rotation).to({
+			y: -HALF_PI
+		},1000)
+		.easing(TWEEN.Easing.Quintic.In)
+		.start()
+		.onComplete(() => {
+			this.scoreGroup.visible = false;
+		});
 	}
 }

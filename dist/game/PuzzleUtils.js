@@ -12,7 +12,7 @@ var PuzzleUtils = function () {
 	_createClass(PuzzleUtils, null, [{
 		key: "addCls",
 		value: function addCls(el, clsToAdd) {
-			if (el.className.trim() == '') {
+			if (el.className.trim() === '') {
 				el.className += clsToAdd;
 			} else {
 				el.className += " " + clsToAdd;
@@ -46,6 +46,22 @@ var PuzzleUtils = function () {
 			if (maxAnisotropy) {
 				texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 			}
+		}
+	}, {
+		key: "hexToRgb",
+		value: function hexToRgb(hex) {
+			var bigint = parseInt(hex, 16);
+			var r = bigint >> 16 & 255;
+			var g = bigint >> 8 & 255;
+			var b = bigint & 255;
+
+			return r + "," + g + "," + b;
+		}
+	}, {
+		key: "isFunction",
+		value: function isFunction(functionToCheck) {
+			var getType = {};
+			return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 		}
 	}, {
 		key: "windowHeight",
