@@ -52,9 +52,17 @@ var PuzzleMenu = function () {
 
 		var p = null;
 
+		this.menuBreadCrumbs = [];
+
 		this.backFn = function () {
-			this.changeMenuAnimation(this.menuOptions, true);
-		}.bind(this);
+			var newMenu = _this.menuBreadCrumbs.pop();
+			_this.changeMenuAnimation(newMenu, true, true);
+		};
+
+		this.resetMenu = function () {
+			_this.menuBreadCrumbs = [];
+			_this.changeMenuAnimation(_this.menuOptions, true);
+		};
 
 		this.menuOptions = {
 			label: '"Not Your Average Puzzle Game"',
@@ -64,14 +72,27 @@ var PuzzleMenu = function () {
 					label: '2D Mode',
 					color: { r: 183, g: 28, b: 28 }, //['#B71C1C','#F44336','#EF9A9A'],
 					items: {
-						start2d: { label: 'Start 2D', action: this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_2D) },
-						startHeight: { label: function () {
-								return 'Start Height ' + this.PuzzleGame.gameSettings.startingHeight;
-							}.bind(this), type: 'number', valueScope: this.PuzzleGame.gameSettings, valueKey: 'startingHeight', min: 0, max: 12, step: 1 },
-						difficulty: { label: function () {
-								return 'Difficulty ' + this.PuzzleGame.gameSettings.difficulty;
-							}.bind(this), type: 'number', valueScope: this.PuzzleGame.gameSettings, valueKey: 'difficulty', min: 1, max: 5, step: 1 },
+						twoEndless: {
+							label: '2D - Endless',
+							items: {
+								start2d: { label: 'Start 2D', action: this.PuzzleGame.startGame.bind(this.PuzzleGame, MAP_2D) },
+								startHeight: { label: function () {
+										return 'Start Height ' + this.PuzzleGame.gameSettings.startingHeight;
+									}.bind(this), type: 'number', valueScope: this.PuzzleGame.gameSettings, valueKey: 'startingHeight', min: 0, max: 12, step: 1 },
+								difficulty: { label: function () {
+										return 'Difficulty ' + this.PuzzleGame.gameSettings.difficulty;
+									}.bind(this), type: 'number', valueScope: this.PuzzleGame.gameSettings, valueKey: 'difficulty', min: 1, max: 5, step: 1 },
+								back: { label: 'Back', action: this.backFn }
+							}
+						},
+						twoTime: {
+							label: '2D - Line Clear',
+							items: {
+								back: { label: 'Back', action: this.backFn }
+							}
+						},
 						back: { label: 'Back', action: this.backFn }
+
 					}
 				},
 				threed: {
@@ -138,7 +159,8 @@ var PuzzleMenu = function () {
 						} else {
 							_this.PuzzleGame.startGame(MAP_2D);
 						}
-					} }
+					} },
+				quit: { label: 'Quit', action: this.resetMenu }
 			}
 		};
 
@@ -171,7 +193,7 @@ var PuzzleMenu = function () {
 							_this.PuzzleGame.startGame(MAP_2D);
 						}
 					} },
-				quit: { label: 'Quit', action: this.backFn }
+				quit: { label: 'Quit', action: this.resetMenu }
 			}
 		};
 
@@ -188,6 +210,7 @@ var PuzzleMenu = function () {
 		this.menuY = 0;
 
 		this.renderCube();
+		this.currentMenuOptions = null;
 		this.changeMenu(this.menuOptions);
 		this.renderMenuText();
 
@@ -440,7 +463,7 @@ var PuzzleMenu = function () {
 		}
 	}, {
 		key: 'changeMenuAnimation',
-		value: function changeMenuAnimation(newMenu, reverse) {
+		value: function changeMenuAnimation(newMenu, reverse, dontLogHistory) {
 			this.inAnimation = true;
 			var direction = reverse ? "+" + TWO_PI : "-" + TWO_PI;
 			new TWEEN.Tween(this.menuSpinGroup.rotation).to({ y: direction, x: 0, z: 0 }, 500).easing(TWEEN.Easing.Exponential.InOut).start().onComplete(function () {
@@ -450,29 +473,32 @@ var PuzzleMenu = function () {
 				}
 			}.bind(this));
 			setTimeout(function () {
-				this.changeMenu(newMenu);
+				this.changeMenu(newMenu, dontLogHistory);
 			}.bind(this), 200);
 			new TWEEN.Tween(this.menuGroup.scale).to({ x: 0.8, y: 0.8, z: 0.8 }, 250).easing(TWEEN.Easing.Back.Out).yoyo(true).repeat(1).start();
-
-			new TWEEN.Tween(this.PuzzleGame.background.material.color).to({
-				r: newMenu.color.r / 255,
-				g: newMenu.color.g / 255,
-				b: newMenu.color.b / 255
-			}, 500).easing(TWEEN.Easing.Exponential.InOut).start();
 		}
 	}, {
 		key: 'changeMenu',
-		value: function changeMenu(newMenu) {
+		value: function changeMenu(newMenu, dontLogHistory) {
 			if (newMenu.hasOwnProperty('color')) {
 				this.currentColor = newMenu.color;
+				new TWEEN.Tween(this.PuzzleGame.background.material.color).to({
+					r: newMenu.color.r / 255,
+					g: newMenu.color.g / 255,
+					b: newMenu.color.b / 255
+				}, 500).easing(TWEEN.Easing.Exponential.Out).start();
 			}
 			this.otherSides.color = new THREE.Color(this.currentColor.r / 255, this.currentColor.g / 255, this.currentColor.b / 255);
+			if (this.currentMenuOptions !== null && !dontLogHistory) {
+				this.menuBreadCrumbs.push(this.currentMenuOptions);
+			}
 			this.currentMenuOptions = newMenu;
 			if (newMenu.hasOwnProperty('lastSelected')) {
 				this.currentSelection = newMenu.lastSelected;
 			} else if (newMenu.hasOwnProperty('items')) {
 				this.selectFirstTop();
 			}
+
 			this.renderMenuText();
 		}
 	}, {
